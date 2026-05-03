@@ -203,4 +203,107 @@ describe('ValuationFlow', () => {
     fireEvent.click(screen.getByText('Voltar'))
     expect(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB')).toBeInTheDocument()
   })
+
+  it('exibe campos de quartos/banheiros/vagas para Apartamento', () => {
+    renderFlow()
+    expect(screen.getByText('Quartos')).toBeInTheDocument()
+    expect(screen.getByText('Banheiros')).toBeInTheDocument()
+    expect(screen.getByText('Vagas')).toBeInTheDocument()
+  })
+
+  it('exibe mesmos campos para Casa', () => {
+    renderFlow()
+    fireEvent.click(screen.getByText('Casa'))
+    expect(screen.getByText('Quartos')).toBeInTheDocument()
+    expect(screen.getByText('Banheiros')).toBeInTheDocument()
+    expect(screen.getByText('Vagas')).toBeInTheDocument()
+  })
+
+  it('Comercial mostra Banheiros e Vagas mas NÃO Quartos', () => {
+    renderFlow()
+    fireEvent.click(screen.getByText('Comercial'))
+    expect(screen.queryByText('Quartos')).not.toBeInTheDocument()
+    expect(screen.getByText('Banheiros')).toBeInTheDocument()
+    expect(screen.getByText('Vagas')).toBeInTheDocument()
+  })
+
+  it('Terreno não mostra Quartos, Banheiros nem Vagas', () => {
+    renderFlow()
+    fireEvent.click(screen.getByText('Terreno'))
+    expect(screen.queryByText('Quartos')).not.toBeInTheDocument()
+    expect(screen.queryByText('Banheiros')).not.toBeInTheDocument()
+    expect(screen.queryByText('Vagas')).not.toBeInTheDocument()
+  })
+
+  it('Terreno envia bedrooms/bathrooms/parking como null', async () => {
+    renderFlow()
+
+    fireEvent.click(screen.getByText('Terreno'))
+    fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
+      target: { value: 'Loteamento Alphaville, Barueri, SP' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('ex. 98'), {
+      target: { value: '500' },
+    })
+
+    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
+    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
+    await act(async () => { fireEvent.click(screen.getByText('✦ Gerar Avaliação IA')) })
+
+    expect(createValuation).toHaveBeenCalledWith({
+      address: 'Loteamento Alphaville, Barueri, SP',
+      property_type: 'land',
+      area_m2: 500,
+      bedrooms: null,
+      bathrooms: null,
+      parking_spots: null,
+      amenities: undefined,
+    })
+  })
+
+  it('Comercial envia bedrooms como null, bathrooms e parking com valores', async () => {
+    renderFlow()
+
+    fireEvent.click(screen.getByText('Comercial'))
+    fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
+      target: { value: 'Av. Brigadeiro Faria Lima, 1500, São Paulo, SP' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('ex. 98'), {
+      target: { value: '200' },
+    })
+
+    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
+    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
+    await act(async () => { fireEvent.click(screen.getByText('✦ Gerar Avaliação IA')) })
+
+    expect(createValuation).toHaveBeenCalledWith({
+      address: 'Av. Brigadeiro Faria Lima, 1500, São Paulo, SP',
+      property_type: 'commercial',
+      area_m2: 200,
+      bedrooms: null,
+      bathrooms: 1,
+      parking_spots: 1,
+      amenities: undefined,
+    })
+  })
+
+  it('review step não exibe campos ocultos para Terreno', async () => {
+    renderFlow()
+
+    fireEvent.click(screen.getByText('Terreno'))
+    fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
+      target: { value: 'Rua Teste, 100' },
+    })
+    fireEvent.change(screen.getByPlaceholderText('ex. 98'), {
+      target: { value: '300' },
+    })
+
+    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
+    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
+
+    expect(screen.queryByText('Quartos')).not.toBeInTheDocument()
+    expect(screen.queryByText('Banheiros')).not.toBeInTheDocument()
+    expect(screen.queryByText('Vagas')).not.toBeInTheDocument()
+    expect(screen.getByText('300m²')).toBeInTheDocument()
+  })
 })

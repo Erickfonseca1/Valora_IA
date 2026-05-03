@@ -50,6 +50,15 @@ function SkeletonStep({ label, delay }: { label: string; delay: number }) {
   )
 }
 
+const ROOM_FIELDS = {
+  apartment: { beds: true, baths: true, parking: true },
+  house: { beds: true, baths: true, parking: true },
+  commercial: { beds: false, baths: true, parking: true },
+  land: { beds: false, baths: false, parking: false },
+} as const satisfies Record<PropertyType, { beds: boolean; baths: boolean; parking: boolean }>
+
+const DEFAULT_ROOMS = { beds: '2', baths: '1', parking: '1' }
+
 export default function ValuationFlow() {
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
@@ -65,8 +74,25 @@ export default function ValuationFlow() {
   const [processing, setProcessing] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
 
+  const showBeds = ROOM_FIELDS[form.propertyType].beds
+  const showBaths = ROOM_FIELDS[form.propertyType].baths
+  const showParking = ROOM_FIELDS[form.propertyType].parking
+
   const set = <K extends keyof ValuationForm>(k: K, v: ValuationForm[K]) =>
     setForm(f => ({ ...f, [k]: v }))
+
+  const handlePropertyTypeChange = (value: PropertyType) => {
+    setForm(f => {
+      const fields = ROOM_FIELDS[value]
+      return {
+        ...f,
+        propertyType: value,
+        beds: fields.beds ? (f.beds || DEFAULT_ROOMS.beds) : '',
+        baths: fields.baths ? (f.baths || DEFAULT_ROOMS.baths) : '',
+        parking: fields.parking ? (f.parking || DEFAULT_ROOMS.parking) : '',
+      }
+    })
+  }
 
   const toggleAmenity = (a: string) =>
     setForm(f => ({
@@ -80,9 +106,9 @@ export default function ValuationFlow() {
     setProcessing(true)
     setApiError(null)
     try {
-      const bedsNum = parseInt(form.beds) || null
-      const bathsNum = parseInt(form.baths) || null
-      const parkingNum = parseInt(form.parking) || null
+      const bedsNum = showBeds ? (parseInt(form.beds) || null) : null
+      const bathsNum = showBaths ? (parseInt(form.baths) || null) : null
+      const parkingNum = showParking ? (parseInt(form.parking) || null) : null
 
       const result = await createValuation({
         address: form.address,
@@ -180,30 +206,50 @@ export default function ValuationFlow() {
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Tipo de Imóvel</label>
               <div className="flex gap-2">
                 {PROPERTY_TYPES.map(t => (
-                  <button key={t.value} onClick={() => set('propertyType', t.value)} style={pillStyle(form.propertyType === t.value)}>
+                  <button key={t.value} onClick={() => handlePropertyTypeChange(t.value)} style={pillStyle(form.propertyType === t.value)}>
                     {t.label}
                   </button>
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-3">
-              {[
-                { label: 'Quartos', key: 'beds' as const, opts: ['1', '2', '3', '4', '5'] },
-                { label: 'Banheiros', key: 'baths' as const, opts: ['1', '2', '3', '4'] },
-                { label: 'Vagas', key: 'parking' as const, opts: ['0', '1', '2', '3'] },
-              ].map(f => (
-                <div key={f.key}>
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">{f.label}</label>
+            <div className="flex gap-3">
+              {showBeds && (
+                <div className="flex-1 min-w-0">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Quartos</label>
                   <select
                     className={inputClass + ' cursor-pointer'}
-                    value={form[f.key]}
-                    onChange={e => set(f.key, e.target.value)}
+                    value={form.beds}
+                    onChange={e => set('beds', e.target.value)}
                   >
-                    {f.opts.map(o => <option key={o} value={o}>{o}</option>)}
+                    {['1', '2', '3', '4', '5'].map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
-              ))}
-              <div>
+              )}
+              {showBaths && (
+                <div className="flex-1 min-w-0">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Banheiros</label>
+                  <select
+                    className={inputClass + ' cursor-pointer'}
+                    value={form.baths}
+                    onChange={e => set('baths', e.target.value)}
+                  >
+                    {['1', '2', '3', '4'].map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+              )}
+              {showParking && (
+                <div className="flex-1 min-w-0">
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Vagas</label>
+                  <select
+                    className={inputClass + ' cursor-pointer'}
+                    value={form.parking}
+                    onChange={e => set('parking', e.target.value)}
+                  >
+                    {['0', '1', '2', '3'].map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
                 <label className="block text-sm font-medium text-slate-700 mb-1.5">Área (m²)</label>
                 <input
                   className={inputClass}
@@ -234,9 +280,9 @@ export default function ValuationFlow() {
               {[
                 { label: 'Endereço', value: form.address },
                 { label: 'Tipo', value: PROPERTY_TYPES.find(t => t.value === form.propertyType)?.label ?? form.propertyType },
-                { label: 'Quartos', value: form.beds },
-                { label: 'Banheiros', value: form.baths },
-                { label: 'Vagas', value: form.parking },
+                ...(showBeds ? [{ label: 'Quartos', value: form.beds }] : []),
+                ...(showBaths ? [{ label: 'Banheiros', value: form.baths }] : []),
+                ...(showParking ? [{ label: 'Vagas', value: form.parking }] : []),
                 { label: 'Área', value: form.area + 'm²' },
               ].map((f, i) => (
                 <div key={i} className="p-3 bg-slate-50 rounded-lg">
