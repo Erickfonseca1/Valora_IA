@@ -135,13 +135,26 @@ interface BarIndicatorProps {
   label: string
   value: number
   color?: string
+  tooltip?: string
 }
 
-export function BarIndicator({ label, value, color = '#1E3A8A' }: BarIndicatorProps) {
+export function BarIndicator({ label, value, color = '#1E3A8A', tooltip }: BarIndicatorProps) {
   return (
     <div className="mb-3">
       <div className="flex justify-between text-xs mb-1 text-slate-500">
-        <span>{label}</span>
+        <span className={`${tooltip ? 'cursor-help border-b border-dotted border-slate-300' : ''}`}>
+          {tooltip ? (
+            <span className="group relative inline-block">
+              {label}
+              <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-3 py-2 bg-slate-800 text-white text-[11px] rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-normal w-56 z-50 text-center leading-relaxed">
+                {tooltip}
+                <span className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-800" />
+              </span>
+            </span>
+          ) : (
+            label
+          )}
+        </span>
         <span className="font-semibold">{value}%</span>
       </div>
       <div className="h-1.5 rounded-full bg-slate-200">

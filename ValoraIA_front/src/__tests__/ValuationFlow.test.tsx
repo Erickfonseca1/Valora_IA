@@ -247,7 +247,6 @@ describe('ValuationFlow', () => {
     })
 
     await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
-    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
     await act(async () => { fireEvent.click(screen.getByText('✦ Gerar Avaliação IA')) })
 
     expect(createValuation).toHaveBeenCalledWith({
@@ -273,7 +272,6 @@ describe('ValuationFlow', () => {
     })
 
     await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
-    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
     await act(async () => { fireEvent.click(screen.getByText('✦ Gerar Avaliação IA')) })
 
     expect(createValuation).toHaveBeenCalledWith({
@@ -298,7 +296,6 @@ describe('ValuationFlow', () => {
       target: { value: '300' },
     })
 
-    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
     await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
 
     expect(screen.queryByText('Quartos')).not.toBeInTheDocument()

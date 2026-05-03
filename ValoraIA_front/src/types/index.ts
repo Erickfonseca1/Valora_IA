@@ -13,6 +13,26 @@ export interface PriceFactor {
   score: number
 }
 
+export interface NearbyPlace {
+  name: string
+  vicinity: string
+  type: string
+  distance_m: number
+}
+
+export interface NeighborhoodPOI {
+  category: string
+  label: string
+  places: NearbyPlace[]
+  score: number
+  weight: number
+}
+
+export interface NeighborhoodData {
+  pois: NeighborhoodPOI[]
+  totalScore: number
+}
+
 export interface FrontendComparable {
   address: string
   neighborhood: string
@@ -53,6 +73,7 @@ export interface ValuationRecord {
   comparables: FrontendComparable[]
   method_estimates?: MethodEstimate[]
   primary_method?: 'mcd_idw' | 'wls' | 'gbdt' | 'ensemble'
+  neighborhood_pois?: NeighborhoodData | null
   created_at: string
 }
 

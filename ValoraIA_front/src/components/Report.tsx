@@ -14,6 +14,16 @@ const PROPERTY_TYPE_LABELS: Record<string, string> = {
   land: 'Terreno',
 }
 
+const TOOLTIPS: Record<string, string> = {
+  'Mercado Local': 'Proximidade dos imóveis comparáveis — quanto mais perto estão do imóvel avaliado, mais precisa é a estimativa.',
+  'Consistência': 'Estabilidade dos preços na região — quanto menos os preços variam entre os imóveis, mais confiável é a referência.',
+  'Volume de Dados': 'Quantidade de imóveis usados na análise — quanto maior a amostra, mais robusto é o resultado.',
+  'Perfil da Região': 'O quanto o imóvel se encaixa no padrão da vizinhança — área próxima à média dos imóveis comparáveis da região.',
+  'Comodidades': 'Itens de valorização do imóvel — piscina, academia, varanda, churrasqueira, portaria 24h, entre outros.',
+  'Cobertura': 'Distribuição dos imóveis comparáveis pela região — quanto mais uniforme, melhor a representatividade da amostra.',
+  'Vizinhança': 'Serviços e comércios próximos ao imóvel — supermercados, farmácias, escolas, transporte público, hospitais e lazer.',
+}
+
 const CONFIDENCE_LABEL = (score: number) => {
   if (score >= 90) return 'Muito Alta'
   if (score >= 75) return 'Alta'
@@ -151,18 +161,71 @@ export default function Report() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           <h3 className="text-[15px] font-semibold mb-5 text-slate-900">Detalhamento da Pontuação</h3>
           {valuation.price_factors.map((f, i) => {
-            const colors = [PRIMARY, ACCENT, PRIMARY, '#F59E0B', ACCENT, '#8B5CF6']
+            const colors = [PRIMARY, ACCENT, PRIMARY, '#F59E0B', ACCENT, '#8B5CF6', '#EC4899']
             return (
               <BarIndicator
                 key={i}
                 label={f.label}
                 value={Math.round(f.score * 100)}
                 color={colors[i % colors.length]}
+                tooltip={TOOLTIPS[f.label]}
               />
             )
           })}
         </div>
       </div>
+
+      {/* Neighborhood POIs */}
+      {valuation.neighborhood_pois && valuation.neighborhood_pois.pois.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-5">
+          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+            <div>
+              <h3 className="text-[15px] font-semibold m-0 text-slate-900">O que há por perto</h3>
+              <p className="text-sm text-slate-400 mt-1">Serviços e comércios que valorizam o imóvel.</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-400">Pontuação de Vizinhança</span>
+              <span className="text-lg font-bold" style={{ color: PRIMARY }}>
+                {Math.round(valuation.neighborhood_pois.totalScore * 100)}%
+              </span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 p-6 gap-4">
+            {valuation.neighborhood_pois.pois.map((cat, i) => {
+              const count = cat.places.length
+              const scorePct = Math.round(cat.score * 100)
+              const barColor = count > 0 ? ACCENT : '#CBD5E1'
+              const minDist = count > 0 ? Math.min(...cat.places.map((p) => p.distance_m)) : null
+              const singular = {
+                'Supermercados': 'Supermercado', 'Farmácias': 'Farmácia', 'Escolas': 'Escola',
+                'Hospitais': 'Hospital', 'Parques': 'Parque', 'Academias': 'Academia',
+                'Shoppings': 'Shopping', 'Restaurantes': 'Restaurante',
+              }[cat.label] ?? cat.label.replace(/s$/, '')
+              const label = count === 1 ? singular : cat.label
+              return (
+                <div key={i} className="flex flex-col gap-1.5">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-slate-700">
+                      {count > 0 ? `${count} ${label}` : cat.label}
+                    </span>
+                    <span className="text-xs font-semibold" style={{ color: barColor }}>{scorePct}%</span>
+                  </div>
+                  <div className="h-1 rounded-full bg-slate-200">
+                    <div className="h-full rounded-full" style={{ background: barColor, width: `${scorePct}%` }} />
+                  </div>
+                  {count > 0 ? (
+                    <div className="text-xs text-slate-500 mt-0.5">
+                      em até {minDist}m
+                    </div>
+                  ) : (
+                    <div className="text-xs text-slate-400 italic">Nenhum encontrado no raio de busca</div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Comparables */}
       {valuation.comparables.length > 0 && (

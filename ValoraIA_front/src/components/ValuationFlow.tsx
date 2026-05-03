@@ -10,7 +10,7 @@ const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Terreno', value: 'land' },
 ]
 
-const AMENITIES = [
+const APARTMENT_AMENITIES = [
   'Piscina', 'Rooftop', 'Vista Mar', 'Cobertura',
   'Academia', 'Portaria 24h', 'Portaria', 'Segurança 24h', 'Elevador', 'Salão de Festas', 'Área Gourmet',
   'Varanda', 'Sacada', 'Churrasqueira', 'Playground', 'Salão de Jogos',
@@ -19,7 +19,28 @@ const AMENITIES = [
   'Área de serviço', 'Armários planejados', 'Ar condicionado', 'Pet friendly',
 ]
 
-const STEPS = ['Detalhes do Imóvel', 'Comodidades', 'Revisão & Preço']
+const HOUSE_AMENITIES = [
+  'Piscina', 'Quintal', 'Jardim', 'Lareira',
+  'Academia', 'Salão de Festas', 'Área Gourmet',
+  'Varanda', 'Sacada', 'Churrasqueira', 'Playground',
+  'Quadra', 'Quadra Esportiva',
+  'Portão eletrônico', 'Interfone', 'Câmeras de segurança',
+  'Área de serviço', 'Armários planejados', 'Ar condicionado', 'Pet friendly',
+]
+
+const AMENITIES_BY_TYPE: Record<PropertyType, string[]> = {
+  apartment: APARTMENT_AMENITIES,
+  house: HOUSE_AMENITIES,
+  commercial: [],
+  land: [],
+}
+
+const STEPS_BY_TYPE: Record<PropertyType, string[]> = {
+  apartment: ['Detalhes do Imóvel', 'Comodidades', 'Revisão & Preço'],
+  house: ['Detalhes do Imóvel', 'Comodidades', 'Revisão & Preço'],
+  commercial: ['Detalhes do Imóvel', 'Revisão & Preço'],
+  land: ['Detalhes do Imóvel', 'Revisão & Preço'],
+}
 
 const PRIMARY = '#1E3A8A'
 const ACCENT = '#10B981'
@@ -90,8 +111,10 @@ export default function ValuationFlow() {
         beds: fields.beds ? (f.beds || DEFAULT_ROOMS.beds) : '',
         baths: fields.baths ? (f.baths || DEFAULT_ROOMS.baths) : '',
         parking: fields.parking ? (f.parking || DEFAULT_ROOMS.parking) : '',
+        amenities: value === 'commercial' || value === 'land' ? [] : f.amenities,
       }
     })
+    setStep(s => Math.min(s, STEPS_BY_TYPE[value].length - 1))
   }
 
   const toggleAmenity = (a: string) =>
@@ -142,6 +165,10 @@ export default function ValuationFlow() {
     fontFamily: 'inherit',
   })
 
+  const steps = STEPS_BY_TYPE[form.propertyType]
+  const maxStep = steps.length - 1
+  const isAmenitiesStep = maxStep === 2 && step === 1
+
   const canAdvance = step === 0
     ? form.address.trim().length > 0 && form.area.trim().length > 0 && parseFloat(form.area) > 0
     : true
@@ -155,7 +182,7 @@ export default function ValuationFlow() {
 
       {/* Step indicator */}
       <div className="flex gap-2 mb-8">
-        {STEPS.map((s, i) => (
+        {steps.map((s, i) => (
           <div key={i} className="flex-1">
             <div
               className="h-[3px] rounded-sm mb-2 transition-all duration-300"
@@ -261,12 +288,12 @@ export default function ValuationFlow() {
               </div>
             </div>
           </div>
-        ) : step === 1 ? (
+        ) : isAmenitiesStep ? (
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Selecione as Comodidades</label>
             <p className="text-sm text-slate-400 mb-4">Selecione todas que se aplicam ao imóvel.</p>
             <div className="flex flex-wrap gap-2">
-              {AMENITIES.map(a => (
+              {AMENITIES_BY_TYPE[form.propertyType].map(a => (
                 <button key={a} onClick={() => toggleAmenity(a)} style={pillStyle(form.amenities.includes(a))}>
                   {a}
                 </button>
@@ -327,12 +354,12 @@ export default function ValuationFlow() {
             {step === 0 ? 'Cancelar' : 'Voltar'}
           </button>
           <button
-            onClick={() => step < 2 ? setStep(s => s + 1) : handleSubmit()}
+            onClick={() => step < maxStep ? setStep(s => s + 1) : handleSubmit()}
             disabled={!canAdvance}
             className="px-6 py-2.5 rounded-lg border-none text-white text-sm font-semibold cursor-pointer transition-opacity hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: PRIMARY, fontFamily: 'inherit' }}
           >
-            {step < 2 ? 'Continuar' : '✦ Gerar Avaliação IA'}
+            {step < maxStep ? 'Continuar' : '✦ Gerar Avaliação IA'}
           </button>
         </div>
       )}
