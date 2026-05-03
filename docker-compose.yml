@@ -1,0 +1,17 @@
+services:
+  backend:
+    build:
+      context: ./ValoraIA_back
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+    env_file: ./ValoraIA_back/.env.local
+    ports:
+      - "3000:3000"
+
+  frontend:
+    build: ./ValoraIA_front
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
