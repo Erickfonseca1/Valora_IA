@@ -25,8 +25,6 @@ const { mockValuationResult } = vi.hoisted(() => ({
   },
 }))
 
-const createValuationMock = vi.fn().mockResolvedValue(mockValuationResult)
-
 vi.mock('../api', () => ({
   createValuation: vi.fn().mockResolvedValue(mockValuationResult),
   getValuation: vi.fn(),
