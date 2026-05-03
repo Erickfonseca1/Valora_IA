@@ -83,6 +83,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     radius_used_m,
     method_estimates,
     primary_method,
+    neighborhood_pois,
   } = engineResult;
 
   // recommended = mean of CI
@@ -112,6 +113,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       lng: geo.lng,
       sample_size,
       radius_used_m,
+      neighborhood_pois,
     })
     .select("id, created_at")
     .single();
@@ -143,6 +145,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     comparables: frontend_comparables,
     method_estimates,
     primary_method,
+    neighborhood_pois,
     created_at: row.created_at,
   };
 

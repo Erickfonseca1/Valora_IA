@@ -1,9 +1,11 @@
 import { getAdminClient } from "@/lib/db/supabase";
+import { fetchNearbyPlaces } from "@/lib/geocoding/nearby-places";
 import type {
   ComparableListing,
   FrontendComparable,
   ListingRow,
   MethodEstimate,
+  NeighborhoodData,
   PriceFactor,
   ValuationRequest,
   ValuationResult,
@@ -17,11 +19,11 @@ const AMENITY_WEIGHTS: Record<string, number> = {
   "Piscina": 0.20, "Rooftop": 0.20, "Vista Mar": 0.20, "Cobertura": 0.20,
   // Alto (0.15)
   "Academia": 0.15, "Portaria 24h": 0.15, "Portaria": 0.15,
-  "Segurança 24h": 0.15, "Elevador": 0.15, "Salão de Festas": 0.15, "Área Gourmet": 0.15,
+  "Segurança 24h": 0.15, "Elevador": 0.15, "Salão de Festas": 0.15, "Área Gourmet": 0.15, "Quintal": 0.15,
   // Médio (0.10)
   "Varanda": 0.10, "Sacada": 0.10, "Churrasqueira": 0.10, "Playground": 0.10,
   "Salão de Jogos": 0.10, "Espaço Kids": 0.10, "Coworking": 0.10,
-  "Quadra": 0.10, "Quadra Esportiva": 0.10,
+  "Quadra": 0.10, "Quadra Esportiva": 0.10, "Jardim": 0.10, "Lareira": 0.10,
   // Básico (0.05)
   "Portão eletrônico": 0.05, "Interfone": 0.05, "Câmeras de segurança": 0.05,
   "Área de serviço": 0.05, "Armários planejados": 0.05,
@@ -323,7 +325,8 @@ function computePriceFactors(
   candidates: WeightedCandidate[],
   targetArea: number,
   radiusUsed: number,
-  amenities: string[]
+  amenities: string[],
+  neighborhoodScore?: number
 ): PriceFactor[] {
   const n = candidates.length;
   const distances = candidates.map((c) => c.row.distance_m);
@@ -350,12 +353,13 @@ function computePriceFactors(
   const transportScore = clamp(1 - distSd / radiusUsed, 0.4, 1.0);
 
   return [
-    { label: "Localização",  score: Number(locationScore.toFixed(2)) },
-    { label: "Condição",     score: Number(conditionScore.toFixed(2)) },
-    { label: "Demanda",      score: Number(demandScore.toFixed(2)) },
-    { label: "Tamanho",      score: Number(sizeScore.toFixed(2)) },
-    { label: "Comodidades",  score: Number(amenityScore.toFixed(2)) },
-    { label: "Transporte",   score: Number(transportScore.toFixed(2)) },
+    { label: "Mercado Local",  score: Number(locationScore.toFixed(2)) },
+    { label: "Consistência",   score: Number(conditionScore.toFixed(2)) },
+    { label: "Volume de Dados",score: Number(demandScore.toFixed(2)) },
+    { label: "Perfil da Região",score: Number(sizeScore.toFixed(2)) },
+    { label: "Comodidades",    score: Number(amenityScore.toFixed(2)) },
+    { label: "Cobertura",      score: Number(transportScore.toFixed(2)) },
+    { label: "Vizinhança",     score: neighborhoodScore ?? 0.50 },
   ];
 }
 
@@ -406,6 +410,7 @@ export interface ExtendedValuationResult extends ValuationResult {
   method_estimates: MethodEstimate[];
   primary_method: "mcd_idw" | "wls" | "gbdt" | "ensemble";
   typology_factor: number;
+  neighborhood_pois: NeighborhoodData | null;
 }
 
 // ─── Main Engine ──────────────────────────────────────────────────────────────
@@ -503,8 +508,15 @@ export async function runValuation(
   const finalCiLowerBrl = Math.max(0, ensemble.ci_lower_ppm2 * target_area);
   const finalCiUpperBrl = ensemble.ci_upper_ppm2 * target_area;
 
+  let neighborhood: NeighborhoodData | null = null;
+  try {
+    neighborhood = await fetchNearbyPlaces(lat, lng);
+  } catch {
+    // Google Places API unavailable → proceed without neighborhood data
+  }
+
   const confidenceScore = computeConfidenceScore(nEff, finalCiLowerBrl, finalCiUpperBrl, finalEstimatedValue);
-  const priceFactors = computePriceFactors(candidates, target_area, radiusUsed, amenities);
+  const priceFactors = computePriceFactors(candidates, target_area, radiusUsed, amenities, neighborhood?.totalScore);
   const frontendComparables = toFrontendComparables(candidates);
 
   return {
@@ -526,6 +538,7 @@ export async function runValuation(
     method_estimates: ensemble.method_estimates,
     primary_method: ensemble.primary_method,
     typology_factor: Number(typologyFactorUsed.toFixed(3)),
+    neighborhood_pois: neighborhood,
   };
 }
 

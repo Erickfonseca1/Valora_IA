@@ -167,6 +167,7 @@ export interface ValuationRecord {
   comparables: FrontendComparable[];
   method_estimates?: MethodEstimate[];
   primary_method?: "mcd_idw" | "wls" | "gbdt" | "ensemble";
+  neighborhood_pois?: NeighborhoodData | null;
   created_at: string;
 }
 
@@ -215,6 +216,20 @@ export interface MarketTrendResponse {
   current_price_m2: number;
   yearly_change_pct: number;
   data_points: number[];
+}
+
+// ─── Nearby Places / Neighborhood ─────────────────────────────────────────────
+
+export interface NearbyPlace {
+  name: string;
+  vicinity: string;
+  type: string;
+  distance_m: number;
+}
+
+export interface NeighborhoodData {
+  pois: { category: string; label: string; places: NearbyPlace[]; score: number; weight: number }[];
+  totalScore: number;
 }
 
 // ─── API Response wrapper ─────────────────────────────────────────────────────

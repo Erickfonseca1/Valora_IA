@@ -39,6 +39,7 @@ export async function GET(
     confidence_score: data.confidence_score,
     price_factors: data.price_factors ?? [],
     comparables: data.comparables ?? [],
+    neighborhood_pois: data.neighborhood_pois ?? null,
     created_at: data.created_at,
   };
 
