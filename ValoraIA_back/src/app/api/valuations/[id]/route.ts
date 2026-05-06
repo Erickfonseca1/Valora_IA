@@ -41,6 +41,21 @@ export async function GET(
     comparables: data.comparables ?? [],
     neighborhood_pois: data.neighborhood_pois ?? null,
     created_at: data.created_at,
+    construction_age: data.construction_age ?? undefined,
+    conservation_state: data.conservation_state ?? undefined,
+    is_corner: data.is_corner ?? undefined,
+    terrain_slope: data.terrain_slope ?? undefined,
+    street_level: data.street_level ?? undefined,
+    property_photos: data.property_photos ?? [],
+    static_market_value: data.static_market_value ? Number(data.static_market_value) : undefined,
+    residual_land_value: data.residual_land_value ? Number(data.residual_land_value) : undefined,
+    max_buildable_area: data.max_buildable_area ? Number(data.max_buildable_area) : undefined,
+    viability_scenarios: data.viability_scenarios ?? undefined,
+    zoning_info: data.zoning_info ?? undefined,
+    homogenization_factors: data.homogenization_factors ?? undefined,
+    ross_heidecke_result: data.ross_heidecke_result ?? undefined,
+    method_estimates: data.method_estimates ?? undefined,
+    primary_method: data.primary_method ?? undefined,
   };
 
   return NextResponse.json({ success: true, data: record });
