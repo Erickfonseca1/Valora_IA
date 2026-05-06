@@ -37,7 +37,7 @@ export default function AppShell({ children }: AppShellProps) {
             </div>
             <div>
               <div className="font-bold text-base text-white" style={{ letterSpacing: '-0.3px' }}>Valora AI</div>
-              <div className="text-xs text-white/60 mt-px">Pricing Agent</div>
+              <div className="text-xs text-white/60 mt-px">Agente de Precificação</div>
             </div>
           </div>
         </div>
@@ -84,11 +84,11 @@ export default function AppShell({ children }: AppShellProps) {
               className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white"
               style={{ background: 'rgba(255,255,255,0.2)' }}
             >
-              MA
+              EP
             </div>
             <div>
-              <div className="text-xs font-medium text-white">Maria Alves</div>
-              <div className="text-[11px] text-white/50">Corretora · Premium</div>
+              <div className="text-xs font-medium text-white">Edizio Peixoto</div>
+              <div className="text-[11px] text-white/50">Corretor · Premium</div>
             </div>
           </div>
         </div>

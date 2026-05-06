@@ -15,3 +15,15 @@ services:
       - "80:80"
     depends_on:
       - backend
+
+  frontend-dev:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./ValoraIA_front:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    command: sh -c "npm install && npm run dev"

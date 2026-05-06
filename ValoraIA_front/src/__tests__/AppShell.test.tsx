@@ -19,7 +19,7 @@ describe('AppShell', () => {
   it('renderiza a logo e nome da aplicação', () => {
     renderWithRouter()
     expect(screen.getByText('Valora AI')).toBeInTheDocument()
-    expect(screen.getByText('Pricing Agent')).toBeInTheDocument()
+    expect(screen.getByText('Agente de Precificação')).toBeInTheDocument()
   })
 
   it('renderiza todos os itens de navegação', () => {
@@ -33,8 +33,8 @@ describe('AppShell', () => {
 
   it('renderiza o nome do usuário', () => {
     renderWithRouter()
-    expect(screen.getByText('Maria Alves')).toBeInTheDocument()
-    expect(screen.getByText('Corretora · Premium')).toBeInTheDocument()
+    expect(screen.getByText('Edizio Peixoto')).toBeInTheDocument()
+    expect(screen.getByText('Corretor · Premium')).toBeInTheDocument()
   })
 
   it('renderiza o children', () => {
