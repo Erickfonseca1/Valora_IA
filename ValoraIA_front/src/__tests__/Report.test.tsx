@@ -59,6 +59,20 @@ const { mockValuation } = vi.hoisted(() => ({
     ],
     primary_method: 'ensemble' as const,
     created_at: '2025-05-01T10:00:00Z',
+    // V2 fields
+    static_market_value: 505000,
+    residual_land_value: 180000,
+    max_buildable_area: 392,
+    viability_scenarios: [
+      { label: 'Conservador', description: 'IA 70% do máximo', VGV_total: 1100000, residual: 125000, roi_pct: 22.7 },
+      { label: 'Base',        description: 'IA máximo',         VGV_total: 1570000, residual: 180000, roi_pct: 22.9 },
+      { label: 'Otimista',   description: 'IA 120%',            VGV_total: 1884000, residual: 215000, roi_pct: 22.8 },
+    ],
+    zoning_info: { zone_code: 'ZR-2', IA_max: 2.0, land_use: 'Residencial' },
+    homogenization_factors: {
+      corner_factor: 1.0, slope_factor: 1.0, level_factor: 1.0,
+      offer_factor: 0.90, combined_factor: 1.0,
+    },
   },
 }))
 
@@ -171,6 +185,32 @@ describe('Report', () => {
     await waitFor(() => {
       expect(screen.getByText('← Voltar ao Painel')).toBeInTheDocument()
       expect(screen.getByText('+ Nova Avaliação')).toBeInTheDocument()
+    })
+  })
+
+  it('exibe seção Análise de Valor quando static_market_value disponível', async () => {
+    renderReport()
+    await waitFor(() => {
+      expect(screen.getByText(/Abismo de Incorporação/i)).toBeInTheDocument()
+      expect(screen.getByText(/Venda Direta/i)).toBeInTheDocument()
+      expect(screen.getByText(/Valor de Incorporação/i)).toBeInTheDocument()
+    })
+  })
+
+  it('exibe seção Potencial Construtivo quando max_buildable_area disponível', async () => {
+    renderReport()
+    await waitFor(() => {
+      expect(screen.getByText(/Potencial Construtivo/i)).toBeInTheDocument()
+      expect(screen.getByText(/392/)).toBeInTheDocument()
+    })
+  })
+
+  it('exibe tabela de homogeneização quando fatores disponíveis', async () => {
+    renderReport()
+    await waitFor(() => {
+      expect(screen.getByText(/Fatores de Homogeneização/i)).toBeInTheDocument()
+      expect(screen.getByText(/Multiplicador Combinado/i)).toBeInTheDocument()
+      expect(screen.getByText(/Desconto de Oferta/i)).toBeInTheDocument()
     })
   })
 })

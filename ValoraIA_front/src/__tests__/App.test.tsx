@@ -44,7 +44,7 @@ describe('App', () => {
   it('sempre renderiza o AppShell com sidebar', () => {
     renderApp('/')
     expect(screen.getByText('Valora AI')).toBeInTheDocument()
-    expect(screen.getByText('Pricing Agent')).toBeInTheDocument()
-    expect(screen.getByText('Maria Alves')).toBeInTheDocument()
+    expect(screen.getByText('Agente de Precificação')).toBeInTheDocument()
+    expect(screen.getByText('Edizio Peixoto')).toBeInTheDocument()
   })
 })
