@@ -85,7 +85,6 @@ export default function Report() {
 
   const radarFactors = valuation.price_factors.map(f => ({ label: f.label, value: f.score }))
   const propertyLabel = PROPERTY_TYPE_LABELS[valuation.property_type] ?? valuation.property_type
-  const rhFactor = valuation.ross_heidecke_result?.remaining_value_pct ?? 1.0
 
   const subtitle = [
     valuation.neighborhood ?? valuation.city,
@@ -388,12 +387,10 @@ export default function Report() {
                   <div className="text-xs text-slate-400 mb-2 truncate">{c.address}</div>
 
                   <div className="text-base font-bold mb-0.5" style={{ color: PRIMARY }}>
-                    {fmt(c.price_brl * rhFactor)}
-                    {rhFactor !== 1.0 && <span title="Ajustado por Ross-Heidecke" style={{ color: '#94A3B8', fontSize: 10 }}>★</span>}
+                    {fmt(c.price_brl)}
                   </div>
                   <div className="text-xs text-slate-500 mb-2">
-                    {fmtM2(c.price_m2_brl * rhFactor)}
-                    {rhFactor !== 1.0 && <span title="Ajustado por Ross-Heidecke" style={{ color: '#94A3B8', fontSize: 10 }}>★</span>}
+                    {fmtM2(c.price_m2_brl)}
                     {c.area_m2 && ` · ${c.area_m2}m²`}
                     {c.bedrooms != null && ` · ${c.bedrooms} qto${c.bedrooms !== 1 ? 's' : ''}`}
                   </div>

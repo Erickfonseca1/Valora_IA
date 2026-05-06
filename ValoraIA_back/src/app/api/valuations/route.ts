@@ -80,24 +80,28 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     restrictions: "Dados de zoneamento indisponíveis — usando padrão urbano brasileiro.",
   };
 
-  // ── Photo analysis (non-blocking) ────────────────────────────────────────
-  let photoAnalysis = null;
-  if (property_photos && property_photos.length > 0) {
+  // ── Photo analysis — auto-fills conservation_state when user didn't set it ──
+  let effectiveConservationState = conservation_state;
+  if (property_photos && property_photos.length > 0 && !conservation_state) {
     try {
-      photoAnalysis = await analyzePropertyPhotos(property_photos);
+      const photoAnalysis = await analyzePropertyPhotos(property_photos);
+      effectiveConservationState = photoAnalysis.estado_conservacao_sugerido;
     } catch { /* non-fatal */ }
   }
-  void photoAnalysis; // may be used in future to auto-fill conservation state
 
   // ── Ross-Heidecke depreciation ────────────────────────────────────────────
   let rossHeidecke: RossHeideckeResult | null = null;
-  if (construction_age != null && conservation_state) {
+  if (construction_age != null && effectiveConservationState) {
     rossHeidecke = computeRossHeidecke({
       construction_age,
-      conservation_state: conservation_state as ConservationState,
+      conservation_state: effectiveConservationState as ConservationState,
       construction_standard: (construction_standard ?? "medium") as ConstructionStandard,
     });
   }
+
+  const rossHeideckeRecord = rossHeidecke
+    ? { ...rossHeidecke, construction_standard: construction_standard ?? "medium" }
+    : null;
 
   // ── MCDDM valuation engine ────────────────────────────────────────────────
   let engineResult;
@@ -184,7 +188,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       method_estimates,
       primary_method,
       construction_age: construction_age ?? null,
-      conservation_state: conservation_state ?? null,
+      conservation_state: effectiveConservationState ?? null,
       is_corner: is_corner ?? null,
       terrain_slope: terrain_slope ?? null,
       street_level: street_level ?? null,
@@ -195,7 +199,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       viability_scenarios: involutiveResult?.viability_scenarios ?? null,
       zoning_info,
       homogenization_factors,
-      ross_heidecke_result: rossHeidecke ?? null,
+      ross_heidecke_result: rossHeideckeRecord ?? null,
     })
     .select("id, created_at")
     .single();
@@ -231,7 +235,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     created_at: row.created_at,
     // V2 fields:
     construction_age: construction_age ?? undefined,
-    conservation_state: conservation_state as ConservationState | undefined,
+    conservation_state: effectiveConservationState as ConservationState ?? undefined,
     is_corner: is_corner ?? undefined,
     terrain_slope: terrain_slope ?? undefined,
     street_level: street_level ?? undefined,
@@ -242,7 +246,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     viability_scenarios: involutiveResult?.viability_scenarios ?? undefined,
     zoning_info,
     homogenization_factors,
-    ross_heidecke_result: rossHeidecke ?? undefined,
+    ross_heidecke_result: rossHeideckeRecord ?? undefined,
   };
 
   return NextResponse.json({ success: true, data: result }, { status: 201 });

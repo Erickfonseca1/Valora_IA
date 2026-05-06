@@ -90,6 +90,7 @@ export interface HomogenizationFactors {
 export interface RossHeideckeResult {
   depreciation_coefficient: number
   remaining_value_pct: number
+  construction_standard?: string
 }
 
 export interface ValuationRecord {

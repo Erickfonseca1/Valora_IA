@@ -29,7 +29,8 @@ export function computeRossHeidecke(input: RossHeideckeInput): RossHeideckeResul
   const { r, Vu } = STANDARD_PARAMS[construction_standard];
   const n = Math.min(Math.max(0, construction_age), Vu - 1);
 
-  // Structural age factor (NBR 14.653 formula: Vh = Vo × (1-r)^n × (Vu-n)/Vu)
+  // PTAM-BR variant: combines Ross exponential decay with linear remaining-life fraction
+  // as specified in NBR 14.653 PTAM methodology
   const age_factor = Math.pow(1 - r, n) * (Vu - n) / Vu;
   const conservation_dep = CONSERVATION_DEPRECIATION[conservation_state];
 

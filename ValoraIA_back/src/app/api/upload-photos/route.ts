@@ -21,6 +21,17 @@ export async function POST(
     );
   }
 
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/jpg'];
+
+  for (const file of files) {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json(
+        { success: false, error: `File type '${file.type}' not allowed. Use JPEG, PNG, or WebP.` },
+        { status: 422 }
+      );
+    }
+  }
+
   const db = getAdminClient();
   const urls: string[] = [];
 

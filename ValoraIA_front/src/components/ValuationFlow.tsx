@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { ValuationForm, PropertyType } from '../types'
 import type { ConservationState, TerrainSlope, StreetLevel } from '../types'
@@ -54,10 +54,10 @@ const ACCENT = '#10B981'
 function SkeletonStep({ label, delay }: { label: string; delay: number }) {
   const [done, setDone] = useState(false)
 
-  useState(() => {
+  useEffect(() => {
     const t = setTimeout(() => setDone(true), delay + 800)
     return () => clearTimeout(t)
-  })
+  }, [delay])
 
   return (
     <div className="flex items-center gap-2.5">
