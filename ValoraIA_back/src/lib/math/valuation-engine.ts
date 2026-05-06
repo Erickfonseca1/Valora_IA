@@ -3,10 +3,13 @@ import { fetchNearbyPlaces } from "@/lib/geocoding/nearby-places";
 import type {
   ComparableListing,
   FrontendComparable,
+  HomogenizationFactors,
   ListingRow,
   MethodEstimate,
   NeighborhoodData,
   PriceFactor,
+  StreetLevel,
+  TerrainSlope,
   ValuationRequest,
   ValuationResult,
 } from "@/types";
@@ -54,6 +57,11 @@ const IDW_RADII_M = [1000, 2000, 3000, 5000];
 const IDW_POWER = 2;           // distance exponent — higher = stronger local bias
 const MIN_SAMPLES = 5;
 const MAX_SAMPLES = 100;
+
+// ─── NBR 14653 Post-Ensemble Homogenization Factors ──────────────────────────
+const CORNER_FACTOR = 1.05;
+const SLOPE_FACTORS: Record<string, number> = { flat: 1.0, gentle: 0.95, steep: 0.80 };
+const LEVEL_FACTORS: Record<string, number> = { same: 1.0, above: 0.95, below: 0.80 };
 
 // ─── Typology Factor (NBR 14653 homogenization) ───────────────────────────────
 //
@@ -411,12 +419,18 @@ export interface ExtendedValuationResult extends ValuationResult {
   primary_method: "mcd_idw" | "wls" | "gbdt" | "ensemble";
   typology_factor: number;
   neighborhood_pois: NeighborhoodData | null;
+  homogenization_factors: HomogenizationFactors;
 }
 
 // ─── Main Engine ──────────────────────────────────────────────────────────────
 
 export async function runValuation(
-  req: ValuationRequest & { amenities?: string[] }
+  req: ValuationRequest & {
+    amenities?: string[];
+    is_corner?: boolean;
+    terrain_slope?: TerrainSlope;
+    street_level?: StreetLevel;
+  }
 ): Promise<ExtendedValuationResult> {
   const { lat, lng, target_area, target_bedrooms, amenities = [] } = req;
   const targetPropertyType = req.target_property_type ?? null;
@@ -508,6 +522,24 @@ export async function runValuation(
   const finalCiLowerBrl = Math.max(0, ensemble.ci_lower_ppm2 * target_area);
   const finalCiUpperBrl = ensemble.ci_upper_ppm2 * target_area;
 
+  // ── NBR post-ensemble homogenization (corner, slope, street level) ────────
+  const cornerFactor = req.is_corner ? CORNER_FACTOR : 1.0;
+  const slopeFactor  = SLOPE_FACTORS[req.terrain_slope ?? 'flat'] ?? 1.0;
+  const levelFactor  = LEVEL_FACTORS[req.street_level ?? 'same'] ?? 1.0;
+  const combinedFactor = cornerFactor * slopeFactor * levelFactor;
+
+  const adjustedEstimatedValue = Number((finalEstimatedValue * combinedFactor).toFixed(2));
+  const adjustedCiLower = Number((Math.max(0, finalCiLowerBrl) * combinedFactor).toFixed(2));
+  const adjustedCiUpper = Number((finalCiUpperBrl * combinedFactor).toFixed(2));
+
+  const homogenizationFactors: HomogenizationFactors = {
+    corner_factor: cornerFactor,
+    slope_factor: slopeFactor,
+    level_factor: levelFactor,
+    offer_factor: OFFER_FACTOR,
+    combined_factor: combinedFactor,
+  };
+
   let neighborhood: NeighborhoodData | null = null;
   try {
     neighborhood = await fetchNearbyPlaces(lat, lng);
@@ -520,12 +552,12 @@ export async function runValuation(
   const frontendComparables = toFrontendComparables(candidates);
 
   return {
-    estimated_value: Number(finalEstimatedValue.toFixed(2)),
+    estimated_value: adjustedEstimatedValue,
     price_per_m2_mean: Number(finalPpm2.toFixed(2)),
     price_per_m2_median: Number(med.toFixed(2)),
     confidence_interval: {
-      lower: Number(finalCiLowerBrl.toFixed(2)),
-      upper: Number(finalCiUpperBrl.toFixed(2)),
+      lower: adjustedCiLower,
+      upper: adjustedCiUpper,
       confidence_level: CONFIDENCE_LEVEL,
     },
     sample_size: candidates.length,
@@ -539,6 +571,7 @@ export async function runValuation(
     primary_method: ensemble.primary_method,
     typology_factor: Number(typologyFactorUsed.toFixed(3)),
     neighborhood_pois: neighborhood,
+    homogenization_factors: homogenizationFactors,
   };
 }
 
