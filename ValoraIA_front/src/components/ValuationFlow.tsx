@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { ValuationForm, PropertyType } from '../types'
-import { createValuation } from '../api'
+import type { ConservationState, TerrainSlope, StreetLevel } from '../types'
+import { createValuation, uploadPhotos, analyzePhotos } from '../api'
 
 const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Apartamento', value: 'apartment' },
@@ -35,11 +36,16 @@ const AMENITIES_BY_TYPE: Record<PropertyType, string[]> = {
   land: [],
 }
 
+// Steps for apartment/house (4 steps)
+const STEPS_APT_HOUSE = ['Detalhes do Imóvel', 'Conservação & Fotos', 'Comodidades', 'Revisão & Envio']
+// Steps for commercial/land (3 steps)
+const STEPS_OTHER = ['Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio']
+
 const STEPS_BY_TYPE: Record<PropertyType, string[]> = {
-  apartment: ['Detalhes do Imóvel', 'Comodidades', 'Revisão & Preço'],
-  house: ['Detalhes do Imóvel', 'Comodidades', 'Revisão & Preço'],
-  commercial: ['Detalhes do Imóvel', 'Revisão & Preço'],
-  land: ['Detalhes do Imóvel', 'Revisão & Preço'],
+  apartment: STEPS_APT_HOUSE,
+  house: STEPS_APT_HOUSE,
+  commercial: STEPS_OTHER,
+  land: STEPS_OTHER,
 }
 
 const PRIMARY = '#1E3A8A'
@@ -91,8 +97,16 @@ export default function ValuationFlow() {
     parking: '1',
     area: '',
     amenities: [],
+    construction_age: '',
+    conservation_state: '' as ConservationState | '',
+    is_corner: false,
+    terrain_slope: '' as TerrainSlope | '',
+    street_level: '' as StreetLevel | '',
+    photos: [] as File[],
+    photoUrls: [] as string[],
   })
   const [processing, setProcessing] = useState(false)
+  const [photoUploading, setPhotoUploading] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
 
   const showBeds = ROOM_FIELDS[form.propertyType].beds
@@ -125,6 +139,36 @@ export default function ValuationFlow() {
         : [...f.amenities, a],
     }))
 
+  const advanceFromPhotoStep = async () => {
+    if (form.photos.length === 0) {
+      setStep(s => s + 1)
+      return
+    }
+    setPhotoUploading(true)
+    try {
+      const { urls } = await uploadPhotos(form.photos)
+      setForm(f => ({ ...f, photoUrls: urls }))
+
+      // If conservation state not already set, try AI analysis (non-fatal)
+      if (!form.conservation_state) {
+        try {
+          const analysis = await analyzePhotos(urls)
+          if (analysis.estado_conservacao_sugerido) {
+            setForm(f => ({ ...f, conservation_state: analysis.estado_conservacao_sugerido }))
+          }
+        } catch {
+          // non-fatal — analysis failure doesn't block the flow
+        }
+      }
+
+      setStep(s => s + 1)
+    } catch (e) {
+      setApiError(e instanceof Error ? e.message : 'Erro ao enviar fotos')
+    } finally {
+      setPhotoUploading(false)
+    }
+  }
+
   const handleSubmit = async () => {
     setProcessing(true)
     setApiError(null)
@@ -141,6 +185,12 @@ export default function ValuationFlow() {
         bathrooms: bathsNum,
         parking_spots: parkingNum,
         amenities: form.amenities.length > 0 ? form.amenities : undefined,
+        construction_age: form.construction_age ? parseInt(form.construction_age) : undefined,
+        conservation_state: form.conservation_state || undefined,
+        is_corner: form.is_corner || undefined,
+        terrain_slope: (form.terrain_slope || undefined) as TerrainSlope | undefined,
+        street_level: (form.street_level || undefined) as StreetLevel | undefined,
+        property_photos: form.photoUrls.length > 0 ? form.photoUrls : undefined,
       })
       navigate(`/resultado/${result.id}`)
     } catch (e) {
@@ -167,11 +217,25 @@ export default function ValuationFlow() {
 
   const steps = STEPS_BY_TYPE[form.propertyType]
   const maxStep = steps.length - 1
-  const isAmenitiesStep = maxStep === 2 && step === 1
+
+  // For apt/house: 0=Details, 1=Conservação&Fotos, 2=Amenities, 3=Review
+  // For commercial/land: 0=Details, 1=Conservação&Fotos, 2=Review
+  const isAmenitiesStep = (form.propertyType === 'apartment' || form.propertyType === 'house') && step === 2
+  const isReviewStep = step === maxStep
 
   const canAdvance = step === 0
     ? form.address.trim().length > 0 && form.area.trim().length > 0 && parseFloat(form.area) > 0
     : true
+
+  const handleContinue = () => {
+    if (step === 1) {
+      advanceFromPhotoStep()
+    } else if (step < maxStep) {
+      setStep(s => s + 1)
+    } else {
+      handleSubmit()
+    }
+  }
 
   return (
     <div className="max-w-[680px] mx-auto">
@@ -218,6 +282,7 @@ export default function ValuationFlow() {
             </div>
           </div>
         ) : step === 0 ? (
+          /* Step 0 — Details */
           <div className="flex flex-col gap-[18px]">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Endereço do Imóvel</label>
@@ -287,8 +352,174 @@ export default function ValuationFlow() {
                 />
               </div>
             </div>
+
+            {/* Construction age */}
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+                Idade da Construção (anos, opcional)
+              </label>
+              <input
+                type="number"
+                min={0}
+                max={200}
+                placeholder="ex. 15"
+                value={form.construction_age}
+                onChange={e => setForm(f => ({ ...f, construction_age: e.target.value }))}
+                style={{ width: '100%', border: '1.5px solid #CBD5E1', borderRadius: 10, padding: '10px 14px', fontSize: 14 }}
+              />
+            </div>
+
+            {/* Conservation state */}
+            <div>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+                Estado de Conservação (opcional)
+              </label>
+              <select
+                value={form.conservation_state}
+                onChange={e => setForm(f => ({ ...f, conservation_state: e.target.value as ConservationState | '' }))}
+                style={{ width: '100%', border: '1.5px solid #CBD5E1', borderRadius: 10, padding: '10px 14px', fontSize: 14 }}
+              >
+                <option value="">Não informado</option>
+                <option value="A">A — Novo</option>
+                <option value="AB">AB — Ótimo</option>
+                <option value="B">B — Muito Bom</option>
+                <option value="BC">BC — Bom</option>
+                <option value="C">C — Regular</option>
+                <option value="CD">CD — Razoável</option>
+                <option value="D">D — Deteriorado</option>
+                <option value="DE">DE — Muito Deteriorado</option>
+                <option value="E">E — Ruína</option>
+              </select>
+            </div>
+
+            {/* Terrain slope + street level in a 2-column grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 6 }}>
+                  Topografia
+                </label>
+                <select
+                  value={form.terrain_slope}
+                  onChange={e => setForm(f => ({ ...f, terrain_slope: e.target.value as TerrainSlope | '' }))}
+                  style={{ width: '100%', border: '1.5px solid #CBD5E1', borderRadius: 10, padding: '10px 14px', fontSize: 14 }}
+                >
+                  <option value="">Não informado</option>
+                  <option value="flat">Plano</option>
+                  <option value="gentle">Suave Declive</option>
+                  <option value="steep">Acentuado</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 13, fontWeight: 600, color: '#475569', display: 'block', marginBottom: 6 }}>
+                  Nível em Relação à Rua
+                </label>
+                <select
+                  value={form.street_level}
+                  onChange={e => setForm(f => ({ ...f, street_level: e.target.value as StreetLevel | '' }))}
+                  style={{ width: '100%', border: '1.5px solid #CBD5E1', borderRadius: 10, padding: '10px 14px', fontSize: 14 }}
+                >
+                  <option value="">Não informado</option>
+                  <option value="same">Mesmo nível da rua</option>
+                  <option value="above">Acima da rua</option>
+                  <option value="below">Abaixo da rua</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Corner lot */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4 }}>
+              <input
+                type="checkbox"
+                id="is_corner"
+                checked={form.is_corner}
+                onChange={e => setForm(f => ({ ...f, is_corner: e.target.checked }))}
+                style={{ width: 18, height: 18, cursor: 'pointer' }}
+              />
+              <label htmlFor="is_corner" style={{ fontSize: 14, color: '#334155', cursor: 'pointer' }}>
+                Imóvel de esquina (fator +5%)
+              </label>
+            </div>
+          </div>
+        ) : step === 1 ? (
+          /* Step 1 — Conservação & Fotos */
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1E293B', margin: 0 }}>
+              Fotos do Imóvel
+            </h3>
+            <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>
+              Opcional. Quando enviadas, a IA analisa o padrão construtivo e pode sugerir o estado de conservação.
+            </p>
+
+            {/* File input area */}
+            <label
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
+                justifyContent: 'center', border: '2px dashed #CBD5E1', borderRadius: 12,
+                padding: 32, cursor: 'pointer', background: '#F8FAFC', gap: 8,
+              }}
+            >
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={e => {
+                  const newFiles = Array.from(e.target.files ?? []);
+                  setForm(f => ({ ...f, photos: [...f.photos, ...newFiles].slice(0, 10) }));
+                }}
+              />
+              <span style={{ fontSize: 28 }}>📷</span>
+              <span style={{ fontSize: 14, color: '#64748B', textAlign: 'center' }}>
+                Clique para adicionar fotos (máx. 10)
+              </span>
+            </label>
+
+            {/* Thumbnails */}
+            {form.photos.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {form.photos.map((file, i) => (
+                  <div key={i} style={{ position: 'relative' }}>
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`foto ${i + 1}`}
+                      style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, photos: f.photos.filter((_, j) => j !== i) }))}
+                      style={{
+                        position: 'absolute', top: -6, right: -6,
+                        background: '#EF4444', color: '#fff', border: 'none',
+                        borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 12,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {photoUploading && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#64748B', fontSize: 13 }}>
+                <div
+                  style={{
+                    width: 16, height: 16, borderRadius: '50%',
+                    border: '2px solid #E2E8F0', borderTopColor: PRIMARY,
+                    animation: 'spin 0.8s linear infinite',
+                  }}
+                />
+                Enviando fotos e analisando com IA...
+              </div>
+            )}
+
+            {apiError && (
+              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
+                {apiError}
+              </div>
+            )}
           </div>
         ) : isAmenitiesStep ? (
+          /* Step 2 (apt/house) — Amenities */
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">Selecione as Comodidades</label>
             <p className="text-sm text-slate-400 mb-4">Selecione todas que se aplicam ao imóvel.</p>
@@ -300,7 +531,8 @@ export default function ValuationFlow() {
               ))}
             </div>
           </div>
-        ) : (
+        ) : isReviewStep ? (
+          /* Last step — Review */
           <div>
             <h3 className="text-base font-semibold mb-4 text-slate-900">Revisar Detalhes</h3>
             <div className="grid grid-cols-2 gap-3">
@@ -311,6 +543,12 @@ export default function ValuationFlow() {
                 ...(showBaths ? [{ label: 'Banheiros', value: form.baths }] : []),
                 ...(showParking ? [{ label: 'Vagas', value: form.parking }] : []),
                 { label: 'Área', value: form.area + 'm²' },
+                ...(form.construction_age ? [{ label: 'Idade (anos)', value: form.construction_age }] : []),
+                ...(form.conservation_state ? [{ label: 'Conservação', value: form.conservation_state }] : []),
+                ...(form.terrain_slope ? [{ label: 'Topografia', value: form.terrain_slope }] : []),
+                ...(form.street_level ? [{ label: 'Nível da Rua', value: form.street_level }] : []),
+                ...(form.is_corner ? [{ label: 'Esquina', value: 'Sim' }] : []),
+                ...(form.photos.length > 0 ? [{ label: 'Fotos', value: `${form.photos.length} foto(s)` }] : []),
               ].map((f, i) => (
                 <div key={i} className="p-3 bg-slate-50 rounded-lg">
                   <div className="text-[11px] text-slate-400 uppercase tracking-wide mb-1">{f.label}</div>
@@ -340,7 +578,7 @@ export default function ValuationFlow() {
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </div>
 
       {/* Navigation */}
@@ -354,12 +592,16 @@ export default function ValuationFlow() {
             {step === 0 ? 'Cancelar' : 'Voltar'}
           </button>
           <button
-            onClick={() => step < maxStep ? setStep(s => s + 1) : handleSubmit()}
-            disabled={!canAdvance}
+            onClick={handleContinue}
+            disabled={!canAdvance || photoUploading}
             className="px-6 py-2.5 rounded-lg border-none text-white text-sm font-semibold cursor-pointer transition-opacity hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: PRIMARY, fontFamily: 'inherit' }}
           >
-            {step < maxStep ? 'Continuar' : '✦ Gerar Avaliação IA'}
+            {photoUploading
+              ? 'Enviando...'
+              : step < maxStep
+                ? 'Continuar'
+                : '✦ Gerar Avaliação IA'}
           </button>
         </div>
       )}
