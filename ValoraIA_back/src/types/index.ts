@@ -121,6 +121,10 @@ export interface ListingRow {
 
 export type PropertyType = "apartment" | "house" | "commercial" | "land";
 export type MarketTemperature = "hot" | "warm" | "cold";
+export type ConservationState = "A" | "AB" | "B" | "BC" | "C" | "CD" | "D" | "DE" | "E";
+export type TerrainSlope = "flat" | "gentle" | "steep";
+export type StreetLevel = "same" | "above" | "below";
+export type ConstructionStandard = "high" | "medium" | "popular";
 
 export interface PriceFactor {
   label: string;
@@ -148,6 +152,40 @@ export interface FrontendComparable {
   amenities?: string[];
 }
 
+export interface ViabilityScenario {
+  label: string;
+  description: string;
+  VGV_total: number;
+  residual: number;
+  roi_pct: number;
+}
+
+export interface ZoningInfo {
+  zone_code?: string;
+  IA_max: number;
+  land_use?: string;
+  restrictions?: string;
+}
+
+export interface PhotoAnalysisResult {
+  padrao_construtivo: "Alto" | "Médio" | "Popular";
+  estado_conservacao_sugerido: ConservationState;
+  comodidades_detectadas: string[];
+}
+
+export interface HomogenizationFactors {
+  corner_factor: number;
+  slope_factor: number;
+  level_factor: number;
+  offer_factor: number;
+  combined_factor: number;
+}
+
+export interface RossHeideckeResult {
+  depreciation_coefficient: number;
+  remaining_value_pct: number;
+}
+
 export interface ValuationRecord {
   id: string;
   address: string;
@@ -168,6 +206,20 @@ export interface ValuationRecord {
   method_estimates?: MethodEstimate[];
   primary_method?: "mcd_idw" | "wls" | "gbdt" | "ensemble";
   neighborhood_pois?: NeighborhoodData | null;
+  // V2 PTAM fields — all optional so existing records stay valid
+  construction_age?: number;
+  conservation_state?: ConservationState;
+  is_corner?: boolean;
+  terrain_slope?: TerrainSlope;
+  street_level?: StreetLevel;
+  static_market_value?: number;
+  residual_land_value?: number;
+  max_buildable_area?: number;
+  viability_scenarios?: ViabilityScenario[];
+  zoning_info?: ZoningInfo | null;
+  property_photos?: string[];
+  ross_heidecke_result?: RossHeideckeResult;
+  homogenization_factors?: HomogenizationFactors;
   created_at: string;
 }
 
@@ -179,6 +231,13 @@ export interface ValuationCreateRequest {
   bathrooms?: number | null;
   parking_spots?: number | null;
   amenities?: string[];
+  construction_age?: number;
+  conservation_state?: ConservationState;
+  is_corner?: boolean;
+  terrain_slope?: TerrainSlope;
+  street_level?: StreetLevel;
+  property_photos?: string[];
+  construction_standard?: ConstructionStandard;
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
