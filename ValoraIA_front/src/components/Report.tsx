@@ -85,6 +85,7 @@ export default function Report() {
 
   const radarFactors = valuation.price_factors.map(f => ({ label: f.label, value: f.score }))
   const propertyLabel = PROPERTY_TYPE_LABELS[valuation.property_type] ?? valuation.property_type
+  const rhFactor = valuation.ross_heidecke_result?.remaining_value_pct ?? 1.0
 
   const subtitle = [
     valuation.neighborhood ?? valuation.city,
@@ -148,6 +149,107 @@ export default function Report() {
           </div>
         </div>
       </div>
+
+      {/* Análise de Valor — Abismo de Incorporação */}
+      {(valuation.static_market_value != null || valuation.residual_land_value != null) && (
+        <div style={{
+          background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0',
+          padding: '24px 28px', marginBottom: 20,
+        }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1E293B', marginBottom: 16 }}>
+            Análise de Valor — Abismo de Incorporação
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+            <div style={{ background: '#F8FAFC', borderRadius: 12, padding: 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 8 }}>
+                Venda Direta (Mercado)
+              </div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: '#1E3A8A' }}>
+                {fmt(valuation.static_market_value ?? 0)}
+              </div>
+              <p style={{ fontSize: 12, color: '#64748B', marginTop: 8, marginBottom: 0 }}>
+                Valor estimado pelo método comparativo direto (MCDDM).
+              </p>
+            </div>
+            <div style={{ background: '#F0FDF4', borderRadius: 12, padding: 20, border: '1px solid #BBF7D0' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: '#16A34A', textTransform: 'uppercase', marginBottom: 8 }}>
+                Valor de Incorporação (Terreno Residual)
+              </div>
+              <div style={{ fontSize: 26, fontWeight: 800, color: '#10B981' }}>
+                {fmt(valuation.residual_land_value ?? 0)}
+              </div>
+              <p style={{ fontSize: 12, color: '#64748B', marginTop: 8, marginBottom: 0 }}>
+                Método involutivo — valor máximo a pagar pelo terreno para viabilizar o desenvolvimento.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Potencial Construtivo */}
+      {valuation.max_buildable_area != null && (
+        <div style={{
+          background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0',
+          padding: '24px 28px', marginBottom: 20,
+        }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1E293B', marginBottom: 16 }}>
+            Potencial Construtivo
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
+            <div>
+              <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
+                Área Construível Máx.
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#1E293B' }}>
+                {valuation.max_buildable_area.toLocaleString('pt-BR')} m²
+              </div>
+            </div>
+            {valuation.zoning_info && (
+              <div>
+                <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
+                  Índice de Aproveitamento
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#1E293B' }}>
+                  {valuation.zoning_info.IA_max}×
+                </div>
+              </div>
+            )}
+            {valuation.viability_scenarios?.[1] && (
+              <div>
+                <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
+                  VGV Estimado (Base)
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#1E293B' }}>
+                  {fmt(valuation.viability_scenarios[1].VGV_total)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {valuation.viability_scenarios && valuation.viability_scenarios.length > 0 && (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #E2E8F0', color: '#64748B' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 0', fontWeight: 600 }}>Cenário</th>
+                  <th style={{ textAlign: 'right', padding: '8px 0', fontWeight: 600 }}>VGV Total</th>
+                  <th style={{ textAlign: 'right', padding: '8px 0', fontWeight: 600 }}>Valor Residual</th>
+                  <th style={{ textAlign: 'right', padding: '8px 0', fontWeight: 600 }}>ROI</th>
+                </tr>
+              </thead>
+              <tbody>
+                {valuation.viability_scenarios.map((s, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                    <td style={{ padding: '10px 0', fontWeight: 600, color: '#334155' }}>{s.label}</td>
+                    <td style={{ padding: '10px 0', textAlign: 'right', color: '#475569' }}>{fmt(s.VGV_total)}</td>
+                    <td style={{ padding: '10px 0', textAlign: 'right', color: s.residual > 0 ? '#10B981' : '#EF4444', fontWeight: 700 }}>{fmt(s.residual)}</td>
+                    <td style={{ padding: '10px 0', textAlign: 'right', color: '#475569' }}>{s.roi_pct}%</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
 
       {/* Radar + Breakdown */}
       <div className="grid grid-cols-2 gap-5 mb-5">
@@ -235,6 +337,15 @@ export default function Report() {
             <p className="text-sm text-slate-400 mt-1">Vendidos ou anunciados recentemente na mesma região.</p>
           </div>
           <div className="grid grid-cols-5 divide-x divide-slate-100">
+            <div style={{ fontSize: 12, color: '#64748B', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', gridColumn: '1 / -1', padding: '0 16px' }}>
+              <span style={{ background: '#F1F5F9', borderRadius: 6, padding: '2px 8px', fontWeight: 600, fontSize: 11 }}>
+                Valores homogeneizados
+              </span>
+              <span>Fator de oferta 10% já aplicado</span>
+              {valuation.ross_heidecke_result && (
+                <span> · Depreciação Ross-Heidecke ({(valuation.ross_heidecke_result.depreciation_coefficient * 100).toFixed(1)}%) aplicada</span>
+              )}
+            </div>
             {valuation.comparables.map((c, i) => {
               const visibleAmenities = c.amenities?.slice(0, 3) ?? []
               const overflowCount = (c.amenities?.length ?? 0) - visibleAmenities.length
@@ -276,9 +387,13 @@ export default function Report() {
                   <div className="text-sm font-semibold text-slate-900 mb-0.5 leading-snug">{c.neighborhood}</div>
                   <div className="text-xs text-slate-400 mb-2 truncate">{c.address}</div>
 
-                  <div className="text-base font-bold mb-0.5" style={{ color: PRIMARY }}>{fmt(c.price_brl)}</div>
+                  <div className="text-base font-bold mb-0.5" style={{ color: PRIMARY }}>
+                    {fmt(c.price_brl * rhFactor)}
+                    {rhFactor !== 1.0 && <span title="Ajustado por Ross-Heidecke" style={{ color: '#94A3B8', fontSize: 10 }}>★</span>}
+                  </div>
                   <div className="text-xs text-slate-500 mb-2">
-                    {fmtM2(c.price_m2_brl)}
+                    {fmtM2(c.price_m2_brl * rhFactor)}
+                    {rhFactor !== 1.0 && <span title="Ajustado por Ross-Heidecke" style={{ color: '#94A3B8', fontSize: 10 }}>★</span>}
                     {c.area_m2 && ` · ${c.area_m2}m²`}
                     {c.bedrooms != null && ` · ${c.bedrooms} qto${c.bedrooms !== 1 ? 's' : ''}`}
                   </div>
@@ -343,6 +458,66 @@ export default function Report() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Fatores de Homogeneização */}
+      {valuation.homogenization_factors && (
+        <div style={{
+          background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0',
+          padding: '24px 28px', marginBottom: 20,
+        }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1E293B', marginBottom: 16 }}>
+            Fatores de Homogeneização Aplicados
+          </h3>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '2px solid #E2E8F0', color: '#64748B' }}>
+                <th style={{ textAlign: 'left', padding: '8px 0', fontWeight: 600 }}>Fator</th>
+                <th style={{ textAlign: 'center', padding: '8px 0', fontWeight: 600 }}>Valor</th>
+                <th style={{ textAlign: 'left', padding: '8px 0', fontWeight: 600 }}>Descrição</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                {
+                  label: 'Desconto de Oferta',
+                  value: `-${((1 - valuation.homogenization_factors.offer_factor) * 100).toFixed(0)}%`,
+                  desc: 'Ajuste padrão NBR 14.653 — preço de oferta vs. transação efetiva',
+                },
+                {
+                  label: 'Esquina',
+                  value: valuation.homogenization_factors.corner_factor > 1 ? '+5%' : '—',
+                  desc: 'Imóvel de esquina tem maior frente e melhor visibilidade comercial',
+                },
+                {
+                  label: 'Topografia',
+                  value: `${((valuation.homogenization_factors.slope_factor - 1) * 100).toFixed(0)}%`,
+                  desc: 'Plano = 0%, Suave Declive = −5%, Acentuado = −20%',
+                },
+                {
+                  label: 'Nível de Rua',
+                  value: `${((valuation.homogenization_factors.level_factor - 1) * 100).toFixed(0)}%`,
+                  desc: 'Mesmo nível = 0%, Acima = −5%, Abaixo = −20%',
+                },
+              ].map((row, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                  <td style={{ padding: '10px 0', fontWeight: 600, color: '#334155' }}>{row.label}</td>
+                  <td style={{ padding: '10px 0', textAlign: 'center', color: '#1E3A8A', fontWeight: 700 }}>{row.value}</td>
+                  <td style={{ padding: '10px 0', color: '#64748B' }}>{row.desc}</td>
+                </tr>
+              ))}
+              <tr style={{ borderTop: '2px solid #E2E8F0', fontWeight: 700 }}>
+                <td style={{ padding: '12px 0', color: '#1E293B' }}>Multiplicador Combinado</td>
+                <td style={{ padding: '12px 0', textAlign: 'center', color: '#10B981', fontSize: 15 }}>
+                  ×{valuation.homogenization_factors.combined_factor.toFixed(3)}
+                </td>
+                <td style={{ padding: '12px 0', color: '#64748B' }}>
+                  Aplicado ao valor estimado pelo método comparativo
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       )}
 
