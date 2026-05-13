@@ -52,6 +52,11 @@ interface ZapItem {
     amenities?: string[];
     unit_types?: string[];
     usage_types?: string[];
+    // Year-built fields — present in some Zap listings
+    construction_year?: number;
+    year_built?: number;
+    characteristics?: { year_built?: number; construction_year?: number };
+    features?: { year_built?: number };
   };
   media?: {
     images?: Array<{ id?: string; url?: string }>;
@@ -93,77 +98,24 @@ function mapZapPropertyType(unitTypes: string[]): string | null {
   return null;
 }
 
-// ─── ZAP amenity slug → engine amenity label ──────────────────────────────────
+// ─── construction_age inference ───────────────────────────────────────────────
+// ZAP does not expose year_built in a stable field. We probe several known
+// attribute paths; if none yields a plausible year we return null.
 
-const ZAP_AMENITY_MAP: Record<string, string> = {
-  // Premium
-  "swimming_pool":            "Piscina",
-  "rooftop":                  "Rooftop",
-  "sea_view":                 "Vista Mar",
-  "penthouse":                "Cobertura",
-  // Alto
-  "gym":                      "Academia",
-  "fitness_center":           "Academia",
-  "doorman":                  "Portaria",
-  "24h_doorman":              "Portaria 24h",
-  "security_24h":             "Segurança 24h",
-  "24h_security":             "Segurança 24h",
-  "elevator":                 "Elevador",
-  "party_room":               "Salão de Festas",
-  "gourmet_area":             "Área Gourmet",
-  "gourmet_balcony":          "Área Gourmet",
-  // Médio
-  "balcony":                  "Varanda",
-  "barbecue_grill":           "Churrasqueira",
-  "playground":               "Playground",
-  "game_room":                "Salão de Jogos",
-  "kids_space":               "Espaço Kids",
-  "coworking":                "Coworking",
-  "sports_court":             "Quadra Esportiva",
-  "tennis_court":             "Quadra Esportiva",
-  "sport_court":              "Quadra Esportiva",
-  // Básico
-  "intercom":                 "Interfone",
-  "security_cameras":         "Câmeras de segurança",
-  "cctv":                     "Câmeras de segurança",
-  "laundry_room":             "Área de serviço",
-  "built_in_wardrobes":       "Armários planejados",
-  "built_in_closets":         "Armários planejados",
-  "air_conditioning":         "Ar condicionado",
-  "pet_friendly":             "Pet friendly",
-  "electric_gate":            "Portão eletrônico",
-  "guest_parking":            "Portão eletrônico",
-};
+const CURRENT_YEAR = new Date().getFullYear();
 
-function mapZapAmenities(zapAmenities: string[]): string[] {
-  const mapped = zapAmenities
-    .map((slug) => ZAP_AMENITY_MAP[slug.toLowerCase()])
-    .filter((v): v is string => v !== undefined);
-  return [...new Set(mapped)]; // deduplicate
-}
+function inferConstructionAge(item: ZapItem): number | null {
+  const yearRaw =
+    item.attributes?.year_built ??
+    item.attributes?.construction_year ??
+    item.attributes?.characteristics?.year_built ??
+    item.attributes?.characteristics?.construction_year ??
+    item.attributes?.features?.year_built;
 
-// ─── Image URL resolver ───────────────────────────────────────────────────────
-// ZAP returns template URLs with {description}/{width}/{height} placeholders.
-// Replace with a standard 760×570 resolution.
-
-function resolveImageUrl(raw: string): string {
-  return raw
-    .replace("{description}", "fit-in")
-    .replace("{action}", "fit-in")
-    .replace("{width}", "760")
-    .replace("{height}", "570")
-    .replace("%7Baction%7D", "fit-in")
-    .replace("%7Bwidth%7D", "760")
-    .replace("%7Bheight%7D", "570");
-}
-
-function extractImages(item: ZapItem, maxImages = 6): string[] {
-  const raw = item.media?.images ?? [];
-  return raw
-    .slice(0, maxImages)
-    .map((img) => img.url)
-    .filter((url): url is string => typeof url === "string" && url.length > 0)
-    .map(resolveImageUrl);
+  if (!yearRaw) return null;
+  const year = Number(yearRaw);
+  if (!Number.isInteger(year) || year < 1900 || year > CURRENT_YEAR) return null;
+  return CURRENT_YEAR - year;
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────
@@ -270,25 +222,29 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<S
       continue;
     }
 
-    const images = extractImages(item);
-    const amenities = mapZapAmenities(item.attributes?.amenities ?? []);
     const property_type = mapZapPropertyType(item.attributes?.unit_types ?? []);
+
+    if (!property_type) {
+      result.skipped_missing_fields++;
+      continue;
+    }
+
+    const construction_age = inferConstructionAge(item);
 
     const { error } = await db.from("listings").upsert(
       {
         source_url: url,
-        platform: "zapimoveis",
         price,
         usable_area,
         bedrooms: item.attributes?.rooms?.bedrooms ?? null,
         bathrooms: item.attributes?.rooms?.bathrooms ?? null,
         parking_spaces: item.attributes?.rooms?.parking_spaces ?? null,
+        property_type,
         coordinates: `SRID=4326;POINT(${lng} ${lat})`,
         neighborhood: item.location?.neighborhood ?? null,
         city,
-        images,
-        amenities,
-        property_type,
+        construction_age,
+        conservation_state: "regular",
         last_seen: new Date().toISOString(),
       },
       { onConflict: "source_url", ignoreDuplicates: false }
