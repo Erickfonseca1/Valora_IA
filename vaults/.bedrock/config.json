@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "language": "pt-BR",
+  "preset": "custom",
+  "domains": ["produto", "backend", "frontend", "dados", "imobiliario", "crescimento"],
+  "git": {
+    "strategy": "commit-only"
+  },
+  "initialized_at": "2026-05-03",
+  "initialized_by": "init@agent"
+}
