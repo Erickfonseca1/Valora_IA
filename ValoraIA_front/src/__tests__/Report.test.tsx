@@ -105,14 +105,15 @@ describe('Report', () => {
   it('exibe o título do relatório', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText('Relatório de Avaliação IA')).toBeInTheDocument()
+      expect(screen.getByText(/Parecer Técnico de Avaliação Mercadológica/i)).toBeInTheDocument()
     })
   })
 
   it('exibe a faixa de preço recomendada', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText('Faixa de Preço Recomendada')).toBeInTheDocument()
+      expect(screen.getByText(/Limite Inferior/i)).toBeInTheDocument()
+      expect(screen.getByText(/Limite Superior/i)).toBeInTheDocument()
     })
   })
 
@@ -126,15 +127,15 @@ describe('Report', () => {
   it('exibe a confiança formatada', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/88%/)).toBeInTheDocument()
-      expect(screen.getByText(/Alta/)).toBeInTheDocument()
+      expect(screen.getByText(/Grau de Confiança/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/88%/).length).toBeGreaterThanOrEqual(1)
     })
   })
 
   it('exibe a seção de fatores de preço', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText('Análise de Fatores de Preço')).toBeInTheDocument()
+      expect(screen.getByText(/Gráfico de Qualidade Multivariada/i)).toBeInTheDocument()
     })
   })
 
@@ -148,32 +149,31 @@ describe('Report', () => {
   it('exibe os detalhamentos de pontuação', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText('Detalhamento da Pontuação')).toBeInTheDocument()
-      expect(screen.getAllByText('Localização').length).toBeGreaterThanOrEqual(2)
-      expect(screen.getAllByText('Condição').length).toBeGreaterThanOrEqual(2)
-      expect(screen.getAllByText('Demanda').length).toBeGreaterThanOrEqual(2)
+      expect(screen.getByText(/Detalhamento por Indicador/i)).toBeInTheDocument()
+      expect(screen.getAllByText('Localização').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText('Condição').length).toBeGreaterThanOrEqual(1)
     })
   })
 
   it('exibe a seção de comparáveis', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText('Imóveis Comparáveis')).toBeInTheDocument()
+      expect(screen.getByText(/Tabela de Imóveis Referenciais/i)).toBeInTheDocument()
     })
   })
 
   it('exibe cards de comparáveis com status', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText('Anunciado')).toBeInTheDocument()
-      expect(screen.getByText('Vendido')).toBeInTheDocument()
+      expect(screen.getByText('Oferta')).toBeInTheDocument()
+      expect(screen.getByText('Venda')).toBeInTheDocument()
     })
   })
 
   it('exibe os métodos de estimativa', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText('Como foi calculado')).toBeInTheDocument()
+      expect(screen.getByText(/Modelos Estatísticos Utilizados/i)).toBeInTheDocument()
       expect(screen.getByText('MCD_IDW')).toBeInTheDocument()
       expect(screen.getByText('WLS')).toBeInTheDocument()
       expect(screen.getByText('GBDT')).toBeInTheDocument()
@@ -191,7 +191,7 @@ describe('Report', () => {
   it('exibe seção Análise de Valor quando static_market_value disponível', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Abismo de Incorporação/i)).toBeInTheDocument()
+      expect(screen.getByText(/Abismo de Valor/i)).toBeInTheDocument()
       expect(screen.getByText(/Venda Direta/i)).toBeInTheDocument()
       expect(screen.getByText(/Valor de Incorporação/i)).toBeInTheDocument()
     })
@@ -210,7 +210,7 @@ describe('Report', () => {
     await waitFor(() => {
       expect(screen.getByText(/Fatores de Homogeneização/i)).toBeInTheDocument()
       expect(screen.getByText(/Multiplicador Combinado/i)).toBeInTheDocument()
-      expect(screen.getByText(/Desconto de Oferta/i)).toBeInTheDocument()
+      expect(screen.getByText(/Fator de Oferta/i)).toBeInTheDocument()
     })
   })
 })

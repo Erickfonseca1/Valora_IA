@@ -21,17 +21,13 @@ beforeEach(() => {
 
 describe('api', () => {
   it('createValuation envia POST com body correto', async () => {
-    const mockVal = { id: 'val_abc', address: 'Rua Teste, 123', neighborhood: 'Centro', city: 'São Paulo', property_type: 'apartment', area_m2: 80, bedrooms: 2, bathrooms: 1, parking_spots: 1, amenities: ['Piscina'], price_range_min_brl: 400000, price_range_max_brl: 500000, recommended_listing_price_brl: 450000, confidence_score: 85, price_factors: [], comparables: [], created_at: '2025-01-01' }
+    const mockVal = { id: 'val_abc', address: 'Rua Teste, 123', property_type: 'apartment', area_m2: 80, static_market_value_brl: 450000, price_per_m2_homogenized: 5625, confidence_score: 85, comparables: [], created_at: '2025-01-01' }
     globalThis.fetch = mockFetch(mockVal)
 
     const result = await createValuation({
       address: 'Rua Teste, 123',
       property_type: 'apartment',
       area_m2: 80,
-      bedrooms: 2,
-      bathrooms: 1,
-      parking_spots: 1,
-      amenities: ['Piscina'],
     })
 
     expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/valuations`, {
@@ -41,17 +37,13 @@ describe('api', () => {
         address: 'Rua Teste, 123',
         property_type: 'apartment',
         area_m2: 80,
-        bedrooms: 2,
-        bathrooms: 1,
-        parking_spots: 1,
-        amenities: ['Piscina'],
       }),
     })
     expect(result).toEqual(mockVal)
   })
 
   it('getValuation faz GET com o id correto', async () => {
-    const mockVal = { id: 'val_xyz', address: 'Av. Paulista, 1000', neighborhood: 'Bela Vista', city: 'São Paulo', property_type: 'apartment', area_m2: 120, bedrooms: 3, bathrooms: 2, parking_spots: 2, amenities: [], price_range_min_brl: 800000, price_range_max_brl: 1000000, recommended_listing_price_brl: 900000, confidence_score: 92, price_factors: [], comparables: [], created_at: '2025-01-02' }
+    const mockVal = { id: 'val_xyz', address: 'Av. Paulista, 1000', property_type: 'apartment', area_m2: 120, static_market_value_brl: 900000, price_per_m2_homogenized: 7500, confidence_score: 92, comparables: [], created_at: '2025-01-02' }
     globalThis.fetch = mockFetch(mockVal)
 
     const result = await getValuation('val_xyz')
