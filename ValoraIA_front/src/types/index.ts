@@ -2,10 +2,24 @@ export type Screen = 'dashboard' | 'valuation-flow' | 'report'
 
 export type PropertyType = 'apartment' | 'house' | 'commercial' | 'land'
 export type MarketTemperature = 'hot' | 'warm' | 'cold'
-export type ConservationState = "A" | "AB" | "B" | "BC" | "C" | "CD" | "D" | "DE" | "E";
-export type TerrainSlope = "flat" | "gentle" | "steep";
-export type StreetLevel = "same" | "above" | "below";
-export type ConstructionStandard = "high" | "medium" | "popular";
+
+// DB enum types — must match newschema.sql exactly
+export type ConservationState =
+  | 'novo'
+  | 'entre_novo_e_regular'
+  | 'regular'
+  | 'reparos_simples'
+  | 'reparos_importantes'
+  | 'critico'
+
+export type TerrainSlope =
+  | 'plano'
+  | 'aclive_leve'
+  | 'declive_leve'
+  | 'aclive_acentuado'
+  | 'declive_acentuado'
+
+export type StreetLevel = 'no_nivel' | 'abaixo_nivel' | 'acima_nivel'
 
 export interface RadarFactor {
   label: string
@@ -48,7 +62,6 @@ export interface FrontendComparable {
   transaction_date: string
   source_url?: string
   images?: string[]
-  amenities?: string[]
 }
 
 export interface MethodEstimate {
@@ -66,67 +79,47 @@ export interface ViabilityScenario {
   roi_pct: number
 }
 
-export interface ZoningInfo {
-  zone_code?: string
-  IA_max: number
-  land_use?: string
-  restrictions?: string
+export interface ZoningParams {
+  IAb?: number
+  IAmax: number
+  TO?: number
 }
 
 export interface PhotoAnalysisResult {
-  padrao_construtivo: "Alto" | "Médio" | "Popular"
+  padrao_construtivo: 'Alto' | 'Médio' | 'Popular'
   estado_conservacao_sugerido: ConservationState
   comodidades_detectadas: string[]
 }
 
-export interface HomogenizationFactors {
-  corner_factor: number
-  slope_factor: number
-  level_factor: number
-  offer_factor: number
-  combined_factor: number
-}
-
-export interface RossHeideckeResult {
-  depreciation_coefficient: number
-  remaining_value_pct: number
-  construction_standard?: string
-}
-
+// Maps 1:1 to valuations table columns
 export interface ValuationRecord {
   id: string
   address: string
-  neighborhood: string | null
-  city: string | null
+  lat: number | null
+  lng: number | null
   property_type: PropertyType
   area_m2: number
   bedrooms: number | null
   bathrooms: number | null
-  parking_spots: number | null
-  amenities: string[]
-  price_range_min_brl: number
-  price_range_max_brl: number
-  recommended_listing_price_brl: number
-  confidence_score: number
-  price_factors: PriceFactor[]
-  comparables: FrontendComparable[]
-  method_estimates?: MethodEstimate[]
-  primary_method?: 'mcd_idw' | 'wls' | 'gbdt' | 'ensemble'
-  neighborhood_pois?: NeighborhoodData | null
-  // V2 PTAM fields — all optional so existing records stay valid
-  construction_age?: number
-  conservation_state?: ConservationState
-  is_corner?: boolean
-  terrain_slope?: TerrainSlope
-  street_level?: StreetLevel
-  static_market_value?: number
-  residual_land_value?: number
-  max_buildable_area?: number
-  viability_scenarios?: ViabilityScenario[]
-  zoning_info?: ZoningInfo | null
-  property_photos?: string[]
-  ross_heidecke_result?: RossHeideckeResult
-  homogenization_factors?: HomogenizationFactors
+  parking_spaces: number | null
+  // PTAM inputs
+  construction_age: number | null
+  conservation_state: ConservationState
+  terrain_slope: TerrainSlope
+  street_level: StreetLevel
+  is_corner: boolean
+  // Results — comparative method
+  static_market_value_brl: number | null
+  price_per_m2_homogenized: number | null
+  confidence_score: number | null
+  // Results — involutive method
+  residual_land_value_brl: number | null
+  max_buildable_area_m2: number | null
+  zoning_params: ZoningParams | null
+  viability_scenarios: ViabilityScenario[] | null
+  // Report metadata
+  comparables: FrontendComparable[] | null
+  neighborhood_pois: NeighborhoodData | null
   created_at: string
 }
 
@@ -141,12 +134,10 @@ export interface DashboardMetrics {
 export interface DashboardValuationItem {
   id: string
   address: string
-  neighborhood: string
   property_type: PropertyType
-  price_brl: number
-  confidence_score: number
+  static_market_value_brl: number | null
+  confidence_score: number | null
   created_at: string
-  bedrooms: number | null
   area_m2: number
 }
 
@@ -167,29 +158,25 @@ export interface CreateValuationBody {
   address: string
   property_type: PropertyType
   area_m2: number
-  bedrooms?: number | null
-  bathrooms?: number | null
-  parking_spots?: number | null
-  amenities?: string[]
-  lat?: number
-  lng?: number
+  bedrooms?: number
+  bathrooms?: number
+  parking_spaces?: number
   construction_age?: number
   conservation_state?: ConservationState
-  is_corner?: boolean
   terrain_slope?: TerrainSlope
   street_level?: StreetLevel
-  property_photos?: string[]
-  construction_standard?: ConstructionStandard
+  is_corner?: boolean
+  lat?: number
+  lng?: number
 }
 
 export interface ValuationForm {
   address: string
   propertyType: PropertyType
-  beds: string
-  baths: string
-  parking: string
   area: string
-  amenities: string[]
+  bedrooms: string
+  bathrooms: string
+  parking_spaces: string
   construction_age: string
   conservation_state: ConservationState | ''
   is_corner: boolean

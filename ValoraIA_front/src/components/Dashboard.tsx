@@ -166,12 +166,12 @@ export default function Dashboard() {
                     <td className="px-4 py-3">
                       <div className="font-medium text-slate-900">{v.address}</div>
                       <div className="text-xs text-slate-400 mt-0.5">
-                        {v.neighborhood} · {v.bedrooms != null ? `${v.bedrooms} quarto${v.bedrooms !== 1 ? 's' : ''}` : 'N/A'} · {v.area_m2}m²
+                        {v.area_m2}m²
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-500">{PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-900">{fmt(v.price_brl)}</td>
-                    <td className="px-4 py-3"><ConfidenceBadge score={v.confidence_score} /></td>
+                    <td className="px-4 py-3 font-semibold text-slate-900">{v.static_market_value_brl != null ? fmt(v.static_market_value_brl) : '—'}</td>
+                    <td className="px-4 py-3"><ConfidenceBadge score={v.confidence_score ?? 0} /></td>
                     <td className="px-4 py-3 text-slate-400">{fmtDate(v.created_at)}</td>
                   </tr>
                 ))}

@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import type { ValuationRecord } from '../types'
 import { getValuation } from '../api'
-import { RadarChart, BarIndicator } from './Charts'
 
 const PRIMARY = '#1E3A8A'
 const ACCENT = '#10B981'
@@ -14,14 +13,27 @@ const PROPERTY_TYPE_LABELS: Record<string, string> = {
   land: 'Terreno',
 }
 
-const TOOLTIPS: Record<string, string> = {
-  'Mercado Local': 'Proximidade dos imóveis comparáveis — quanto mais perto estão do imóvel avaliado, mais precisa é a estimativa.',
-  'Consistência': 'Estabilidade dos preços na região — quanto menos os preços variam entre os imóveis, mais confiável é a referência.',
-  'Volume de Dados': 'Quantidade de imóveis usados na análise — quanto maior a amostra, mais robusto é o resultado.',
-  'Perfil da Região': 'O quanto o imóvel se encaixa no padrão da vizinhança — área próxima à média dos imóveis comparáveis da região.',
-  'Comodidades': 'Itens de valorização do imóvel — piscina, academia, varanda, churrasqueira, portaria 24h, entre outros.',
-  'Cobertura': 'Distribuição dos imóveis comparáveis pela região — quanto mais uniforme, melhor a representatividade da amostra.',
-  'Vizinhança': 'Serviços e comércios próximos ao imóvel — supermercados, farmácias, escolas, transporte público, hospitais e lazer.',
+const CONSERVATION_LABELS: Record<string, string> = {
+  novo: 'Novo',
+  entre_novo_e_regular: 'Entre Novo e Regular',
+  regular: 'Regular',
+  reparos_simples: 'Reparos Simples',
+  reparos_importantes: 'Reparos Importantes',
+  critico: 'Crítico',
+}
+
+const SLOPE_LABELS: Record<string, string> = {
+  plano: 'Plano',
+  aclive_leve: 'Aclive Leve',
+  declive_leve: 'Declive Leve',
+  aclive_acentuado: 'Aclive Acentuado',
+  declive_acentuado: 'Declive Acentuado',
+}
+
+const LEVEL_LABELS: Record<string, string> = {
+  no_nivel: 'No nível da rua',
+  acima_nivel: 'Acima do nível da rua',
+  abaixo_nivel: 'Abaixo do nível da rua',
 }
 
 const CONFIDENCE_LABEL = (score: number) => {
@@ -37,21 +49,61 @@ const fmt = (v: number) =>
 const fmtM2 = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }) + '/m²'
 
+function SectionHeader({ number, title }: { number: string; title: string }) {
+  return (
+    <div style={{
+      background: PRIMARY,
+      color: '#fff',
+      padding: '10px 20px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 14,
+    }}>
+      <span style={{
+        fontSize: 10,
+        fontWeight: 700,
+        letterSpacing: 2,
+        opacity: 0.55,
+        fontFamily: 'monospace',
+        minWidth: 20,
+      }}>{number}</span>
+      <span style={{
+        fontSize: 12,
+        fontWeight: 700,
+        letterSpacing: 1,
+        textTransform: 'uppercase',
+        fontFamily: 'Georgia, "Times New Roman", serif',
+      }}>{title}</span>
+    </div>
+  )
+}
+
+function SectionCard({ children, style }: { children: ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div style={{
+      background: '#fff',
+      border: '1px solid #E2E8F0',
+      borderRadius: 8,
+      marginBottom: 14,
+      overflow: 'hidden',
+      ...style,
+    }}>
+      {children}
+    </div>
+  )
+}
+
 export default function Report() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [valuation, setValuation] = useState<ValuationRecord | null>(null)
-  const [animate, setAnimate] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!id) { navigate('/'); return }
     getValuation(id)
-      .then(v => {
-        setValuation(v)
-        setTimeout(() => setAnimate(true), 100)
-      })
+      .then(v => setValuation(v))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
   }, [id, navigate])
@@ -83,456 +135,389 @@ export default function Report() {
     )
   }
 
-  const radarFactors = valuation.price_factors.map(f => ({ label: f.label, value: f.score }))
   const propertyLabel = PROPERTY_TYPE_LABELS[valuation.property_type] ?? valuation.property_type
+  const laudoDate = new Date(valuation.created_at).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: 'long', year: 'numeric',
+  })
+  const laudoId = `PTAM-${valuation.id.slice(-6).toUpperCase()}`
+  const confidenceScore = valuation.confidence_score ?? 0
+  const comparables = valuation.comparables ?? []
 
-  const subtitle = [
-    valuation.neighborhood ?? valuation.city,
-    propertyLabel,
-    `${valuation.area_m2}m²`,
-    valuation.bedrooms != null ? `${valuation.bedrooms} quarto${valuation.bedrooms !== 1 ? 's' : ''}` : null,
-    valuation.bathrooms != null ? `${valuation.bathrooms} banheiro${valuation.bathrooms !== 1 ? 's' : ''}` : null,
-  ].filter(Boolean).join(' · ')
+  const fichaRows: { label: string; value: string }[] = [
+    { label: 'Nº do Laudo', value: laudoId },
+    { label: 'Data de Emissão', value: laudoDate },
+    { label: 'Tipo de Imóvel', value: propertyLabel },
+    { label: 'Área', value: `${valuation.area_m2.toLocaleString('pt-BR')} m²` },
+    ...(valuation.bedrooms != null ? [{ label: 'Quartos', value: String(valuation.bedrooms) }] : []),
+    ...(valuation.bathrooms != null ? [{ label: 'Banheiros', value: String(valuation.bathrooms) }] : []),
+    ...(valuation.parking_spaces != null ? [{ label: 'Vagas de Garagem', value: String(valuation.parking_spaces) }] : []),
+    { label: 'Estado de Conservação', value: CONSERVATION_LABELS[valuation.conservation_state] ?? valuation.conservation_state },
+    ...(valuation.construction_age != null ? [{ label: 'Idade da Construção', value: `${valuation.construction_age} anos` }] : []),
+    { label: 'Topografia', value: SLOPE_LABELS[valuation.terrain_slope] ?? valuation.terrain_slope },
+    { label: 'Nível em Relação à Rua', value: LEVEL_LABELS[valuation.street_level] ?? valuation.street_level },
+    ...(valuation.is_corner ? [{ label: 'Situação', value: 'Imóvel de Esquina' }] : []),
+    { label: 'Finalidade', value: 'Determinação do Valor de Mercado' },
+    { label: 'Metodologia', value: 'Método Comparativo Direto de Dados de Mercado — NBR 14.653-1' },
+  ]
 
   return (
-    <div className="max-w-[900px] mx-auto">
-      {/* Hero */}
-      <div
-        className="rounded-xl p-8 mb-5 relative overflow-hidden text-white"
-        style={{ background: `linear-gradient(135deg, ${PRIMARY} 0%, ${PRIMARY}DD 100%)` }}
-      >
-        <div className="absolute top-[-40px] right-[-40px] w-[180px] h-[180px] rounded-full" style={{ background: 'rgba(255,255,255,0.05)' }} />
-        <div className="absolute bottom-[-60px] right-[80px] w-[120px] h-[120px] rounded-full" style={{ background: 'rgba(255,255,255,0.03)' }} />
+    <div style={{ maxWidth: 940, margin: '0 auto', fontFamily: 'inherit' }}>
 
-        <div className="relative">
-          <div className="text-xs uppercase tracking-widest opacity-70 mb-2">Relatório de Avaliação IA</div>
-          <h1 className="text-xl font-semibold m-0 mb-1">{valuation.address}</h1>
-          <p className="text-sm opacity-70 mb-6">{subtitle}</p>
-
-          <div className="flex gap-8 items-end">
-            <div>
-              <div className="text-xs uppercase tracking-wide opacity-60 mb-1.5">Faixa de Preço Recomendada</div>
-              <div
-                className="text-[28px] font-bold transition-all duration-500"
-                style={{ opacity: animate ? 1 : 0, transform: animate ? 'translateY(0)' : 'translateY(10px)' }}
-              >
-                {fmt(valuation.price_range_min_brl)} — {fmt(valuation.price_range_max_brl)}
-              </div>
+      {/* ── DOCUMENT LETTERHEAD ─────────────────────────────────── */}
+      <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, marginBottom: 14, overflow: 'hidden' }}>
+        <div style={{
+          background: PRIMARY,
+          padding: '18px 24px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+        }}>
+          <div>
+            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700, marginBottom: 6 }}>
+              Parecer Técnico de Avaliação Mercadológica
             </div>
-            <div className="border-l pl-8" style={{ borderColor: 'rgba(255,255,255,0.2)' }}>
-              <div className="text-xs uppercase tracking-wide opacity-60 mb-1.5">Preço Ideal de Anúncio</div>
-              <div
-                className="text-[34px] font-extrabold transition-all duration-500"
-                style={{
-                  color: '#6EE7B7',
-                  opacity: animate ? 1 : 0,
-                  transform: animate ? 'translateY(0)' : 'translateY(10px)',
-                  transitionDelay: '0.15s',
-                }}
-              >
-                {fmt(valuation.recommended_listing_price_brl)}
-              </div>
+            <div style={{ color: '#fff', fontSize: 24, fontWeight: 800, fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: 0.5 }}>
+              ValoraIA
             </div>
-            <div className="ml-auto">
-              <div
-                className="px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-1.5"
-                style={{ background: 'rgba(255,255,255,0.15)' }}
-              >
-                <span className="w-2 h-2 rounded-full" style={{ background: '#6EE7B7' }} />
-                {valuation.confidence_score}% · {CONFIDENCE_LABEL(valuation.confidence_score)}
-              </div>
-              {valuation.confidence_score <= 59 && (
-                <div className="text-[11px] opacity-60 mt-1 text-center">Amostra reduzida na região</div>
-              )}
+            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 3 }}>
+              Avaliação por Inteligência Artificial · Conforme ABNT NBR 14.653
             </div>
           </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Nº do Laudo</div>
+            <div style={{ color: '#fff', fontSize: 18, fontWeight: 800, fontFamily: 'monospace', letterSpacing: 1.5 }}>{laudoId}</div>
+            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 6 }}>{laudoDate}</div>
+          </div>
+        </div>
+        <div style={{ padding: '10px 24px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>Imóvel:</span>
+          <span style={{ fontSize: 13, color: '#1E293B', fontWeight: 600 }}>{valuation.address}</span>
         </div>
       </div>
 
-      {/* Análise de Valor — Abismo de Incorporação */}
-      {(valuation.static_market_value != null || valuation.residual_land_value != null) && (
-        <div style={{
-          background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0',
-          padding: '24px 28px', marginBottom: 20,
-        }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1E293B', marginBottom: 16 }}>
-            Análise de Valor — Abismo de Incorporação
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-            <div style={{ background: '#F8FAFC', borderRadius: 12, padding: 20 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 8 }}>
-                Venda Direta (Mercado)
-              </div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: '#1E3A8A' }}>
-                {fmt(valuation.static_market_value ?? 0)}
-              </div>
-              <p style={{ fontSize: 12, color: '#64748B', marginTop: 8, marginBottom: 0 }}>
-                Valor estimado pelo método comparativo direto (MCDDM).
-              </p>
+      {/* ── 01. FICHA TÉCNICA ───────────────────────────────────── */}
+      <SectionCard>
+        <SectionHeader number="01" title="Ficha Técnica do Laudo" />
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <tbody>
+            {fichaRows.map((row, i) => (
+              <tr key={i} style={{ borderBottom: '1px solid #F1F5F9', background: i % 2 === 0 ? '#FAFBFD' : '#fff' }}>
+                <td style={{ padding: '9px 20px', color: '#64748B', fontWeight: 700, width: '32%', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.3 }}>
+                  {row.label}
+                </td>
+                <td style={{ padding: '9px 20px', color: '#1E293B', fontWeight: 500 }}>
+                  {row.value}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </SectionCard>
+
+      {/* ── 02. VALOR DE MERCADO DETERMINADO ───────────────────── */}
+      <SectionCard>
+        <SectionHeader number="02" title="Valor de Mercado Determinado" />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+          <div style={{ padding: '24px 28px', borderRight: '1px solid #F1F5F9' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+              Valor de Mercado (Método Comparativo)
             </div>
-            <div style={{ background: '#F0FDF4', borderRadius: 12, padding: 20, border: '1px solid #BBF7D0' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: 1, color: '#16A34A', textTransform: 'uppercase', marginBottom: 8 }}>
-                Valor de Incorporação (Terreno Residual)
+            <div style={{ fontSize: 34, fontWeight: 900, color: PRIMARY, fontFamily: 'monospace', lineHeight: 1 }}>
+              {valuation.static_market_value_brl != null ? fmt(valuation.static_market_value_brl) : '—'}
+            </div>
+            {valuation.price_per_m2_homogenized != null && (
+              <div style={{ fontSize: 14, color: '#64748B', marginTop: 8 }}>
+                {fmtM2(Math.round(valuation.price_per_m2_homogenized))} · homogeneizado
               </div>
-              <div style={{ fontSize: 26, fontWeight: 800, color: '#10B981' }}>
-                {fmt(valuation.residual_land_value ?? 0)}
+            )}
+          </div>
+          <div style={{ padding: '24px 28px' }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+              Grau de Confiança da Estimativa
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
+              <div style={{ fontSize: 34, fontWeight: 900, color: confidenceScore >= 75 ? ACCENT : '#F59E0B', fontFamily: 'monospace', lineHeight: 1 }}>
+                {confidenceScore}%
               </div>
-              <p style={{ fontSize: 12, color: '#64748B', marginTop: 8, marginBottom: 0 }}>
-                Método involutivo — valor máximo a pagar pelo terreno para viabilizar o desenvolvimento.
-              </p>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#64748B' }}>
+                {CONFIDENCE_LABEL(confidenceScore)}
+              </div>
+            </div>
+            <div style={{ height: 6, background: '#F1F5F9', borderRadius: 3 }}>
+              <div style={{ height: '100%', background: confidenceScore >= 75 ? ACCENT : '#F59E0B', borderRadius: 3, width: `${confidenceScore}%`, transition: 'width 0.6s ease' }} />
+            </div>
+            <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 8 }}>
+              Baseado em {comparables.length} imóvel{comparables.length !== 1 ? 'is' : ''} comparável{comparables.length !== 1 ? 'is' : ''} · Fator de oferta −10% aplicado
             </div>
           </div>
         </div>
-      )}
+      </SectionCard>
 
-      {/* Potencial Construtivo */}
-      {valuation.max_buildable_area != null && (
-        <div style={{
-          background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0',
-          padding: '24px 28px', marginBottom: 20,
-        }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1E293B', marginBottom: 16 }}>
-            Potencial Construtivo
-          </h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
-            <div>
-              <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
-                Área Construível Máx.
-              </div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#1E293B' }}>
-                {valuation.max_buildable_area.toLocaleString('pt-BR')} m²
-              </div>
-            </div>
-            {valuation.zoning_info && (
-              <div>
-                <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
-                  Índice de Aproveitamento
-                </div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#1E293B' }}>
-                  {valuation.zoning_info.IA_max}×
-                </div>
-              </div>
-            )}
-            {valuation.viability_scenarios?.[1] && (
-              <div>
-                <div style={{ fontSize: 11, color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase', marginBottom: 4 }}>
-                  VGV Estimado (Base)
-                </div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: '#1E293B' }}>
-                  {fmt(valuation.viability_scenarios[1].VGV_total)}
-                </div>
-              </div>
-            )}
+      {/* ── 03. IMÓVEIS REFERENCIAIS ─────────────────────────────── */}
+      {comparables.length > 0 && (
+        <SectionCard>
+          <SectionHeader number="03" title="Tabela de Imóveis Referenciais Homogeneizados" />
+          <div style={{ padding: '10px 20px 8px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #F1F5F9' }}>
+            <span style={{ background: '#F1F5F9', borderRadius: 4, padding: '2px 8px', fontWeight: 700, fontSize: 10, color: '#475569', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+              Homogeneizados
+            </span>
+            <span style={{ fontSize: 11, color: '#94A3B8' }}>
+              Fator de oferta de 10% já aplicado em todos os comparáveis · Conforme NBR 14.653-1
+            </span>
           </div>
-
-          {valuation.viability_scenarios && valuation.viability_scenarios.length > 0 && (
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 560 }}>
               <thead>
-                <tr style={{ borderBottom: '2px solid #E2E8F0', color: '#64748B' }}>
-                  <th style={{ textAlign: 'left', padding: '8px 0', fontWeight: 600 }}>Cenário</th>
-                  <th style={{ textAlign: 'right', padding: '8px 0', fontWeight: 600 }}>VGV Total</th>
-                  <th style={{ textAlign: 'right', padding: '8px 0', fontWeight: 600 }}>Valor Residual</th>
-                  <th style={{ textAlign: 'right', padding: '8px 0', fontWeight: 600 }}>ROI</th>
+                <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
+                  <th style={{ padding: '9px 12px 9px 20px', textAlign: 'center', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, width: 36 }}>Nº</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Endereço / Bairro</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Área</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Qtos</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'center', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Situação</th>
+                  <th style={{ padding: '9px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Val./m²</th>
+                  <th style={{ padding: '9px 20px 9px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Valor Total</th>
                 </tr>
               </thead>
               <tbody>
-                {valuation.viability_scenarios.map((s, i) => (
-                  <tr key={i} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                    <td style={{ padding: '10px 0', fontWeight: 600, color: '#334155' }}>{s.label}</td>
-                    <td style={{ padding: '10px 0', textAlign: 'right', color: '#475569' }}>{fmt(s.VGV_total)}</td>
-                    <td style={{ padding: '10px 0', textAlign: 'right', color: s.residual > 0 ? '#10B981' : '#EF4444', fontWeight: 700 }}>{fmt(s.residual)}</td>
-                    <td style={{ padding: '10px 0', textAlign: 'right', color: '#475569' }}>{s.roi_pct}%</td>
+                {comparables.map((c, i) => (
+                  <tr
+                    key={i}
+                    style={{
+                      borderBottom: '1px solid #F1F5F9',
+                      background: i % 2 === 0 ? '#fff' : '#FAFBFD',
+                      cursor: c.source_url ? 'pointer' : 'default',
+                    }}
+                    onClick={() => c.source_url && window.open(c.source_url, '_blank')}
+                  >
+                    <td style={{ padding: '10px 12px 10px 20px', textAlign: 'center', color: '#94A3B8', fontWeight: 700, fontSize: 11, fontFamily: 'monospace' }}>
+                      {String(i + 1).padStart(2, '0')}
+                    </td>
+                    <td style={{ padding: '10px 12px' }}>
+                      <div style={{ fontWeight: 600, color: '#1E293B', fontSize: 13 }}>{c.neighborhood}</div>
+                      <div style={{ color: '#94A3B8', fontSize: 11, marginTop: 1, maxWidth: 280, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {c.address}
+                      </div>
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: '#475569', fontWeight: 500 }}>{c.area_m2}m²</td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: '#475569' }}>{c.bedrooms ?? '—'}</td>
+                    <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 3,
+                        background: c.status === 'listed' ? '#ECFDF5' : '#F1F5F9',
+                        color: c.status === 'listed' ? ACCENT : '#64748B',
+                        textTransform: 'uppercase', letterSpacing: 0.5,
+                      }}>
+                        {c.status === 'listed' ? 'Oferta' : 'Venda'}
+                      </span>
+                    </td>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: PRIMARY, fontWeight: 700, fontFamily: 'monospace', fontSize: 13 }}>
+                      {fmtM2(c.price_m2_brl)}
+                    </td>
+                    <td style={{ padding: '10px 20px 10px 12px', textAlign: 'right', color: '#1E293B', fontWeight: 700, fontFamily: 'monospace', fontSize: 13 }}>
+                      {fmt(c.price_brl)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
-          )}
-        </div>
+          </div>
+        </SectionCard>
       )}
 
-      {/* Radar + Breakdown */}
-      <div className="grid grid-cols-2 gap-5 mb-5">
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-[15px] font-semibold mb-4 text-slate-900">Análise de Fatores de Preço</h3>
-          <div className="flex justify-center">
-            <RadarChart factors={radarFactors} size={240} />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h3 className="text-[15px] font-semibold mb-5 text-slate-900">Detalhamento da Pontuação</h3>
-          {valuation.price_factors.map((f, i) => {
-            const colors = [PRIMARY, ACCENT, PRIMARY, '#F59E0B', ACCENT, '#8B5CF6', '#EC4899']
-            return (
-              <BarIndicator
-                key={i}
-                label={f.label}
-                value={Math.round(f.score * 100)}
-                color={colors[i % colors.length]}
-                tooltip={TOOLTIPS[f.label]}
-              />
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Neighborhood POIs */}
-      {valuation.neighborhood_pois && valuation.neighborhood_pois.pois.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-5">
-          <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
+      {/* ── 04. ANÁLISE INVOLUTIVA (land only) ─────────────────── */}
+      {valuation.max_buildable_area_m2 != null && (
+        <SectionCard>
+          <SectionHeader number="04" title="Análise Involutiva — Potencial Construtivo" />
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', gap: 36, flexWrap: 'wrap' }}>
             <div>
-              <h3 className="text-[15px] font-semibold m-0 text-slate-900">O que há por perto</h3>
-              <p className="text-sm text-slate-400 mt-1">Serviços e comércios que valorizam o imóvel.</p>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Área Construível Máxima</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: PRIMARY, fontFamily: 'monospace' }}>
+                {valuation.max_buildable_area_m2.toLocaleString('pt-BR')} m²
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400">Pontuação de Vizinhança</span>
-              <span className="text-lg font-bold" style={{ color: PRIMARY }}>
+            {valuation.zoning_params && (
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Índice de Aproveitamento (IA)</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: PRIMARY, fontFamily: 'monospace' }}>{valuation.zoning_params.IAmax}×</div>
+                {valuation.zoning_params.IAb != null && (
+                  <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>IAb: {valuation.zoning_params.IAb}×</div>
+                )}
+              </div>
+            )}
+          </div>
+          {valuation.viability_scenarios && valuation.viability_scenarios.length > 0 && (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 560 }}>
+                <thead>
+                  <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
+                    <th style={{ padding: '9px 20px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Cenário</th>
+                    <th style={{ padding: '9px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>VGV Total</th>
+                    <th style={{ padding: '9px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Custo Obra (50%)</th>
+                    <th style={{ padding: '9px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Valor Residual</th>
+                    <th style={{ padding: '9px 20px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>ROI</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {valuation.viability_scenarios.map((s, i) => (
+                    <tr key={i} style={{
+                      borderBottom: '1px solid #F1F5F9',
+                      background: i === 1 ? `${ACCENT}09` : i % 2 === 0 ? '#fff' : '#FAFBFD',
+                    }}>
+                      <td style={{ padding: '12px 20px' }}>
+                        <div style={{ fontWeight: 700, color: '#1E293B' }}>{s.label}</div>
+                        <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>{s.description}</div>
+                      </td>
+                      <td style={{ padding: '12px', textAlign: 'right', color: '#475569', fontWeight: 600, fontFamily: 'monospace' }}>{fmt(s.VGV_total)}</td>
+                      <td style={{ padding: '12px', textAlign: 'right', color: '#475569', fontFamily: 'monospace' }}>{fmt(s.VGV_total * 0.5)}</td>
+                      <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, fontFamily: 'monospace', color: s.residual > 0 ? ACCENT : '#DC2626' }}>
+                        {fmt(s.residual)}
+                      </td>
+                      <td style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 700, color: s.roi_pct > 15 ? ACCENT : '#F59E0B' }}>
+                        {s.roi_pct}%
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </SectionCard>
+      )}
+
+      {/* ── 05. ABISMO DE VALOR ─────────────────────────────────── */}
+      {valuation.static_market_value_brl != null && valuation.residual_land_value_brl != null && (
+        <SectionCard>
+          <SectionHeader number="05" title="Abismo de Valor — Análise Comparativa de Uso" />
+          <div style={{ padding: '20px' }}>
+            <p style={{ fontSize: 13, color: '#64748B', marginBottom: 20, marginTop: 0, lineHeight: 1.75 }}>
+              A análise involutiva revela o "abismo de valor" entre a venda direta do imóvel no mercado
+              e seu potencial como ativo de desenvolvimento. O Valor Residual do Terreno representa o
+              preço máximo que um incorporador pagaria pelo imóvel para viabilizar um empreendimento,
+              mantendo as margens mínimas do setor.
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, alignItems: 'center' }}>
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '20px 24px' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
+                  Venda Direta ao Mercado
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: PRIMARY, fontFamily: 'monospace', marginBottom: 6 }}>
+                  {fmt(valuation.static_market_value_brl)}
+                </div>
+                <div style={{ fontSize: 11, color: '#94A3B8' }}>
+                  Método Comparativo Direto (MCDDM) · NBR 14.653-2
+                </div>
+              </div>
+              <div style={{ textAlign: 'center', color: '#CBD5E1', fontSize: 22, padding: '0 4px' }}>⇄</div>
+              <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, padding: '20px 24px' }}>
+                <div style={{ fontSize: 9, fontWeight: 700, color: '#16A34A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
+                  Valor de Incorporação (Residual)
+                </div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: ACCENT, fontFamily: 'monospace', marginBottom: 6 }}>
+                  {fmt(valuation.residual_land_value_brl)}
+                </div>
+                <div style={{ fontSize: 11, color: '#64748B' }}>
+                  Método Involutivo · Cenário Base (IA máximo)
+                </div>
+              </div>
+            </div>
+            {valuation.residual_land_value_brl > 0 && (
+              <div style={{ marginTop: 14, background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 6, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 12, color: '#92400E', fontWeight: 600 }}>Relação Incorporação / Venda Direta:</span>
+                <span style={{ fontSize: 15, fontWeight: 900, color: '#92400E', fontFamily: 'monospace' }}>
+                  {(valuation.residual_land_value_brl / valuation.static_market_value_brl).toFixed(2)}×
+                </span>
+                <span style={{ fontSize: 12, color: '#92400E' }}>
+                  — {valuation.residual_land_value_brl > valuation.static_market_value_brl
+                    ? 'O potencial de desenvolvimento supera a venda direta'
+                    : 'A venda direta é mais vantajosa que o desenvolvimento'}
+                </span>
+              </div>
+            )}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* ── 06. VIZINHANÇA ──────────────────────────────────────── */}
+      {valuation.neighborhood_pois && valuation.neighborhood_pois.pois.length > 0 && (
+        <SectionCard>
+          <SectionHeader number="06" title="Análise de Vizinhança e Infraestrutura Urbana" />
+          <div style={{ padding: '10px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontSize: 12, color: '#64748B' }}>
+              Levantamento de serviços e equipamentos urbanos no entorno imediato do imóvel.
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 11, color: '#64748B', fontWeight: 600 }}>Score de Vizinhança:</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: PRIMARY, fontFamily: 'monospace' }}>
                 {Math.round(valuation.neighborhood_pois.totalScore * 100)}%
               </span>
             </div>
           </div>
-          <div className="grid grid-cols-2 p-6 gap-4">
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
             {valuation.neighborhood_pois.pois.map((cat, i) => {
               const count = cat.places.length
               const scorePct = Math.round(cat.score * 100)
-              const barColor = count > 0 ? ACCENT : '#CBD5E1'
-              const minDist = count > 0 ? Math.min(...cat.places.map((p) => p.distance_m)) : null
-              const singular = {
-                'Supermercados': 'Supermercado', 'Farmácias': 'Farmácia', 'Escolas': 'Escola',
-                'Hospitais': 'Hospital', 'Parques': 'Parque', 'Academias': 'Academia',
-                'Shoppings': 'Shopping', 'Restaurantes': 'Restaurante',
-              }[cat.label] ?? cat.label.replace(/s$/, '')
-              const label = count === 1 ? singular : cat.label
+              const minDist = count > 0 ? Math.min(...cat.places.map(p => p.distance_m)) : null
               return (
-                <div key={i} className="flex flex-col gap-1.5">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-700">
-                      {count > 0 ? `${count} ${label}` : cat.label}
-                    </span>
-                    <span className="text-xs font-semibold" style={{ color: barColor }}>{scorePct}%</span>
+                <div
+                  key={i}
+                  style={{
+                    padding: '14px 16px',
+                    borderRight: (i + 1) % 4 !== 0 ? '1px solid #F1F5F9' : undefined,
+                    borderBottom: i < valuation.neighborhood_pois!.pois.length - 4 ? '1px solid #F1F5F9' : undefined,
+                  }}
+                >
+                  <div style={{ fontSize: 11, fontWeight: 600, color: '#334155', marginBottom: 6 }}>{cat.label}</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: count > 0 ? PRIMARY : '#CBD5E1', fontFamily: 'monospace', marginBottom: 4 }}>
+                    {count}
                   </div>
-                  <div className="h-1 rounded-full bg-slate-200">
-                    <div className="h-full rounded-full" style={{ background: barColor, width: `${scorePct}%` }} />
+                  <div style={{ height: 3, background: '#F1F5F9', borderRadius: 2, marginBottom: 4 }}>
+                    <div style={{ height: '100%', background: count > 0 ? ACCENT : '#CBD5E1', borderRadius: 2, width: `${scorePct}%` }} />
                   </div>
-                  {count > 0 ? (
-                    <div className="text-xs text-slate-500 mt-0.5">
-                      em até {minDist}m
-                    </div>
-                  ) : (
-                    <div className="text-xs text-slate-400 italic">Nenhum encontrado no raio de busca</div>
-                  )}
+                  <div style={{ fontSize: 10, color: '#94A3B8' }}>
+                    {minDist != null ? `Mais próximo: ${minDist}m` : 'Não encontrado'}
+                  </div>
                 </div>
               )
             })}
           </div>
-        </div>
+        </SectionCard>
       )}
 
-      {/* Comparables */}
-      {valuation.comparables.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-5">
-          <div className="px-6 py-4 border-b border-slate-200">
-            <h3 className="text-[15px] font-semibold m-0 text-slate-900">Imóveis Comparáveis</h3>
-            <p className="text-sm text-slate-400 mt-1">Vendidos ou anunciados recentemente na mesma região.</p>
-          </div>
-          <div className="grid grid-cols-5 divide-x divide-slate-100">
-            <div style={{ fontSize: 12, color: '#64748B', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', gridColumn: '1 / -1', padding: '0 16px' }}>
-              <span style={{ background: '#F1F5F9', borderRadius: 6, padding: '2px 8px', fontWeight: 600, fontSize: 11 }}>
-                Valores homogeneizados
-              </span>
-              <span>Fator de oferta 10% já aplicado</span>
-              {valuation.ross_heidecke_result && (
-                <span> · Depreciação Ross-Heidecke ({(valuation.ross_heidecke_result.depreciation_coefficient * 100).toFixed(1)}%) aplicada</span>
-              )}
-            </div>
-            {valuation.comparables.map((c, i) => {
-              const visibleAmenities = c.amenities?.slice(0, 3) ?? []
-              const overflowCount = (c.amenities?.length ?? 0) - visibleAmenities.length
-              const CardWrapper = c.source_url ? 'a' : 'div'
-              const wrapperProps = c.source_url
-                ? { href: c.source_url, target: '_blank', rel: 'noopener noreferrer' }
-                : {}
+      {/* ── AVISO LEGAL ─────────────────────────────────────────── */}
+      <div style={{
+        padding: '14px 20px',
+        background: '#F8FAFC',
+        border: '1px solid #E2E8F0',
+        borderRadius: 8,
+        marginBottom: 14,
+        fontSize: 11,
+        color: '#94A3B8',
+        lineHeight: 1.75,
+      }}>
+        <strong style={{ color: '#64748B' }}>Aviso Legal:</strong> Este parecer foi gerado por sistema de inteligência artificial com base em dados públicos de oferta e transação imobiliária.
+        Os valores apresentados têm caráter informativo e não substituem laudo de avaliação assinado por profissional habilitado pelo IBAPE/CONFEA,
+        conforme exigido pela NBR 14.653-1 para laudos com fins legais, judiciais ou de garantia.
+      </div>
 
-              return (
-                <CardWrapper
-                  key={i}
-                  {...wrapperProps}
-                  className="flex flex-col p-4 hover:bg-slate-50 transition-colors no-underline text-inherit"
-                >
-                  {/* Image */}
-                  <div className="w-full aspect-[760/570] rounded-lg overflow-hidden mb-3 bg-slate-100 flex-shrink-0">
-                    {c.images?.[0] ? (
-                      <img
-                        src={c.images[0]}
-                        alt={c.neighborhood}
-                        width={760}
-                        height={570}
-                        loading="lazy"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div
-                        className="w-full h-full flex items-center justify-center"
-                        style={{
-                          background: 'repeating-linear-gradient(135deg, #E2E8F0, #E2E8F0 8px, #EEF2F7 8px, #EEF2F7 16px)',
-                        }}
-                      >
-                        <span className="text-[10px] text-slate-400 font-mono">sem foto</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className="text-sm font-semibold text-slate-900 mb-0.5 leading-snug">{c.neighborhood}</div>
-                  <div className="text-xs text-slate-400 mb-2 truncate">{c.address}</div>
-
-                  <div className="text-base font-bold mb-0.5" style={{ color: PRIMARY }}>
-                    {fmt(c.price_brl)}
-                  </div>
-                  <div className="text-xs text-slate-500 mb-2">
-                    {fmtM2(c.price_m2_brl)}
-                    {c.area_m2 && ` · ${c.area_m2}m²`}
-                    {c.bedrooms != null && ` · ${c.bedrooms} qto${c.bedrooms !== 1 ? 's' : ''}`}
-                  </div>
-
-                  {/* Status badge */}
-                  <span
-                    className="inline-block self-start px-2 py-0.5 rounded-full text-[11px] font-medium mb-2"
-                    style={{
-                      background: c.status === 'listed' ? '#ECFDF5' : '#F1F5F9',
-                      color: c.status === 'listed' ? ACCENT : '#64748B',
-                    }}
-                  >
-                    {c.status === 'listed' ? 'Anunciado' : 'Vendido'}
-                  </span>
-
-                  {/* Amenity chips */}
-                  {visibleAmenities.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-auto pt-2">
-                      {visibleAmenities.map(a => (
-                        <span
-                          key={a}
-                          className="px-1.5 py-0.5 rounded text-[10px] font-medium"
-                          style={{ background: PRIMARY + '10', color: PRIMARY }}
-                        >
-                          {a}
-                        </span>
-                      ))}
-                      {overflowCount > 0 && (
-                        <span
-                          className="px-1.5 py-0.5 rounded text-[10px] font-medium"
-                          style={{ background: '#F1F5F9', color: '#64748B' }}
-                        >
-                          +{overflowCount}
-                        </span>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Ver anúncio link */}
-                  {c.source_url && (
-                    <div className="text-[11px] mt-2" style={{ color: PRIMARY }}>
-                      Ver anúncio →
-                    </div>
-                  )}
-                </CardWrapper>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Method breakdown (informational) */}
-      {valuation.method_estimates && valuation.method_estimates.length > 0 && (
-        <div className="bg-white rounded-xl border border-slate-200 p-5 mb-5">
-          <h3 className="text-[15px] font-semibold mb-3 text-slate-900">Como foi calculado</h3>
-          <div className="flex gap-4">
-            {valuation.method_estimates.map((m, i) => (
-              <div key={i} className="flex-1 p-3 bg-slate-50 rounded-lg">
-                <div className="text-[11px] text-slate-400 uppercase tracking-wide mb-1">{m.method.toUpperCase()}</div>
-                <div className="text-sm font-semibold text-slate-900">{fmt(m.predicted_ppm2)}/m²</div>
-                <div className="text-xs text-slate-500 mt-0.5">Peso: {(m.weight * 100).toFixed(0)}%</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Fatores de Homogeneização */}
-      {valuation.homogenization_factors && (
-        <div style={{
-          background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0',
-          padding: '24px 28px', marginBottom: 20,
-        }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: '#1E293B', marginBottom: 16 }}>
-            Fatores de Homogeneização Aplicados
-          </h3>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #E2E8F0', color: '#64748B' }}>
-                <th style={{ textAlign: 'left', padding: '8px 0', fontWeight: 600 }}>Fator</th>
-                <th style={{ textAlign: 'center', padding: '8px 0', fontWeight: 600 }}>Valor</th>
-                <th style={{ textAlign: 'left', padding: '8px 0', fontWeight: 600 }}>Descrição</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[
-                {
-                  label: 'Desconto de Oferta',
-                  value: `-${((1 - valuation.homogenization_factors.offer_factor) * 100).toFixed(0)}%`,
-                  desc: 'Ajuste padrão NBR 14.653 — preço de oferta vs. transação efetiva',
-                },
-                {
-                  label: 'Esquina',
-                  value: valuation.homogenization_factors.corner_factor > 1 ? '+5%' : '—',
-                  desc: 'Imóvel de esquina tem maior frente e melhor visibilidade comercial',
-                },
-                {
-                  label: 'Topografia',
-                  value: `${((valuation.homogenization_factors.slope_factor - 1) * 100).toFixed(0)}%`,
-                  desc: 'Plano = 0%, Suave Declive = −5%, Acentuado = −20%',
-                },
-                {
-                  label: 'Nível de Rua',
-                  value: `${((valuation.homogenization_factors.level_factor - 1) * 100).toFixed(0)}%`,
-                  desc: 'Mesmo nível = 0%, Acima = −5%, Abaixo = −20%',
-                },
-              ].map((row, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid #F1F5F9' }}>
-                  <td style={{ padding: '10px 0', fontWeight: 600, color: '#334155' }}>{row.label}</td>
-                  <td style={{ padding: '10px 0', textAlign: 'center', color: '#1E3A8A', fontWeight: 700 }}>{row.value}</td>
-                  <td style={{ padding: '10px 0', color: '#64748B' }}>{row.desc}</td>
-                </tr>
-              ))}
-              <tr style={{ borderTop: '2px solid #E2E8F0', fontWeight: 700 }}>
-                <td style={{ padding: '12px 0', color: '#1E293B' }}>Multiplicador Combinado</td>
-                <td style={{ padding: '12px 0', textAlign: 'center', color: '#10B981', fontSize: 15 }}>
-                  ×{valuation.homogenization_factors.combined_factor.toFixed(3)}
-                </td>
-                <td style={{ padding: '12px 0', color: '#64748B' }}>
-                  Aplicado ao valor estimado pelo método comparativo
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="flex gap-3 justify-center pb-10">
+      {/* ── AÇÕES ───────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'center', paddingBottom: 40 }}>
         <button
           onClick={() => navigate('/')}
-          className="px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 cursor-pointer transition-all hover:-translate-y-px hover:shadow-md"
-          style={{ border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontFamily: 'inherit' }}
+          style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontFamily: 'inherit' }}
         >
           ← Voltar ao Painel
         </button>
         <button
           onClick={() => navigate('/nova-avaliacao')}
-          className="px-5 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 cursor-pointer transition-all hover:-translate-y-px hover:shadow-md"
-          style={{ border: 'none', background: PRIMARY, color: '#fff', fontFamily: 'inherit' }}
+          style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: PRIMARY, color: '#fff', fontFamily: 'inherit' }}
         >
           + Nova Avaliação
+        </button>
+        <button
+          onClick={() => window.print()}
+          style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontFamily: 'inherit' }}
+        >
+          Imprimir / PDF
         </button>
       </div>
     </div>

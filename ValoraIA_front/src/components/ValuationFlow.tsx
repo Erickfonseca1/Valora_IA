@@ -11,41 +11,13 @@ const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Terreno', value: 'land' },
 ]
 
-const APARTMENT_AMENITIES = [
-  'Piscina', 'Rooftop', 'Vista Mar', 'Cobertura',
-  'Academia', 'Portaria 24h', 'Portaria', 'Segurança 24h', 'Elevador', 'Salão de Festas', 'Área Gourmet',
-  'Varanda', 'Sacada', 'Churrasqueira', 'Playground', 'Salão de Jogos',
-  'Espaço Kids', 'Coworking', 'Quadra', 'Quadra Esportiva',
-  'Portão eletrônico', 'Interfone', 'Câmeras de segurança',
-  'Área de serviço', 'Armários planejados', 'Ar condicionado', 'Pet friendly',
-]
-
-const HOUSE_AMENITIES = [
-  'Piscina', 'Quintal', 'Jardim', 'Lareira',
-  'Academia', 'Salão de Festas', 'Área Gourmet',
-  'Varanda', 'Sacada', 'Churrasqueira', 'Playground',
-  'Quadra', 'Quadra Esportiva',
-  'Portão eletrônico', 'Interfone', 'Câmeras de segurança',
-  'Área de serviço', 'Armários planejados', 'Ar condicionado', 'Pet friendly',
-]
-
-const AMENITIES_BY_TYPE: Record<PropertyType, string[]> = {
-  apartment: APARTMENT_AMENITIES,
-  house: HOUSE_AMENITIES,
-  commercial: [],
-  land: [],
-}
-
-// Steps for apartment/house (4 steps)
-const STEPS_APT_HOUSE = ['Detalhes do Imóvel', 'Conservação & Fotos', 'Comodidades', 'Revisão & Envio']
-// Steps for commercial/land (3 steps)
-const STEPS_OTHER = ['Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio']
+const STEPS = ['Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio']
 
 const STEPS_BY_TYPE: Record<PropertyType, string[]> = {
-  apartment: STEPS_APT_HOUSE,
-  house: STEPS_APT_HOUSE,
-  commercial: STEPS_OTHER,
-  land: STEPS_OTHER,
+  apartment: STEPS,
+  house: STEPS,
+  commercial: STEPS,
+  land: STEPS,
 }
 
 const PRIMARY = '#1E3A8A'
@@ -77,14 +49,6 @@ function SkeletonStep({ label, delay }: { label: string; delay: number }) {
   )
 }
 
-const ROOM_FIELDS = {
-  apartment: { beds: true, baths: true, parking: true },
-  house: { beds: true, baths: true, parking: true },
-  commercial: { beds: false, baths: true, parking: true },
-  land: { beds: false, baths: false, parking: false },
-} as const satisfies Record<PropertyType, { beds: boolean; baths: boolean; parking: boolean }>
-
-const DEFAULT_ROOMS = { beds: '2', baths: '1', parking: '1' }
 
 export default function ValuationFlow() {
   const navigate = useNavigate()
@@ -92,11 +56,10 @@ export default function ValuationFlow() {
   const [form, setForm] = useState<ValuationForm>({
     address: '',
     propertyType: 'apartment',
-    beds: '2',
-    baths: '1',
-    parking: '1',
     area: '',
-    amenities: [],
+    bedrooms: '',
+    bathrooms: '',
+    parking_spaces: '',
     construction_age: '',
     conservation_state: '' as ConservationState | '',
     is_corner: false,
@@ -109,35 +72,13 @@ export default function ValuationFlow() {
   const [photoUploading, setPhotoUploading] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
 
-  const showBeds = ROOM_FIELDS[form.propertyType].beds
-  const showBaths = ROOM_FIELDS[form.propertyType].baths
-  const showParking = ROOM_FIELDS[form.propertyType].parking
-
   const set = <K extends keyof ValuationForm>(k: K, v: ValuationForm[K]) =>
     setForm(f => ({ ...f, [k]: v }))
 
   const handlePropertyTypeChange = (value: PropertyType) => {
-    setForm(f => {
-      const fields = ROOM_FIELDS[value]
-      return {
-        ...f,
-        propertyType: value,
-        beds: fields.beds ? (f.beds || DEFAULT_ROOMS.beds) : '',
-        baths: fields.baths ? (f.baths || DEFAULT_ROOMS.baths) : '',
-        parking: fields.parking ? (f.parking || DEFAULT_ROOMS.parking) : '',
-        amenities: value === 'commercial' || value === 'land' ? [] : f.amenities,
-      }
-    })
+    setForm(f => ({ ...f, propertyType: value }))
     setStep(s => Math.min(s, STEPS_BY_TYPE[value].length - 1))
   }
-
-  const toggleAmenity = (a: string) =>
-    setForm(f => ({
-      ...f,
-      amenities: f.amenities.includes(a)
-        ? f.amenities.filter(x => x !== a)
-        : [...f.amenities, a],
-    }))
 
   const advanceFromPhotoStep = async () => {
     if (form.photos.length === 0) {
@@ -173,24 +114,18 @@ export default function ValuationFlow() {
     setProcessing(true)
     setApiError(null)
     try {
-      const bedsNum = showBeds ? (parseInt(form.beds) || null) : null
-      const bathsNum = showBaths ? (parseInt(form.baths) || null) : null
-      const parkingNum = showParking ? (parseInt(form.parking) || null) : null
-
       const result = await createValuation({
         address: form.address,
         property_type: form.propertyType,
         area_m2: parseFloat(form.area),
-        bedrooms: bedsNum,
-        bathrooms: bathsNum,
-        parking_spots: parkingNum,
-        amenities: form.amenities.length > 0 ? form.amenities : undefined,
+        bedrooms: form.bedrooms ? parseInt(form.bedrooms) : undefined,
+        bathrooms: form.bathrooms ? parseInt(form.bathrooms) : undefined,
+        parking_spaces: form.parking_spaces ? parseInt(form.parking_spaces) : undefined,
         construction_age: form.construction_age ? parseInt(form.construction_age) : undefined,
         conservation_state: form.conservation_state || undefined,
         is_corner: form.is_corner || undefined,
         terrain_slope: (form.terrain_slope || undefined) as TerrainSlope | undefined,
         street_level: (form.street_level || undefined) as StreetLevel | undefined,
-        property_photos: form.photoUrls.length > 0 ? form.photoUrls : undefined,
       })
       navigate(`/resultado/${result.id}`)
     } catch (e) {
@@ -217,10 +152,6 @@ export default function ValuationFlow() {
 
   const steps = STEPS_BY_TYPE[form.propertyType]
   const maxStep = steps.length - 1
-
-  // For apt/house: 0=Details, 1=Conservação&Fotos, 2=Amenities, 3=Review
-  // For commercial/land: 0=Details, 1=Conservação&Fotos, 2=Review
-  const isAmenitiesStep = (form.propertyType === 'apartment' || form.propertyType === 'house') && step === 2
   const isReviewStep = step === maxStep
 
   const canAdvance = step === 0
@@ -304,54 +235,58 @@ export default function ValuationFlow() {
                 ))}
               </div>
             </div>
-            <div className="flex gap-3">
-              {showBeds && (
-                <div className="flex-1 min-w-0">
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Quartos</label>
-                  <select
-                    className={inputClass + ' cursor-pointer'}
-                    value={form.beds}
-                    onChange={e => set('beds', e.target.value)}
-                  >
-                    {['1', '2', '3', '4', '5'].map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-              )}
-              {showBaths && (
-                <div className="flex-1 min-w-0">
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Banheiros</label>
-                  <select
-                    className={inputClass + ' cursor-pointer'}
-                    value={form.baths}
-                    onChange={e => set('baths', e.target.value)}
-                  >
-                    {['1', '2', '3', '4'].map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-              )}
-              {showParking && (
-                <div className="flex-1 min-w-0">
-                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Vagas</label>
-                  <select
-                    className={inputClass + ' cursor-pointer'}
-                    value={form.parking}
-                    onChange={e => set('parking', e.target.value)}
-                  >
-                    {['0', '1', '2', '3'].map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                </div>
-              )}
-              <div className="flex-1 min-w-0">
-                <label className="block text-sm font-medium text-slate-700 mb-1.5">Área (m²)</label>
-                <input
-                  className={inputClass}
-                  type="number"
-                  placeholder="ex. 98"
-                  value={form.area}
-                  onChange={e => set('area', e.target.value)}
-                />
-              </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Área (m²)</label>
+              <input
+                className={inputClass}
+                type="number"
+                placeholder="ex. 98"
+                value={form.area}
+                onChange={e => set('area', e.target.value)}
+              />
             </div>
+
+            {/* Rooms — apartment and house only */}
+            {(form.propertyType === 'apartment' || form.propertyType === 'house') && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Quartos</label>
+                  <input
+                    className={inputClass}
+                    type="number"
+                    min={0}
+                    max={20}
+                    placeholder="ex. 3"
+                    value={form.bedrooms}
+                    onChange={e => set('bedrooms', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Banheiros</label>
+                  <input
+                    className={inputClass}
+                    type="number"
+                    min={0}
+                    max={20}
+                    placeholder="ex. 2"
+                    value={form.bathrooms}
+                    onChange={e => set('bathrooms', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1.5">Vagas</label>
+                  <input
+                    className={inputClass}
+                    type="number"
+                    min={0}
+                    max={20}
+                    placeholder="ex. 1"
+                    value={form.parking_spaces}
+                    onChange={e => set('parking_spaces', e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Construction age */}
             <div>
@@ -380,15 +315,12 @@ export default function ValuationFlow() {
                 style={{ width: '100%', border: '1.5px solid #CBD5E1', borderRadius: 10, padding: '10px 14px', fontSize: 14 }}
               >
                 <option value="">Não informado</option>
-                <option value="A">A — Novo</option>
-                <option value="AB">AB — Ótimo</option>
-                <option value="B">B — Muito Bom</option>
-                <option value="BC">BC — Bom</option>
-                <option value="C">C — Regular</option>
-                <option value="CD">CD — Razoável</option>
-                <option value="D">D — Deteriorado</option>
-                <option value="DE">DE — Muito Deteriorado</option>
-                <option value="E">E — Ruína</option>
+                <option value="novo">Novo</option>
+                <option value="entre_novo_e_regular">Entre Novo e Regular</option>
+                <option value="regular">Regular</option>
+                <option value="reparos_simples">Reparos Simples</option>
+                <option value="reparos_importantes">Reparos Importantes</option>
+                <option value="critico">Crítico</option>
               </select>
             </div>
 
@@ -404,9 +336,11 @@ export default function ValuationFlow() {
                   style={{ width: '100%', border: '1.5px solid #CBD5E1', borderRadius: 10, padding: '10px 14px', fontSize: 14 }}
                 >
                   <option value="">Não informado</option>
-                  <option value="flat">Plano</option>
-                  <option value="gentle">Suave Declive</option>
-                  <option value="steep">Acentuado</option>
+                  <option value="plano">Plano</option>
+                  <option value="aclive_leve">Aclive Leve</option>
+                  <option value="declive_leve">Declive Leve</option>
+                  <option value="aclive_acentuado">Aclive Acentuado</option>
+                  <option value="declive_acentuado">Declive Acentuado</option>
                 </select>
               </div>
               <div>
@@ -419,9 +353,9 @@ export default function ValuationFlow() {
                   style={{ width: '100%', border: '1.5px solid #CBD5E1', borderRadius: 10, padding: '10px 14px', fontSize: 14 }}
                 >
                   <option value="">Não informado</option>
-                  <option value="same">Mesmo nível da rua</option>
-                  <option value="above">Acima da rua</option>
-                  <option value="below">Abaixo da rua</option>
+                  <option value="no_nivel">No nível da rua</option>
+                  <option value="acima_nivel">Acima da rua</option>
+                  <option value="abaixo_nivel">Abaixo da rua</option>
                 </select>
               </div>
             </div>
@@ -518,19 +452,6 @@ export default function ValuationFlow() {
               </div>
             )}
           </div>
-        ) : isAmenitiesStep ? (
-          /* Step 2 (apt/house) — Amenities */
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">Selecione as Comodidades</label>
-            <p className="text-sm text-slate-400 mb-4">Selecione todas que se aplicam ao imóvel.</p>
-            <div className="flex flex-wrap gap-2">
-              {AMENITIES_BY_TYPE[form.propertyType].map(a => (
-                <button key={a} onClick={() => toggleAmenity(a)} style={pillStyle(form.amenities.includes(a))}>
-                  {a}
-                </button>
-              ))}
-            </div>
-          </div>
         ) : isReviewStep ? (
           /* Last step — Review */
           <div>
@@ -539,10 +460,10 @@ export default function ValuationFlow() {
               {[
                 { label: 'Endereço', value: form.address },
                 { label: 'Tipo', value: PROPERTY_TYPES.find(t => t.value === form.propertyType)?.label ?? form.propertyType },
-                ...(showBeds ? [{ label: 'Quartos', value: form.beds }] : []),
-                ...(showBaths ? [{ label: 'Banheiros', value: form.baths }] : []),
-                ...(showParking ? [{ label: 'Vagas', value: form.parking }] : []),
                 { label: 'Área', value: form.area + 'm²' },
+                ...(form.bedrooms ? [{ label: 'Quartos', value: form.bedrooms }] : []),
+                ...(form.bathrooms ? [{ label: 'Banheiros', value: form.bathrooms }] : []),
+                ...(form.parking_spaces ? [{ label: 'Vagas', value: form.parking_spaces }] : []),
                 ...(form.construction_age ? [{ label: 'Idade (anos)', value: form.construction_age }] : []),
                 ...(form.conservation_state ? [{ label: 'Conservação', value: form.conservation_state }] : []),
                 ...(form.terrain_slope ? [{ label: 'Topografia', value: form.terrain_slope }] : []),
@@ -556,22 +477,6 @@ export default function ValuationFlow() {
                 </div>
               ))}
             </div>
-            {form.amenities.length > 0 && (
-              <div className="mt-3">
-                <div className="text-[11px] text-slate-400 uppercase tracking-wide mb-1.5">Comodidades</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {form.amenities.map(a => (
-                    <span
-                      key={a}
-                      className="px-2.5 py-1 rounded-xl text-xs font-medium"
-                      style={{ background: ACCENT + '12', color: ACCENT }}
-                    >
-                      {a}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
             {apiError && (
               <div className="mt-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-600">
                 {apiError}
