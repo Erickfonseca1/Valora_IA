@@ -12,7 +12,7 @@ export async function GET(req: NextRequest): Promise<NextResponse<ApiResponse<Da
   const { data, error, count } = await db
     .from("valuations")
     .select(
-      "id, address, neighborhood, city, property_type, recommended_listing_price_brl, confidence_score, created_at, bedrooms, area_m2",
+      "id, address, property_type, static_market_value_brl, confidence_score, created_at, area_m2",
       { count: "exact" }
     )
     .order("created_at", { ascending: false })
@@ -32,13 +32,11 @@ export async function GET(req: NextRequest): Promise<NextResponse<ApiResponse<Da
       items: (data ?? []).map((row) => ({
         id: row.id,
         address: row.address,
-        neighborhood: [row.neighborhood, row.city].filter(Boolean).join(", ") || row.address,
         property_type: row.property_type,
-        price_brl: row.recommended_listing_price_brl,
-        confidence_score: row.confidence_score,
+        static_market_value_brl: row.static_market_value_brl ? Number(row.static_market_value_brl) : null,
+        confidence_score: row.confidence_score ? Number(row.confidence_score) : null,
         created_at: row.created_at,
-        bedrooms: row.bedrooms,
-        area_m2: row.area_m2,
+        area_m2: Number(row.area_m2),
       })),
     },
   });

@@ -35,13 +35,12 @@ export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>
       ? Number((scores.reduce((s, v) => s + v, 0) / scores.length).toFixed(1))
       : 0;
 
-  // Most common city in recent valuations
+  // Most common city from listings (no city column on valuations table)
   const { data: cityData } = await db
-    .from("valuations")
+    .from("listings")
     .select("city")
-    .not("city", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(50);
+    .order("last_seen", { ascending: false })
+    .limit(100);
 
   const cityCounts: Record<string, number> = {};
   for (const row of cityData ?? []) {

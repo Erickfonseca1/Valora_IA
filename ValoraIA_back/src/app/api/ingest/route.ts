@@ -41,16 +41,18 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<I
 
   const {
     source_url,
-    platform,
     price,
     usable_area,
     bedrooms,
     bathrooms,
     parking_spaces,
+    property_type,
     lat,
     lng,
     neighborhood,
     city,
+    construction_age,
+    conservation_state,
   } = parsed.data;
 
   // ── Upsert into Supabase ───────────────────────────────────────────────────
@@ -65,15 +67,17 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<I
     .upsert(
       {
         source_url,
-        platform,
         price,
         usable_area,
         bedrooms,
         bathrooms,
         parking_spaces,
+        property_type,
         coordinates: coordinatesWKT,
         neighborhood,
         city,
+        construction_age,
+        conservation_state,
         last_seen: new Date().toISOString(),
       },
       {
