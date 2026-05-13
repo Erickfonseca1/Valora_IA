@@ -30,16 +30,16 @@ export const IngestSchema = z.object({
     .url({ message: "source_url must be a valid URL" })
     .max(2048),
 
-  platform: z.enum(["olx", "zapimoveis", "vivareal", "quintoandar", "imovelweb"], {
-    error: "platform must be one of: olx, zapimoveis, vivareal, quintoandar, imovelweb",
-  }),
-
   price: coercePositiveNumber("price"),
   usable_area: coercePositiveNumber("usable_area"),
 
   bedrooms: coerceNonNegativeInt("bedrooms"),
   bathrooms: coerceNonNegativeInt("bathrooms"),
   parking_spaces: coerceNonNegativeInt("parking_spaces"),
+
+  property_type: z.enum(["apartment", "house", "commercial", "land"], {
+    error: "property_type must be one of: apartment, house, commercial, land",
+  }),
 
   lat: z
     .union([z.string(), z.number()])
@@ -57,6 +57,12 @@ export const IngestSchema = z.object({
 
   neighborhood: z.string().max(255).nullable().optional().default(null),
   city: z.string().min(1).max(255),
+
+  construction_age: z.number().int().min(0).max(300).nullable().optional().default(null),
+  conservation_state: z
+    .enum(["novo", "entre_novo_e_regular", "regular", "reparos_simples", "reparos_importantes", "critico"])
+    .optional()
+    .default("regular"),
 });
 
 export type ValidatedIngestPayload = z.infer<typeof IngestSchema>;

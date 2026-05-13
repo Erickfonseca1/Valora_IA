@@ -1,43 +1,68 @@
-// ─── Core Domain Types ────────────────────────────────────────────────────────
-
-export type Platform = "olx" | "zapimoveis" | "vivareal" | "quintoandar" | "imovelweb";
+// ─── Core Domain Types ─────────────────────────────────────────────────────────
 
 export interface GeoPoint {
   lat: number;
   lng: number;
 }
 
+// ─── DB Enum Types — must match newschema.sql exactly ─────────────────────────
+
+export type PropertyType = "apartment" | "house" | "commercial" | "land";
+export type MarketTemperature = "hot" | "warm" | "cold";
+
+export type ConservationState =
+  | "novo"
+  | "entre_novo_e_regular"
+  | "regular"
+  | "reparos_simples"
+  | "reparos_importantes"
+  | "critico";
+
+export type TerrainSlope =
+  | "plano"
+  | "aclive_leve"
+  | "declive_leve"
+  | "aclive_acentuado"
+  | "declive_acentuado";
+
+export type StreetLevel = "no_nivel" | "abaixo_nivel" | "acima_nivel";
+
+// ─── Listings Table ────────────────────────────────────────────────────────────
+
 export interface Listing {
   id: string;
   source_url: string;
-  platform: Platform;
   price: number;
   usable_area: number;
   bedrooms: number | null;
   bathrooms: number | null;
   parking_spaces: number | null;
+  property_type: PropertyType;
   coordinates: GeoPoint;
   neighborhood: string | null;
   city: string;
-  price_per_m2: number;
+  construction_age: number | null;
+  conservation_state: ConservationState;
   last_seen: string;
   created_at: string;
 }
 
-// ─── Ingest Types ─────────────────────────────────────────────────────────────
+// ─── Ingest Types ──────────────────────────────────────────────────────────────
 
 export interface IngestPayload {
   source_url: string;
-  platform: Platform;
   price: string | number;
   usable_area: string | number;
   bedrooms?: string | number | null;
   bathrooms?: string | number | null;
   parking_spaces?: string | number | null;
+  property_type: PropertyType;
   lat: string | number;
   lng: string | number;
   neighborhood?: string | null;
   city: string;
+  construction_age?: number | null;
+  conservation_state?: ConservationState;
 }
 
 export interface IngestResult {
@@ -46,7 +71,7 @@ export interface IngestResult {
   source_url: string;
 }
 
-// ─── Valuation / MCDDM Types ──────────────────────────────────────────────────
+// ─── Valuation Engine Types ────────────────────────────────────────────────────
 
 export interface ValuationRequest {
   lat: number;
@@ -55,13 +80,12 @@ export interface ValuationRequest {
   target_bedrooms?: number | null;
   target_bathrooms?: number | null;
   target_parking?: number | null;
-  target_property_type?: string | null;
+  target_property_type?: PropertyType | null;
 }
 
 export interface ComparableListing {
   id: string;
   source_url: string;
-  platform: Platform;
   price: number;
   price_per_m2: number;
   usable_area: number;
@@ -78,7 +102,7 @@ export interface ComparableListing {
 export interface ConfidenceInterval {
   lower: number;
   upper: number;
-  confidence_level: number; // e.g. 0.80
+  confidence_level: number;
 }
 
 export interface ValuationResult {
@@ -88,55 +112,41 @@ export interface ValuationResult {
   confidence_interval: ConfidenceInterval;
   sample_size: number;
   radius_used_m: number;
-  offer_factor_applied: number; // e.g. 0.90
+  offer_factor_applied: number;
   comparables: ComparableListing[];
 }
 
-// ─── DB Row (raw from Supabase) ───────────────────────────────────────────────
+// ─── DB Row (raw from Supabase listings table) ─────────────────────────────────
 
 export interface ListingRow {
   id: string;
   source_url: string;
-  platform: string;
   price: number;
   usable_area: number;
   bedrooms: number | null;
   bathrooms: number | null;
   parking_spaces: number | null;
-  // PostGIS returns as GeoJSON or lon/lat columns depending on query
+  property_type: PropertyType;
   lat: number;
   lng: number;
   neighborhood: string | null;
   city: string;
-  price_per_m2: number;
+  construction_age: number | null;
+  conservation_state: ConservationState;
   last_seen: string;
   created_at: string;
   distance_m: number;
-  images: string[];
-  amenities: string[];
-  property_type: string | null;
 }
 
-// ─── Front-end Valuation (wizard + report) ────────────────────────────────────
+// ─── Zoning Params (stored as JSONB in valuations.zoning_params) ──────────────
 
-export type PropertyType = "apartment" | "house" | "commercial" | "land";
-export type MarketTemperature = "hot" | "warm" | "cold";
-export type ConservationState = "A" | "AB" | "B" | "BC" | "C" | "CD" | "D" | "DE" | "E";
-export type TerrainSlope = "flat" | "gentle" | "steep";
-export type StreetLevel = "same" | "above" | "below";
-export type ConstructionStandard = "high" | "medium" | "popular";
-
-export interface PriceFactor {
-  label: string;
-  score: number; // 0–1
+export interface ZoningParams {
+  IAb?: number;   // Índice de Aproveitamento básico
+  IAmax: number;  // Índice de Aproveitamento máximo
+  TO?: number;    // Taxa de Ocupação
 }
 
-export interface MethodEstimate {
-  method: "mcd_idw" | "wls" | "gbdt";
-  predicted_ppm2: number;
-  weight: number;
-  meta: Record<string, unknown>;
-}
+// ─── Comparable stored in valuations.comparables JSONB ────────────────────────
 
 export interface FrontendComparable {
   address: string;
@@ -149,8 +159,9 @@ export interface FrontendComparable {
   transaction_date: string;
   source_url?: string;
   images?: string[];
-  amenities?: string[];
 }
+
+// ─── Viability Scenarios stored in valuations.viability_scenarios JSONB ────────
 
 export interface ViabilityScenario {
   label: string;
@@ -160,67 +171,36 @@ export interface ViabilityScenario {
   roi_pct: number;
 }
 
-export interface ZoningInfo {
-  zone_code?: string;
-  IA_max: number;
-  land_use?: string;
-  restrictions?: string;
-}
-
-export interface PhotoAnalysisResult {
-  padrao_construtivo: "Alto" | "Médio" | "Popular";
-  estado_conservacao_sugerido: ConservationState;
-  comodidades_detectadas: string[];
-}
-
-export interface HomogenizationFactors {
-  corner_factor: number;
-  slope_factor: number;
-  level_factor: number;
-  offer_factor: number;
-  combined_factor: number;
-}
-
-export interface RossHeideckeResult {
-  depreciation_coefficient: number;
-  remaining_value_pct: number;
-  construction_standard?: ConstructionStandard;
-}
+// ─── ValuationRecord — maps 1:1 to valuations table ───────────────────────────
 
 export interface ValuationRecord {
   id: string;
   address: string;
-  neighborhood: string | null;
-  city: string | null;
+  lat: number | null;
+  lng: number | null;
   property_type: PropertyType;
   area_m2: number;
   bedrooms: number | null;
   bathrooms: number | null;
-  parking_spots: number | null;
-  amenities: string[];
-  price_range_min_brl: number;
-  price_range_max_brl: number;
-  recommended_listing_price_brl: number;
-  confidence_score: number;
-  price_factors: PriceFactor[];
-  comparables: FrontendComparable[];
-  method_estimates?: MethodEstimate[];
-  primary_method?: "mcd_idw" | "wls" | "gbdt" | "ensemble";
-  neighborhood_pois?: NeighborhoodData | null;
-  // V2 PTAM fields — all optional so existing records stay valid
-  construction_age?: number;
-  conservation_state?: ConservationState;
-  is_corner?: boolean;
-  terrain_slope?: TerrainSlope;
-  street_level?: StreetLevel;
-  static_market_value?: number;
-  residual_land_value?: number;
-  max_buildable_area?: number;
-  viability_scenarios?: ViabilityScenario[];
-  zoning_info?: ZoningInfo | null;
-  property_photos?: string[];
-  ross_heidecke_result?: RossHeideckeResult;
-  homogenization_factors?: HomogenizationFactors;
+  parking_spaces: number | null;
+  // PTAM inputs
+  construction_age: number | null;
+  conservation_state: ConservationState;
+  terrain_slope: TerrainSlope;
+  street_level: StreetLevel;
+  is_corner: boolean;
+  // Results — comparative method
+  static_market_value_brl: number | null;
+  price_per_m2_homogenized: number | null;
+  confidence_score: number | null;
+  // Results — involutive method
+  residual_land_value_brl: number | null;
+  max_buildable_area_m2: number | null;
+  zoning_params: ZoningParams | null;
+  viability_scenarios: ViabilityScenario[] | null;
+  // Report metadata
+  comparables: FrontendComparable[] | null;
+  neighborhood_pois: NeighborhoodData | null;
   created_at: string;
 }
 
@@ -228,20 +208,37 @@ export interface ValuationCreateRequest {
   address: string;
   property_type: PropertyType;
   area_m2: number;
-  bedrooms?: number | null;
-  bathrooms?: number | null;
-  parking_spots?: number | null;
-  amenities?: string[];
+  bedrooms?: number;
+  bathrooms?: number;
+  parking_spaces?: number;
   construction_age?: number;
   conservation_state?: ConservationState;
-  is_corner?: boolean;
   terrain_slope?: TerrainSlope;
   street_level?: StreetLevel;
-  property_photos?: string[];
-  construction_standard?: ConstructionStandard;
+  is_corner?: boolean;
 }
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
+// ─── Photo Analysis (valuation_photos table + AI) ─────────────────────────────
+
+export interface PhotoAnalysisResult {
+  padrao_construtivo: "Alto" | "Médio" | "Popular";
+  estado_conservacao_sugerido: ConservationState;
+  comodidades_detectadas: string[];
+}
+
+// ─── Dashboard ─────────────────────────────────────────────────────────────────
+
+export interface PriceFactor {
+  label: string;
+  score: number;
+}
+
+export interface MethodEstimate {
+  method: "mcd_idw" | "wls" | "gbdt";
+  predicted_ppm2: number;
+  weight: number;
+  meta: Record<string, unknown>;
+}
 
 export interface DashboardMetrics {
   valuations_this_month: number;
@@ -254,12 +251,10 @@ export interface DashboardMetrics {
 export interface DashboardValuationItem {
   id: string;
   address: string;
-  neighborhood: string;
   property_type: PropertyType;
-  price_brl: number;
-  confidence_score: number;
+  static_market_value_brl: number | null;
+  confidence_score: number | null;
   created_at: string;
-  bedrooms: number | null;
   area_m2: number;
 }
 
@@ -268,7 +263,7 @@ export interface DashboardValuationsResponse {
   items: DashboardValuationItem[];
 }
 
-// ─── Market Trend ─────────────────────────────────────────────────────────────
+// ─── Market Trend ──────────────────────────────────────────────────────────────
 
 export interface MarketTrendResponse {
   city: string;
@@ -278,7 +273,7 @@ export interface MarketTrendResponse {
   data_points: number[];
 }
 
-// ─── Nearby Places / Neighborhood ─────────────────────────────────────────────
+// ─── Nearby Places / Neighborhood ──────────────────────────────────────────────
 
 export interface NearbyPlace {
   name: string;
@@ -292,7 +287,7 @@ export interface NeighborhoodData {
   totalScore: number;
 }
 
-// ─── API Response wrapper ─────────────────────────────────────────────────────
+// ─── API Response wrapper ──────────────────────────────────────────────────────
 
 export interface ApiSuccess<T> {
   success: true;
