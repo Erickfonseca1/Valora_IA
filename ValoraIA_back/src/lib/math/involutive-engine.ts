@@ -1,18 +1,20 @@
-import type { ViabilityScenario } from "@/types";
+import type { ViabilityScenario, ZoningParams } from "@/types";
 
 export interface InvolutiveInput {
-  area_terreno: number;       // m² of the land plot
-  IA_max: number;             // Floor Area Ratio (Índice de Aproveitamento)
-  VGV_estimado_m2: number;    // Market price per m² from MCDDM engine
+  area_terreno: number;      // m² — from valuations.area_m2
+  zoning_params: ZoningParams; // from valuations.zoning_params JSONB
+  VGV_estimado_m2: number;   // price/m² from comparative engine
 }
 
+// Field names match DB columns in the valuations table
 export interface InvolutiveResult {
+  residual_land_value_brl: number;    // → valuations.residual_land_value_brl
+  max_buildable_area_m2: number;      // → valuations.max_buildable_area_m2
+  viability_scenarios: ViabilityScenario[]; // → valuations.viability_scenarios JSONB
+  // detailed breakdown (for report display, not persisted separately)
   VGV_total: number;
   Custo_Obra: number;
   Outorga_Onerosa: number;
-  Valor_Residual_Terreno: number;
-  max_buildable_area: number;
-  viability_scenarios: ViabilityScenario[];
 }
 
 function calcScenario(
@@ -34,14 +36,15 @@ function calcScenario(
 }
 
 export function runInvolutive(input: InvolutiveInput): InvolutiveResult {
-  const { area_terreno, IA_max, VGV_estimado_m2 } = input;
+  const { area_terreno, zoning_params, VGV_estimado_m2 } = input;
+  const IA_max = zoning_params.IAmax;
 
   const VGV_total = IA_max * area_terreno * VGV_estimado_m2;
   const Custo_Obra = VGV_total * 0.50;
   const Outorga_Onerosa = area_terreno * 0.10 * VGV_estimado_m2;
   const Margem_Incorporador = VGV_total * 0.15;
-  const Valor_Residual_Terreno = VGV_total - Custo_Obra - Outorga_Onerosa - Margem_Incorporador;
-  const max_buildable_area = IA_max * area_terreno;
+  const residual_land_value_brl = VGV_total - Custo_Obra - Outorga_Onerosa - Margem_Incorporador;
+  const max_buildable_area_m2 = IA_max * area_terreno;
 
   const viability_scenarios: ViabilityScenario[] = [
     calcScenario(area_terreno, VGV_estimado_m2, IA_max, 0.7, "Conservador", "IA 70% do máximo permitido"),
@@ -50,11 +53,11 @@ export function runInvolutive(input: InvolutiveInput): InvolutiveResult {
   ];
 
   return {
+    residual_land_value_brl,
+    max_buildable_area_m2,
+    viability_scenarios,
     VGV_total,
     Custo_Obra,
     Outorga_Onerosa,
-    Valor_Residual_Terreno,
-    max_buildable_area,
-    viability_scenarios,
   };
 }

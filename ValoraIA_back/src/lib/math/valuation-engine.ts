@@ -3,7 +3,6 @@ import { fetchNearbyPlaces } from "@/lib/geocoding/nearby-places";
 import type {
   ComparableListing,
   FrontendComparable,
-  HomogenizationFactors,
   ListingRow,
   MethodEstimate,
   NeighborhoodData,
@@ -60,8 +59,11 @@ const MAX_SAMPLES = 100;
 
 // ─── NBR 14653 Post-Ensemble Homogenization Factors ──────────────────────────
 const CORNER_FACTOR = 1.05;
-const SLOPE_FACTORS: Record<string, number> = { flat: 1.0, gentle: 0.95, steep: 0.80 };
-const LEVEL_FACTORS: Record<string, number> = { same: 1.0, above: 0.95, below: 0.80 };
+const SLOPE_FACTORS: Record<string, number> = {
+  plano: 1.0, aclive_leve: 0.95, declive_leve: 0.95,
+  aclive_acentuado: 0.80, declive_acentuado: 0.80,
+};
+const LEVEL_FACTORS: Record<string, number> = { no_nivel: 1.0, acima_nivel: 0.95, abaixo_nivel: 0.80 };
 
 // ─── Typology Factor (NBR 14653 homogenization) ───────────────────────────────
 //
@@ -126,8 +128,8 @@ async function computeTypologyFactor(
     return TYPOLOGY_DEFAULTS[targetType]?.[compType] ?? 1.0;
   }
 
-  const targetPpm2 = targetSample.map((r) => r.price_per_m2);
-  const compPpm2   = compSample.map((r) => r.price_per_m2);
+  const targetPpm2 = targetSample.map((r) => r.price / r.usable_area);
+  const compPpm2   = compSample.map((r) => r.price / r.usable_area);
 
   const avgTarget = targetPpm2.reduce((s, v) => s + v, 0) / targetPpm2.length;
   const avgComp   = compPpm2.reduce((s, v) => s + v, 0) / compPpm2.length;
@@ -272,7 +274,7 @@ async function fetchIDWCandidates(
   }
 
   // IQR filter on raw price_per_m2 to remove data errors
-  const rawPpm2 = rows.map((r) => r.price_per_m2);
+  const rawPpm2 = rows.map((r) => r.price / r.usable_area);
   const keepMask = removeOutliersIQR(rawPpm2);
   const cleanRows = rows.filter((_, i) => keepMask[i]);
 
@@ -300,7 +302,7 @@ async function fetchIDWCandidates(
     const distM = Math.max(row.distance_m, 50);
     const idwWeight = 1 / Math.pow(distM, IDW_POWER);
     const typologyFactor = allFactors[i];
-    const homogenizedPpm2 = row.price_per_m2 * OFFER_FACTOR *
+    const homogenizedPpm2 = (row.price / row.usable_area) * OFFER_FACTOR *
       Math.pow(targetArea / row.usable_area, AREA_EXPONENT) *
       typologyFactor;
     return { row, homogenizedPpm2, idwWeight, typologyFactor };
@@ -322,7 +324,7 @@ async function fetchIDWCandidates(
 // ─── Homogenization ───────────────────────────────────────────────────────────
 
 function homogenize(row: ListingRow, targetArea: number, typologyFactor = 1.0): number {
-  return row.price_per_m2 * OFFER_FACTOR *
+  return (row.price / row.usable_area) * OFFER_FACTOR *
     Math.pow(targetArea / row.usable_area, AREA_EXPONENT) *
     typologyFactor;
 }
@@ -349,7 +351,7 @@ function computePriceFactors(
 
   const demandScore = clamp(0.4 + (n / MAX_SAMPLES) * 0.6, 0.4, 1.0);
 
-  const ppm2 = candidates.map((c) => c.row.price_per_m2);
+  const ppm2 = candidates.map((c) => c.row.price / c.row.usable_area);
   const ppm2Mean = mean(ppm2);
   const ppm2Sd = stdDev(ppm2, ppm2Mean);
   const cov = ppm2Sd / ppm2Mean;
@@ -400,12 +402,10 @@ function toFrontendComparables(
     price_brl: row.price,
     area_m2: row.usable_area,
     bedrooms: row.bedrooms,
-    price_m2_brl: Math.round(row.price_per_m2),
+    price_m2_brl: Math.round(row.price / row.usable_area),
     status: "listed" as const,
     transaction_date: row.last_seen,
     source_url: row.source_url,
-    images: row.images ?? [],
-    amenities: row.amenities ?? [],
   }));
 }
 
@@ -419,7 +419,7 @@ export interface ExtendedValuationResult extends ValuationResult {
   primary_method: "mcd_idw" | "wls" | "gbdt" | "ensemble";
   typology_factor: number;
   neighborhood_pois: NeighborhoodData | null;
-  homogenization_factors: HomogenizationFactors;
+  price_per_m2_homogenized: number;
 }
 
 // ─── Main Engine ──────────────────────────────────────────────────────────────
@@ -472,9 +472,8 @@ export async function runValuation(
     .map(({ row }) => ({
       id: row.id,
       source_url: row.source_url,
-      platform: row.platform as ComparableListing["platform"],
       price: row.price,
-      price_per_m2: row.price_per_m2,
+      price_per_m2: Number((row.price / row.usable_area).toFixed(2)),
       usable_area: row.usable_area,
       bedrooms: row.bedrooms,
       bathrooms: row.bathrooms,
@@ -488,7 +487,7 @@ export async function runValuation(
 
   // ── Ensemble: MCD+IDW + WLS + GBDT ───────────────────────────────────────
   const ensembleSamples: EnsembleSample[] = candidates.map((c) => ({
-    ppm2: c.row.price_per_m2,
+    ppm2: c.row.price / c.row.usable_area,
     homPpm2: c.homogenizedPpm2,
     area: c.row.usable_area,
     bedrooms: c.row.bedrooms ?? 0,
@@ -524,21 +523,14 @@ export async function runValuation(
 
   // ── NBR post-ensemble homogenization (corner, slope, street level) ────────
   const cornerFactor = req.is_corner ? CORNER_FACTOR : 1.0;
-  const slopeFactor  = SLOPE_FACTORS[req.terrain_slope ?? 'flat'] ?? 1.0;
-  const levelFactor  = LEVEL_FACTORS[req.street_level ?? 'same'] ?? 1.0;
+  const slopeFactor  = SLOPE_FACTORS[req.terrain_slope ?? 'plano'] ?? 1.0;
+  const levelFactor  = LEVEL_FACTORS[req.street_level ?? 'no_nivel'] ?? 1.0;
   const combinedFactor = cornerFactor * slopeFactor * levelFactor;
 
   const adjustedEstimatedValue = Number((finalEstimatedValue * combinedFactor).toFixed(2));
   const adjustedCiLower = Number((Math.max(0, finalCiLowerBrl) * combinedFactor).toFixed(2));
   const adjustedCiUpper = Number((finalCiUpperBrl * combinedFactor).toFixed(2));
-
-  const homogenizationFactors: HomogenizationFactors = {
-    corner_factor: cornerFactor,
-    slope_factor: slopeFactor,
-    level_factor: levelFactor,
-    offer_factor: OFFER_FACTOR,
-    combined_factor: combinedFactor,
-  };
+  const pricePerM2Homogenized = Number((finalPpm2 * combinedFactor).toFixed(2));
 
   let neighborhood: NeighborhoodData | null = null;
   try {
@@ -571,7 +563,7 @@ export async function runValuation(
     primary_method: ensemble.primary_method,
     typology_factor: Number(typologyFactorUsed.toFixed(3)),
     neighborhood_pois: neighborhood,
-    homogenization_factors: homogenizationFactors,
+    price_per_m2_homogenized: pricePerM2Homogenized,
   };
 }
 
