@@ -174,6 +174,26 @@ export interface ViabilityScenario {
   roi_pct: number;
 }
 
+// ─── HomogenizationFactors — per-comparable homogenization breakdown ──────────
+
+export interface HomogenizationFactors {
+  ensemble_ppm2: number;
+  offer_factor: number;
+  typology_factor: number;
+  corner_factor: number;
+  slope_factor: number;
+  level_factor: number;
+  physical_factor: number;
+  amenity_internal: number;
+  amenity_condo: number;
+  amenity_proximo: number;
+  amenity_factor: number;
+  combined_factor: number;
+  ppm2_homogenized: number;
+  area_m2: number;
+  market_value: number;
+}
+
 // ─── ValuationRecord — maps 1:1 to valuations table ───────────────────────────
 
 export interface ValuationRecord {
@@ -207,6 +227,7 @@ export interface ValuationRecord {
   // Report metadata
   comparables: FrontendComparable[] | null;
   neighborhood_pois: NeighborhoodData | null;
+  homogenization_factors: HomogenizationFactors | null;
   created_at: string;
 }
 
