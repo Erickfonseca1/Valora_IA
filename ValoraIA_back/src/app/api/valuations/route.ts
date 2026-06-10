@@ -29,6 +29,11 @@ const ValuationCreateSchema = z.object({
   ]).optional(),
   street_level: z.enum(["no_nivel", "abaixo_nivel", "acima_nivel"]).optional(),
   is_corner: z.boolean().optional(),
+  amenities: z.array(z.object({
+    item: z.string(),
+    scope: z.enum(["interno", "condo", "proximo"]),
+  })).optional(),
+  in_gated_community: z.boolean().optional(),
 });
 
 export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<ValuationRecord>>> {
@@ -52,6 +57,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     bedrooms, bathrooms, parking_spaces,
     lat: bodyLat, lng: bodyLng,
     construction_age, conservation_state, terrain_slope, street_level, is_corner,
+    amenities, in_gated_community,
   } = parsed.data;
 
   // ── Geocode ───────────────────────────────────────────────────────────────
@@ -86,6 +92,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       is_corner,
       terrain_slope,
       street_level,
+      amenities: amenities ?? [],
+      in_gated_community: in_gated_community ?? false,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Valuation failed";
@@ -141,6 +149,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       viability_scenarios: involutiveResult?.viability_scenarios ?? null,
       comparables: frontend_comparables,
       neighborhood_pois,
+      amenities: amenities ?? [],
+      in_gated_community: in_gated_community ?? false,
     })
     .select("id, created_at")
     .single();
@@ -177,6 +187,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     viability_scenarios: involutiveResult?.viability_scenarios ?? null,
     comparables: frontend_comparables,
     neighborhood_pois,
+    amenities: amenities ?? [],
+    in_gated_community: in_gated_community ?? false,
     created_at: row.created_at,
   };
 

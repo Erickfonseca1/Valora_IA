@@ -5,6 +5,9 @@ export interface GeoPoint {
   lng: number;
 }
 
+export type AmenityScope = "interno" | "condo" | "proximo";
+export interface AmenitySelectionDTO { item: string; scope: AmenityScope; }
+
 // ─── DB Enum Types — must match newschema.sql exactly ─────────────────────────
 
 export type PropertyType = "apartment" | "house" | "commercial" | "land";
@@ -198,6 +201,9 @@ export interface ValuationRecord {
   max_buildable_area_m2: number | null;
   zoning_params: ZoningParams | null;
   viability_scenarios: ViabilityScenario[] | null;
+  // Amenities
+  amenities: AmenitySelectionDTO[];
+  in_gated_community: boolean;
   // Report metadata
   comparables: FrontendComparable[] | null;
   neighborhood_pois: NeighborhoodData | null;
@@ -216,6 +222,8 @@ export interface ValuationCreateRequest {
   terrain_slope?: TerrainSlope;
   street_level?: StreetLevel;
   is_corner?: boolean;
+  amenities?: AmenitySelectionDTO[];
+  in_gated_community?: boolean;
 }
 
 // ─── Photo Analysis (valuation_photos table + AI) ─────────────────────────────

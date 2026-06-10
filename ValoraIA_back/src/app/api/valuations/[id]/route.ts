@@ -46,6 +46,8 @@ export async function GET(
     viability_scenarios: data.viability_scenarios ?? null,
     comparables: data.comparables ?? null,
     neighborhood_pois: data.neighborhood_pois ?? null,
+    amenities: data.amenities ?? [],
+    in_gated_community: data.in_gated_community ?? false,
     created_at: data.created_at,
   };
 
