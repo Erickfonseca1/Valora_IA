@@ -389,6 +389,62 @@ function toFrontendComparables(
   }));
 }
 
+// ─── Homogenization Factors ───────────────────────────────────────────────────
+
+export interface HomogenizationFactors {
+  ensemble_ppm2: number;
+  offer_factor: number;
+  typology_factor: number;
+  corner_factor: number;
+  slope_factor: number;
+  level_factor: number;
+  physical_factor: number;
+  amenity_internal: number;
+  amenity_condo: number;
+  amenity_proximo: number;
+  amenity_factor: number;
+  combined_factor: number;
+  ppm2_homogenized: number;
+  area_m2: number;
+  market_value: number;
+}
+
+export function buildHomogenizationFactors(p: {
+  ensemblePpm2: number;
+  offerFactor: number;
+  typologyFactor: number;
+  cornerFactor: number;
+  slopeFactor: number;
+  levelFactor: number;
+  internalFactor: number;
+  condoFactor: number;
+  proximoFactor: number;
+  areaM2: number;
+}): HomogenizationFactors {
+  const physical = p.cornerFactor * p.slopeFactor * p.levelFactor;
+  const amenity = p.internalFactor * p.condoFactor * p.proximoFactor;
+  const combined = physical * amenity;
+  const ppm2Homog = p.ensemblePpm2 * combined;
+  const round = (v: number, d = 6) => Number(v.toFixed(d));
+  return {
+    ensemble_ppm2: round(p.ensemblePpm2, 2),
+    offer_factor: round(p.offerFactor),
+    typology_factor: round(p.typologyFactor),
+    corner_factor: round(p.cornerFactor),
+    slope_factor: round(p.slopeFactor),
+    level_factor: round(p.levelFactor),
+    physical_factor: round(physical),
+    amenity_internal: round(p.internalFactor),
+    amenity_condo: round(p.condoFactor),
+    amenity_proximo: round(p.proximoFactor),
+    amenity_factor: round(amenity),
+    combined_factor: round(combined),
+    ppm2_homogenized: round(ppm2Homog, 2),
+    area_m2: round(p.areaM2, 2),
+    market_value: round(ppm2Homog * p.areaM2, 2),
+  };
+}
+
 // ─── Extended Valuation Result ────────────────────────────────────────────────
 
 export interface ExtendedValuationResult extends ValuationResult {
@@ -402,6 +458,7 @@ export interface ExtendedValuationResult extends ValuationResult {
   price_per_m2_homogenized: number;
   amenity_breakdown: import("@/lib/amenities/factors").ScopeContribution[];
   amenity_factors: { internal: number; condo: number; proximo: number };
+  homogenization_factors: HomogenizationFactors;
 }
 
 // ─── Main Engine ──────────────────────────────────────────────────────────────
@@ -567,6 +624,18 @@ export async function runValuation(
       condo: scope.condoFactor,
       proximo: proximoFactor,
     },
+    homogenization_factors: buildHomogenizationFactors({
+      ensemblePpm2: finalPpm2,
+      offerFactor: OFFER_FACTOR,
+      typologyFactor: typologyFactorUsed,
+      cornerFactor,
+      slopeFactor,
+      levelFactor,
+      internalFactor: scope.internalFactor,
+      condoFactor: scope.condoFactor,
+      proximoFactor,
+      areaM2: target_area,
+    }),
   };
 }
 
