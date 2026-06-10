@@ -110,6 +110,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     confidence_score,
     frontend_comparables,
     neighborhood_pois,
+    homogenization_factors,
   } = engineResult;
 
   // ── Involutive (land only) ────────────────────────────────────────────────
@@ -149,6 +150,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       viability_scenarios: involutiveResult?.viability_scenarios ?? null,
       comparables: frontend_comparables,
       neighborhood_pois,
+      homogenization_factors,
       amenities: amenities ?? [],
       in_gated_community: in_gated_community ?? false,
     })
@@ -187,6 +189,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     viability_scenarios: involutiveResult?.viability_scenarios ?? null,
     comparables: frontend_comparables,
     neighborhood_pois,
+    homogenization_factors,
     amenities: amenities ?? [],
     in_gated_community: in_gated_community ?? false,
     created_at: row.created_at,
