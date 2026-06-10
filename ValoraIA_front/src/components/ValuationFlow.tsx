@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { ValuationForm, PropertyType } from '../types'
-import type { ConservationState, TerrainSlope, StreetLevel } from '../types'
+import type { ConservationState, TerrainSlope, StreetLevel, AmenityScope, AmenitySelection } from '../types'
 import { createValuation, uploadPhotos, analyzePhotos } from '../api'
+import { itemsForScope, FRONT_CATALOG } from '../amenities'
 
 const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Apartamento', value: 'apartment' },
@@ -13,11 +14,16 @@ const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
 
 const STEPS = ['Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio']
 
-const STEPS_BY_TYPE: Record<PropertyType, string[]> = {
-  apartment: STEPS,
-  house: STEPS,
-  commercial: STEPS,
-  land: STEPS,
+function hasAmenityIn(list: AmenitySelection[], item: string, scope: AmenityScope) {
+  return list.some(a => a.item === item && a.scope === scope)
+}
+
+function mapLabelToItem(label: string): string | null {
+  const n = label.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+  const hit = Object.entries(FRONT_CATALOG).find(
+    ([, e]) => e.label.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().includes(n)
+  )
+  return hit ? hit[0] : null
 }
 
 const PRIMARY = '#1E3A8A'
@@ -67,17 +73,42 @@ export default function ValuationFlow() {
     street_level: '' as StreetLevel | '',
     photos: [] as File[],
     photoUrls: [] as string[],
+    amenities: [],
+    in_gated_community: false,
   })
   const [processing, setProcessing] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [suggested, setSuggested] = useState<AmenitySelection[]>([])
 
   const set = <K extends keyof ValuationForm>(k: K, v: ValuationForm[K]) =>
     setForm(f => ({ ...f, [k]: v }))
 
+  const hasAmenity = (item: string, scope: AmenityScope) =>
+    form.amenities.some(a => a.item === item && a.scope === scope)
+
+  const toggleAmenity = (item: string, scope: AmenityScope) =>
+    setForm(f => ({
+      ...f,
+      amenities: hasAmenityIn(f.amenities, item, scope)
+        ? f.amenities.filter(a => !(a.item === item && a.scope === scope))
+        : [...f.amenities, { item, scope }],
+    }))
+
+  const condoVisible =
+    form.propertyType === 'apartment' ||
+    ((form.propertyType === 'house' || form.propertyType === 'commercial') && form.in_gated_community)
+
+  const internoVisible = form.propertyType !== 'land'
+
   const handlePropertyTypeChange = (value: PropertyType) => {
-    setForm(f => ({ ...f, propertyType: value }))
-    setStep(s => Math.min(s, STEPS_BY_TYPE[value].length - 1))
+    setForm(f => ({
+      ...f,
+      propertyType: value,
+      amenities: value === 'land' ? [] : f.amenities,
+      in_gated_community: value === 'apartment' ? false : f.in_gated_community,
+    }))
+    setStep(s => Math.min(s, STEPS.length - 1))
   }
 
   const advanceFromPhotoStep = async () => {
@@ -97,6 +128,13 @@ export default function ValuationFlow() {
           if (analysis.estado_conservacao_sugerido) {
             setForm(f => ({ ...f, conservation_state: analysis.estado_conservacao_sugerido }))
           }
+          const defScope: AmenityScope =
+            form.propertyType === 'apartment' ? 'condo' : 'interno'
+          const sugg = (analysis.comodidades_detectadas ?? [])
+            .map((c: string) => mapLabelToItem(c))
+            .filter((id: string | null): id is string => !!id && !hasAmenityIn(form.amenities, id, defScope))
+            .map((id: string) => ({ item: id, scope: defScope }))
+          if (sugg.length > 0) setSuggested(sugg)
         } catch {
           // non-fatal — analysis failure doesn't block the flow
         }
@@ -126,6 +164,8 @@ export default function ValuationFlow() {
         is_corner: form.is_corner || undefined,
         terrain_slope: (form.terrain_slope || undefined) as TerrainSlope | undefined,
         street_level: (form.street_level || undefined) as StreetLevel | undefined,
+        amenities: form.amenities,
+        in_gated_community: form.in_gated_community || undefined,
       })
       navigate(`/resultado/${result.id}`)
     } catch (e) {
@@ -150,7 +190,7 @@ export default function ValuationFlow() {
     fontFamily: 'inherit',
   })
 
-  const steps = STEPS_BY_TYPE[form.propertyType]
+  const steps = STEPS
   const maxStep = steps.length - 1
   const isReviewStep = step === maxStep
 
@@ -370,8 +410,64 @@ export default function ValuationFlow() {
                 style={{ width: 18, height: 18, cursor: 'pointer' }}
               />
               <label htmlFor="is_corner" style={{ fontSize: 14, color: '#334155', cursor: 'pointer' }}>
-                Imóvel de esquina (fator +5%)
+                Imóvel de esquina
               </label>
+            </div>
+
+            {/* Comodidades & Diferenciais */}
+            <div style={{ marginTop: 8 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>
+                Comodidades & Diferenciais
+              </label>
+
+              {(form.propertyType === 'house' || form.propertyType === 'commercial') && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <input
+                    type="checkbox"
+                    id="in_gated"
+                    checked={form.in_gated_community}
+                    onChange={e => setForm(f => ({ ...f, in_gated_community: e.target.checked }))}
+                    style={{ width: 18, height: 18, cursor: 'pointer' }}
+                  />
+                  <label htmlFor="in_gated" style={{ fontSize: 14, color: '#334155', cursor: 'pointer' }}>
+                    Imóvel em condomínio fechado
+                  </label>
+                </div>
+              )}
+
+              {internoVisible && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: '#64748B', marginBottom: 6 }}>Do imóvel</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {itemsForScope('interno').map(a => (
+                      <button key={`int-${a.id}`} type="button"
+                        onClick={() => toggleAmenity(a.id, 'interno')}
+                        style={pillStyle(hasAmenity(a.id, 'interno'))}>
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {condoVisible && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: '#64748B', marginBottom: 6 }}>Do condomínio</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {itemsForScope('condo').map(a => (
+                      <button key={`con-${a.id}`} type="button"
+                        onClick={() => toggleAmenity(a.id, 'condo')}
+                        style={pillStyle(hasAmenity(a.id, 'condo'))}>
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>
+                Comodidades próximas (entorno) são detectadas automaticamente pela localização.
+              </p>
             </div>
           </div>
         ) : step === 1 ? (
@@ -456,6 +552,25 @@ export default function ValuationFlow() {
           /* Last step — Review */
           <div>
             <h3 className="text-base font-semibold mb-4 text-slate-900">Revisar Detalhes</h3>
+            {suggested.length > 0 && (
+              <div style={{ marginBottom: 16, padding: 12, background: '#F0FDF4', borderRadius: 10, border: '1px solid #BBF7D0' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#15803D', marginBottom: 8 }}>
+                  Sugestões da IA — clique para confirmar
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {suggested.map(s => (
+                    <button key={`sug-${s.item}`} type="button"
+                      onClick={() => {
+                        toggleAmenity(s.item, s.scope)
+                        setSuggested(list => list.filter(x => x.item !== s.item))
+                      }}
+                      style={pillStyle(false)}>
+                      + {FRONT_CATALOG[s.item]?.label ?? s.item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: 'Endereço', value: form.address },

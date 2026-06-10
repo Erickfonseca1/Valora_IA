@@ -1,5 +1,8 @@
 export type Screen = 'dashboard' | 'valuation-flow' | 'report'
 
+export type AmenityScope = 'interno' | 'condo' | 'proximo'
+export interface AmenitySelection { item: string; scope: AmenityScope }
+
 export type PropertyType = 'apartment' | 'house' | 'commercial' | 'land'
 export type MarketTemperature = 'hot' | 'warm' | 'cold'
 
@@ -91,6 +94,24 @@ export interface PhotoAnalysisResult {
   comodidades_detectadas: string[]
 }
 
+export interface HomogenizationFactors {
+  ensemble_ppm2: number
+  offer_factor: number
+  typology_factor: number
+  corner_factor: number
+  slope_factor: number
+  level_factor: number
+  physical_factor: number
+  amenity_internal: number
+  amenity_condo: number
+  amenity_proximo: number
+  amenity_factor: number
+  combined_factor: number
+  ppm2_homogenized: number
+  area_m2: number
+  market_value: number
+}
+
 // Maps 1:1 to valuations table columns
 export interface ValuationRecord {
   id: string
@@ -120,6 +141,11 @@ export interface ValuationRecord {
   // Report metadata
   comparables: FrontendComparable[] | null
   neighborhood_pois: NeighborhoodData | null
+  amenities: AmenitySelection[]
+  in_gated_community: boolean
+  amenity_factors?: { internal: number; condo: number; proximo: number }
+  amenity_breakdown?: { scope: AmenityScope; item: string; contribution: number; derived: boolean }[]
+  homogenization_factors?: HomogenizationFactors | null
   created_at: string
 }
 
@@ -168,6 +194,8 @@ export interface CreateValuationBody {
   is_corner?: boolean
   lat?: number
   lng?: number
+  amenities?: AmenitySelection[]
+  in_gated_community?: boolean
 }
 
 export interface ValuationForm {
@@ -184,4 +212,6 @@ export interface ValuationForm {
   street_level: StreetLevel | ''
   photos: File[]
   photoUrls: string[]
+  amenities: AmenitySelection[]
+  in_gated_community: boolean
 }

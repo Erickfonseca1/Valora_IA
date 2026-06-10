@@ -3,6 +3,7 @@ import AppShell from './components/AppShell'
 import Dashboard from './components/Dashboard'
 import ValuationFlow from './components/ValuationFlow'
 import Report from './components/Report'
+import Relatorios from './components/Relatorios'
 
 export default function App() {
   return (
@@ -11,6 +12,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/nova-avaliacao" element={<ValuationFlow />} />
+          <Route path="/relatorios" element={<Relatorios />} />
           <Route path="/resultado/:id" element={<Report />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

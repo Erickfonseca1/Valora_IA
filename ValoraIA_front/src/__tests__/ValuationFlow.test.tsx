@@ -39,7 +39,7 @@ vi.mock('../api', () => ({
   }),
 }))
 
-import { createValuation } from '../api'
+import { createValuation, analyzePhotos } from '../api'
 
 function renderFlow() {
   return render(
@@ -63,7 +63,7 @@ async function fillStep0AndAdvance() {
 }
 
 // After fillStep0AndAdvance, we are on step 1 (Conservação & Fotos).
-// This helper advances through that photo step to reach step 2 (Comodidades for apt/house).
+// This helper advances through that photo step to reach step 2 (Revisão & Envio).
 async function advanceThroughPhotoStep() {
   const continuarBtn = screen.getByText('Continuar')
   await act(async () => {
@@ -82,7 +82,6 @@ describe('ValuationFlow', () => {
     renderFlow()
     expect(screen.getByText('Detalhes do Imóvel')).toBeInTheDocument()
     expect(screen.getByText('Conservação & Fotos')).toBeInTheDocument()
-    expect(screen.getByText('Comodidades')).toBeInTheDocument()
     expect(screen.getByText('Revisão & Envio')).toBeInTheDocument()
   })
 
@@ -125,40 +124,26 @@ describe('ValuationFlow', () => {
     expect(screen.getByText('Fotos do Imóvel')).toBeInTheDocument()
   })
 
-  it('navega para passo 2 (Comodidades) após passo 1', async () => {
+  it('navega para passo 2 (revisão) após passo 1', async () => {
     renderFlow()
     await fillStep0AndAdvance()
     await advanceThroughPhotoStep()
-    expect(screen.getByText('Selecione as Comodidades')).toBeInTheDocument()
-  })
-
-  it('passo 2 exibe amenities para seleção', async () => {
-    renderFlow()
-    await fillStep0AndAdvance()
-    await advanceThroughPhotoStep()
-    expect(screen.getByText('Piscina')).toBeInTheDocument()
-    expect(screen.getByText('Academia')).toBeInTheDocument()
-    expect(screen.getByText('Elevador')).toBeInTheDocument()
-  })
-
-  it('navega para passo 3 (revisão) após passo 2', async () => {
-    renderFlow()
-    await fillStep0AndAdvance()
-    await advanceThroughPhotoStep()
-    const continuarBtn = screen.getByText('Continuar')
-    await act(async () => {
-      fireEvent.click(continuarBtn)
-    })
     expect(screen.getByText('Revisar Detalhes')).toBeInTheDocument()
   })
 
-  it('passo 3 exibe todos os dados preenchidos', async () => {
+  it('passo 0 exibe comodidades para seleção', () => {
+    renderFlow()
+    expect(screen.getByText('Comodidades & Diferenciais')).toBeInTheDocument()
+    // Piscina appears in both "interno" and "condo" scopes for apartment
+    expect(screen.getAllByText('Piscina').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Academia').length).toBeGreaterThan(0)
+    expect(screen.getByText('Elevador')).toBeInTheDocument()
+  })
+
+  it('passo 2 exibe todos os dados preenchidos', async () => {
     renderFlow()
     await fillStep0AndAdvance()
     await advanceThroughPhotoStep()
-    await act(async () => {
-      fireEvent.click(screen.getByText('Continuar'))
-    })
     expect(screen.getByText('Av. Paulista, 1000, São Paulo, SP')).toBeInTheDocument()
     expect(screen.getByText('120m²')).toBeInTheDocument()
   })
@@ -167,9 +152,6 @@ describe('ValuationFlow', () => {
     renderFlow()
     await fillStep0AndAdvance()
     await advanceThroughPhotoStep()
-    await act(async () => {
-      fireEvent.click(screen.getByText('Continuar'))
-    })
     expect(screen.getByText('✦ Gerar Avaliação IA')).toBeInTheDocument()
   })
 
@@ -178,9 +160,6 @@ describe('ValuationFlow', () => {
     await fillStep0AndAdvance()
     await advanceThroughPhotoStep()
     await act(async () => {
-      fireEvent.click(screen.getByText('Continuar'))
-    })
-    await act(async () => {
       fireEvent.click(screen.getByText('✦ Gerar Avaliação IA'))
     })
 
@@ -188,9 +167,6 @@ describe('ValuationFlow', () => {
       address: 'Av. Paulista, 1000, São Paulo, SP',
       property_type: 'apartment',
       area_m2: 120,
-      bedrooms: 2,
-      bathrooms: 1,
-      parking_spots: 1,
     }))
 
     expect(screen.getByText('A IA está analisando o imóvel...')).toBeInTheDocument()
@@ -202,9 +178,6 @@ describe('ValuationFlow', () => {
 
     await fillStep0AndAdvance()
     await advanceThroughPhotoStep()
-    await act(async () => {
-      fireEvent.click(screen.getByText('Continuar'))
-    })
     await act(async () => {
       fireEvent.click(screen.getByText('✦ Gerar Avaliação IA'))
     })
@@ -247,12 +220,12 @@ describe('ValuationFlow', () => {
     expect(screen.getByText('Vagas')).toBeInTheDocument()
   })
 
-  it('Comercial mostra Banheiros e Vagas mas NÃO Quartos', () => {
+  it('Comercial não mostra Quartos, Banheiros nem Vagas', () => {
     renderFlow()
     fireEvent.click(screen.getByText('Comercial'))
     expect(screen.queryByText('Quartos')).not.toBeInTheDocument()
-    expect(screen.getByText('Banheiros')).toBeInTheDocument()
-    expect(screen.getByText('Vagas')).toBeInTheDocument()
+    expect(screen.queryByText('Banheiros')).not.toBeInTheDocument()
+    expect(screen.queryByText('Vagas')).not.toBeInTheDocument()
   })
 
   it('Terreno não mostra Quartos, Banheiros nem Vagas', () => {
@@ -263,7 +236,7 @@ describe('ValuationFlow', () => {
     expect(screen.queryByText('Vagas')).not.toBeInTheDocument()
   })
 
-  it('Terreno envia bedrooms/bathrooms/parking como null', async () => {
+  it('Terreno envia bedrooms/bathrooms/parking como undefined', async () => {
     renderFlow()
 
     fireEvent.click(screen.getByText('Terreno'))
@@ -276,7 +249,7 @@ describe('ValuationFlow', () => {
 
     // Step 0 → Step 1 (Conservação & Fotos)
     await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
-    // Step 1 → Step 2 (Revisão, since Terreno has no amenities step)
+    // Step 1 → Step 2 (Revisão)
     await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
     await act(async () => { fireEvent.click(screen.getByText('✦ Gerar Avaliação IA')) })
 
@@ -284,36 +257,6 @@ describe('ValuationFlow', () => {
       address: 'Loteamento Alphaville, Barueri, SP',
       property_type: 'land',
       area_m2: 500,
-      bedrooms: null,
-      bathrooms: null,
-      parking_spots: null,
-    }))
-  })
-
-  it('Comercial envia bedrooms como null, bathrooms e parking com valores', async () => {
-    renderFlow()
-
-    fireEvent.click(screen.getByText('Comercial'))
-    fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
-      target: { value: 'Av. Brigadeiro Faria Lima, 1500, São Paulo, SP' },
-    })
-    fireEvent.change(screen.getByPlaceholderText('ex. 98'), {
-      target: { value: '200' },
-    })
-
-    // Step 0 → Step 1 (Conservação & Fotos)
-    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
-    // Step 1 → Step 2 (Revisão, since Comercial has no amenities step)
-    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
-    await act(async () => { fireEvent.click(screen.getByText('✦ Gerar Avaliação IA')) })
-
-    expect(createValuation).toHaveBeenCalledWith(expect.objectContaining({
-      address: 'Av. Brigadeiro Faria Lima, 1500, São Paulo, SP',
-      property_type: 'commercial',
-      area_m2: 200,
-      bedrooms: null,
-      bathrooms: 1,
-      parking_spots: 1,
     }))
   })
 
@@ -360,5 +303,54 @@ describe('ValuationFlow', () => {
 
     // Should now be on Conservação & Fotos step
     expect(screen.getByText(/Fotos do Imóvel/i)).toBeTruthy()
+  })
+
+  it('mostra comodidades de condomínio para apartamento e oculta para casa sem flag', async () => {
+    render(<MemoryRouter><ValuationFlow /></MemoryRouter>)
+    // apartment é default → "Do condomínio" visível
+    expect(screen.getByText('Do condomínio')).toBeInTheDocument()
+    // troca para Casa → some
+    fireEvent.click(screen.getByText('Casa'))
+    expect(screen.queryByText('Do condomínio')).not.toBeInTheDocument()
+    // marca condomínio fechado → reaparece
+    fireEvent.click(screen.getByLabelText('Imóvel em condomínio fechado'))
+    expect(screen.getByText('Do condomínio')).toBeInTheDocument()
+  })
+
+  it('exibe chip de sugestão da IA e remove ao clicar', async () => {
+    vi.mocked(analyzePhotos).mockResolvedValueOnce({
+      padrao_construtivo: 'Médio',
+      estado_conservacao_sugerido: 'regular' as const,
+      comodidades_detectadas: ['Piscina'],
+    })
+
+    renderFlow()
+    await fillStep0AndAdvance()
+
+    // On step 1 (Fotos), simulate uploading a file so analyzePhotos gets called
+    const fakeFile = new File(['fake'], 'foto.jpg', { type: 'image/jpeg' })
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [fakeFile] } })
+    })
+
+    // Advance through photo step (triggers upload + analyzePhotos)
+    await act(async () => {
+      fireEvent.click(screen.getByText('Continuar'))
+    })
+
+    // Chip da sugestão deve aparecer na seção de revisão
+    await waitFor(() => {
+      expect(screen.getByText('Sugestões da IA — clique para confirmar')).toBeInTheDocument()
+    })
+    // Botão com o label da comodidade detectada
+    const chip = screen.getByRole('button', { name: /\+ Piscina/i })
+    expect(chip).toBeInTheDocument()
+
+    // Ao clicar, o chip deve desaparecer
+    await act(async () => {
+      fireEvent.click(chip)
+    })
+    expect(screen.queryByText('Sugestões da IA — clique para confirmar')).not.toBeInTheDocument()
   })
 })

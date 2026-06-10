@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/db/supabase";
-import type { ApiResponse } from "@/types";
+import type { ApiResponse, PropertyType } from "@/types";
+import { buildListingAmenities } from "./amenities-map";
 
 const INGEST_SECRET = process.env.INGEST_WEBHOOK_SECRET;
 const APIFY_TOKEN = process.env.APIFY_API_TOKEN;
@@ -231,6 +232,11 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<S
 
     const construction_age = inferConstructionAge(item);
 
+    const rawUnitType = item.attributes?.unit_types?.[0] ?? null;
+    const listingAmenities = buildListingAmenities(
+      item.attributes?.amenities, property_type as PropertyType, rawUnitType
+    );
+
     const { error } = await db.from("listings").upsert(
       {
         source_url: url,
@@ -245,6 +251,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<S
         city,
         construction_age,
         conservation_state: "regular",
+        unit_type: rawUnitType,
+        amenities: listingAmenities,
         last_seen: new Date().toISOString(),
       },
       { onConflict: "source_url", ignoreDuplicates: false }

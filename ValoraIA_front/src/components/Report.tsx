@@ -2,9 +2,44 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import type { ValuationRecord } from '../types'
 import { getValuation } from '../api'
+import { FRONT_CATALOG } from '../amenities'
+import ValueWaterfall from './ValueWaterfall'
+import { pdf } from '@react-pdf/renderer'
+import LaudoPDF from './LaudoPDF'
 
 const PRIMARY = '#1E3A8A'
 const ACCENT = '#10B981'
+
+const SCOPE_TITLES: Record<string, string> = {
+  interno: 'Diferencial do Imóvel',
+  condo: 'Infra do Condomínio',
+  proximo: 'Entorno',
+}
+
+function AmenityScopes({ amenities }: { amenities?: { item: string; scope: string }[] }) {
+  if (!amenities?.length) return null
+  const byScope: Record<string, string[]> = {}
+  for (const a of amenities) {
+    const label = FRONT_CATALOG[a.item]?.label ?? a.item
+    ;(byScope[a.scope] ??= []).push(label)
+  }
+  const hasAny = (['interno', 'condo', 'proximo'] as const).some(s => byScope[s]?.length)
+  if (!hasAny) return null
+  return (
+    <div style={{ display: 'grid', gap: 12 }}>
+      {(['interno', 'condo', 'proximo'] as const).map(s =>
+        byScope[s]?.length ? (
+          <div key={s}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+              {SCOPE_TITLES[s]}
+            </div>
+            <div style={{ fontSize: 13, color: '#334155' }}>{byScope[s].join(' · ')}</div>
+          </div>
+        ) : null
+      )}
+    </div>
+  )
+}
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   apartment: 'Apartamento',
@@ -99,6 +134,7 @@ export default function Report() {
   const [valuation, setValuation] = useState<ValuationRecord | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [pdfLoading, setPdfLoading] = useState(false)
 
   useEffect(() => {
     if (!id) { navigate('/'); return }
@@ -141,6 +177,22 @@ export default function Report() {
   })
   const laudoId = `PTAM-${valuation.id.slice(-6).toUpperCase()}`
   const confidenceScore = valuation.confidence_score ?? 0
+
+  const handleDownloadPdf = async () => {
+    if (!valuation) return
+    setPdfLoading(true)
+    try {
+      const blob = await pdf(<LaudoPDF valuation={valuation} />).toBlob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${laudoId}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setPdfLoading(false)
+    }
+  }
   const comparables = valuation.comparables ?? []
 
   const fichaRows: { label: string; value: string }[] = [
@@ -214,6 +266,16 @@ export default function Report() {
         </table>
       </SectionCard>
 
+      {/* ── 01b. COMODIDADES POR ESCOPO ─────────────────────────── */}
+      {valuation.amenities?.length > 0 && (
+        <SectionCard>
+          <SectionHeader number="01b" title="Comodidades do Imóvel por Escopo" />
+          <div style={{ padding: '16px 20px' }}>
+            <AmenityScopes amenities={valuation.amenities} />
+          </div>
+        </SectionCard>
+      )}
+
       {/* ── 02. VALOR DE MERCADO DETERMINADO ───────────────────── */}
       <SectionCard>
         <SectionHeader number="02" title="Valor de Mercado Determinado" />
@@ -252,6 +314,14 @@ export default function Report() {
           </div>
         </div>
       </SectionCard>
+
+      {/* ── 02b. MEMÓRIA DE CÁLCULO ─────────────────────────────── */}
+      {valuation.homogenization_factors && (
+        <SectionCard>
+          <SectionHeader number="02b" title="Como Chegamos a Este Valor" />
+          <ValueWaterfall factors={valuation.homogenization_factors} />
+        </SectionCard>
+      )}
 
       {/* ── 03. IMÓVEIS REFERENCIAIS ─────────────────────────────── */}
       {comparables.length > 0 && (
@@ -514,10 +584,11 @@ export default function Report() {
           + Nova Avaliação
         </button>
         <button
-          onClick={() => window.print()}
-          style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontFamily: 'inherit' }}
+          onClick={handleDownloadPdf}
+          disabled={pdfLoading}
+          style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: pdfLoading ? 'default' : 'pointer', border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontFamily: 'inherit', opacity: pdfLoading ? 0.6 : 1 }}
         >
-          Imprimir / PDF
+          {pdfLoading ? 'Gerando PDF…' : 'Baixar PDF'}
         </button>
       </div>
     </div>

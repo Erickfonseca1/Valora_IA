@@ -14,7 +14,12 @@ const { mockValuation } = vi.hoisted(() => ({
     bedrooms: 3,
     bathrooms: 2,
     parking_spots: 1,
-    amenities: ['Piscina', 'Academia', 'Varanda'],
+    amenities: [
+      { item: 'piscina', scope: 'condo' as const },
+      { item: 'academia', scope: 'condo' as const },
+      { item: 'varanda', scope: 'interno' as const },
+    ],
+    in_gated_community: false,
     price_range_min_brl: 485000,
     price_range_max_brl: 525000,
     recommended_listing_price_brl: 505000,
@@ -70,8 +75,10 @@ const { mockValuation } = vi.hoisted(() => ({
     ],
     zoning_info: { zone_code: 'ZR-2', IA_max: 2.0, land_use: 'Residencial' },
     homogenization_factors: {
-      corner_factor: 1.0, slope_factor: 1.0, level_factor: 1.0,
-      offer_factor: 0.90, combined_factor: 1.0,
+      ensemble_ppm2: 5000, offer_factor: 0.9, typology_factor: 1.0,
+      corner_factor: 1.05, slope_factor: 1.0, level_factor: 1.0, physical_factor: 1.05,
+      amenity_internal: 1.06, amenity_condo: 1.0, amenity_proximo: 1.0, amenity_factor: 1.06,
+      combined_factor: 1.113, ppm2_homogenized: 5565, area_m2: 98, market_value: 545370,
     },
   },
 }))
@@ -211,6 +218,21 @@ describe('Report', () => {
       expect(screen.getByText(/Fatores de Homogeneização/i)).toBeInTheDocument()
       expect(screen.getByText(/Multiplicador Combinado/i)).toBeInTheDocument()
       expect(screen.getByText(/Fator de Oferta/i)).toBeInTheDocument()
+    })
+  })
+
+  it('agrupa comodidades por escopo no relatório', async () => {
+    renderReport()
+    await waitFor(() => {
+      expect(screen.getByText('Diferencial do Imóvel')).toBeInTheDocument()
+      expect(screen.getByText('Infra do Condomínio')).toBeInTheDocument()
+    })
+  })
+
+  it('mostra a seção de memória de cálculo quando há fatores', async () => {
+    renderReport()
+    await waitFor(() => {
+      expect(screen.getAllByText('Como Chegamos a Este Valor').length).toBeGreaterThanOrEqual(1)
     })
   })
 })
