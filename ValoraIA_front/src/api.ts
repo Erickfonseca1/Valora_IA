@@ -7,7 +7,7 @@ import type {
   PhotoAnalysisResult,
 } from './types'
 
-const BASE = import.meta.env.DEV ? 'http://localhost:3000' : ''
+const BASE = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:3000' : '')
 
 async function callApi<T>(url: string, options?: RequestInit): Promise<T> {
   const res = await fetch(BASE + url, options)
