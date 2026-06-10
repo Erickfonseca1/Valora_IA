@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import type { ValuationRecord } from '../types'
 import { getValuation } from '../api'
 import { FRONT_CATALOG } from '../amenities'
+import ValueWaterfall from './ValueWaterfall'
 
 const PRIMARY = '#1E3A8A'
 const ACCENT = '#10B981'
@@ -294,6 +295,14 @@ export default function Report() {
           </div>
         </div>
       </SectionCard>
+
+      {/* ── 02b. MEMÓRIA DE CÁLCULO ─────────────────────────────── */}
+      {valuation.homogenization_factors && (
+        <SectionCard>
+          <SectionHeader number="02b" title="Como Chegamos a Este Valor" />
+          <ValueWaterfall factors={valuation.homogenization_factors} />
+        </SectionCard>
+      )}
 
       {/* ── 03. IMÓVEIS REFERENCIAIS ─────────────────────────────── */}
       {comparables.length > 0 && (
