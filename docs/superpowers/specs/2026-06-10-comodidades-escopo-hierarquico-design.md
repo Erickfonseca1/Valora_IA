@@ -77,9 +77,19 @@ A norma **não** prescreve percentuais por comodidade. Ela governa método e lim
 - Grau II/III exigem fatores **justificados/derivados** (inferência sobre a amostra ou tabela de
   referência reconhecida), não arbitrados.
 
-> Os limites numéricos exatos de grau (ajuste individual máximo, somatório, nº de comps) devem ser
-> confirmados contra o texto da NBR 14653-2:2011 na implementação. O valor canônico assumido aqui é
-> o intervalo de admissibilidade por fator **[0,50; 2,00]**.
+**Limites adotados (decisão).** A NBR fixa a admissibilidade por fator; o resto são guardrails de
+saneamento de engenharia (declarados como tais no relatório, não como "percentual da norma"):
+
+- **Por fator individual (norma):** todo fator de homogeneização aplicado a um comparável ∈
+  **[0,50; 2,00]**. Fora → comparável descartado.
+- **Mínimo para derivar (engenharia):** `≥ 5 pares` casados com/sem o item (espelha
+  `MIN_SAMPLES=5` do engine). Abaixo disso → `derived:false`, usa fallback do catálogo.
+- **Teto agregado por escopo (engenharia, anti-runaway do produtório):** `internalFactor` ∈
+  [0,80; 1,25] (±25%), `condoFactor` ∈ [0,90; 1,15] (±15%), `proximoFactor` ∈ [0,95; 1,05] (±5%,
+  delta-only). O valor *dentro* desses limites vem da amostra; os tetos só evitam que ruído de
+  amostra pequena exploda o preço.
+- O relatório expõe fator, origem (`derived`/`fallback`) e nº de pares → grau de fundamentação
+  auditável e degradação explícita.
 
 ## Arquitetura
 
@@ -113,6 +123,54 @@ AMENITY_CATALOG = {
 
 `scopes` ausente para um escopo ⇒ item não ofertado/peso 0 (ex: portaria não é `interno`;
 academia `interno` não existe para terreno).
+
+#### Catálogo MVP (decisão)
+
+Itens cobertos no MVP, alinhados às amenities recorrentes do Zap (mercado residencial BR). Coluna
+de escopos válidos define onde cada item pode existir:
+
+| Item | Categoria | interno | condo | proximo |
+|------|-----------|:------:|:-----:|:-------:|
+| Piscina | lazer | ✓ | ✓ | — |
+| Academia | lazer | ✓ | ✓ | ✓ |
+| Churrasqueira / Área gourmet | lazer | ✓ | ✓ | — |
+| Salão de festas | lazer | — | ✓ | — |
+| Salão de jogos | lazer | — | ✓ | — |
+| Playground | lazer | — | ✓ | — |
+| Espaço kids | lazer | — | ✓ | — |
+| Quadra esportiva | lazer | ✓ | ✓ | ✓ |
+| Sauna | lazer | ✓ | ✓ | — |
+| Espaço pet | lazer | — | ✓ | — |
+| Quintal | espaço | ✓ | — | — |
+| Jardim | espaço | ✓ | ✓ | — |
+| Varanda / Sacada | conforto | ✓ | — | — |
+| Vista mar | conforto | ✓ | — | — |
+| Cobertura / Rooftop | conforto | ✓ | ✓ | — |
+| Ar condicionado | conforto | ✓ | — | — |
+| Armários planejados | conforto | ✓ | — | — |
+| Mobiliado | conforto | ✓ | — | — |
+| Lareira | conforto | ✓ | — | — |
+| Portaria 24h | segurança | — | ✓ | — |
+| Segurança 24h | segurança | — | ✓ | — |
+| Portão eletrônico | segurança | ✓ | ✓ | — |
+| Câmeras de segurança | segurança | ✓ | ✓ | — |
+| Elevador | infra | — | ✓ | — |
+| Gerador | infra | — | ✓ | — |
+| Coworking | infra | — | ✓ | — |
+| Lavanderia | infra | — | ✓ | — |
+| Supermercado | proximo (POI) | — | — | ✓ |
+| Farmácia | proximo (POI) | — | — | ✓ |
+| Transporte público | proximo (POI) | — | — | ✓ |
+| Escola | proximo (POI) | — | — | ✓ |
+| Hospital | proximo (POI) | — | — | ✓ |
+| Parque | proximo (POI) | — | — | ✓ |
+| Shopping | proximo (POI) | — | — | ✓ |
+| Restaurante | proximo (POI) | — | — | ✓ |
+
+Itens `proximo (POI)` mantêm a fonte Google Places atual (não viram input de usuário). Pesos de
+fallback por escopo são definidos no `amenity-catalog.ts` na implementação, ancorados na ordem de
+grandeza atual das tabelas (`AMENITY_WEIGHTS`/`POI_CONFIGS`), porém reduzidos para caber nos tetos
+agregados acima — o valor real vem da amostra quando disponível.
 
 ### Camadas (unidades isoladas)
 
