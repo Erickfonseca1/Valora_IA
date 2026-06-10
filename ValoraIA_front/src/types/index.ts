@@ -125,6 +125,8 @@ export interface ValuationRecord {
   neighborhood_pois: NeighborhoodData | null
   amenities: AmenitySelection[]
   in_gated_community: boolean
+  amenity_factors?: { internal: number; condo: number; proximo: number }
+  amenity_breakdown?: { scope: AmenityScope; item: string; contribution: number; derived: boolean }[]
   created_at: string
 }
 

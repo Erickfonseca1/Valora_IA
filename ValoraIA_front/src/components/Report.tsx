@@ -2,9 +2,41 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import type { ValuationRecord } from '../types'
 import { getValuation } from '../api'
+import { FRONT_CATALOG } from '../amenities'
 
 const PRIMARY = '#1E3A8A'
 const ACCENT = '#10B981'
+
+const SCOPE_TITLES: Record<string, string> = {
+  interno: 'Diferencial do Imóvel',
+  condo: 'Infra do Condomínio',
+  proximo: 'Entorno',
+}
+
+function AmenityScopes({ amenities }: { amenities?: { item: string; scope: string }[] }) {
+  if (!amenities?.length) return null
+  const byScope: Record<string, string[]> = {}
+  for (const a of amenities) {
+    const label = FRONT_CATALOG[a.item]?.label ?? a.item
+    ;(byScope[a.scope] ??= []).push(label)
+  }
+  const hasAny = (['interno', 'condo', 'proximo'] as const).some(s => byScope[s]?.length)
+  if (!hasAny) return null
+  return (
+    <div style={{ display: 'grid', gap: 12 }}>
+      {(['interno', 'condo', 'proximo'] as const).map(s =>
+        byScope[s]?.length ? (
+          <div key={s}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 4 }}>
+              {SCOPE_TITLES[s]}
+            </div>
+            <div style={{ fontSize: 13, color: '#334155' }}>{byScope[s].join(' · ')}</div>
+          </div>
+        ) : null
+      )}
+    </div>
+  )
+}
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   apartment: 'Apartamento',
@@ -213,6 +245,16 @@ export default function Report() {
           </tbody>
         </table>
       </SectionCard>
+
+      {/* ── 01b. COMODIDADES POR ESCOPO ─────────────────────────── */}
+      {valuation.amenities?.length > 0 && (
+        <SectionCard>
+          <SectionHeader number="01b" title="Comodidades do Imóvel por Escopo" />
+          <div style={{ padding: '16px 20px' }}>
+            <AmenityScopes amenities={valuation.amenities} />
+          </div>
+        </SectionCard>
+      )}
 
       {/* ── 02. VALOR DE MERCADO DETERMINADO ───────────────────── */}
       <SectionCard>
