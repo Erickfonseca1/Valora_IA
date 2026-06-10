@@ -101,53 +101,72 @@ export default function Relatorios() {
               {query ? 'Nenhum resultado para essa busca.' : 'Nenhuma avaliação encontrada.'}
             </div>
           ) : (
-            <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Imóvel</th>
-                    <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Tipo</th>
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Valor</th>
-                    <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Confiança</th>
-                    <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Data</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((v, i) => (
-                    <tr
-                      key={v.id}
-                      onClick={() => navigate(`/resultado/${v.id}`)}
-                      className="cursor-pointer transition-colors"
-                      style={{
-                        borderTop: i === 0 ? 'none' : '1px solid #F1F5F9',
-                        background: 'white',
-                      }}
-                      onMouseEnter={e => (e.currentTarget.style.background = '#F8FAFC')}
-                      onMouseLeave={e => (e.currentTarget.style.background = 'white')}
-                    >
-                      <td className="px-5 py-3.5">
-                        <div className="font-medium text-slate-800 truncate max-w-xs">{v.address}</div>
-                        <div className="text-xs text-slate-400 mt-0.5">{v.area_m2} m²</div>
-                      </td>
-                      <td className="px-4 py-3.5 text-slate-600">
-                        {PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type}
-                      </td>
-                      <td className="px-4 py-3.5 text-right font-semibold" style={{ color: PRIMARY }}>
+            <>
+              {/* Mobile: cards */}
+              <div className="flex flex-col gap-3 sm:hidden">
+                {filtered.map(v => (
+                  <div
+                    key={v.id}
+                    onClick={() => navigate(`/resultado/${v.id}`)}
+                    className="bg-white rounded-xl border border-slate-200 px-4 py-3.5 cursor-pointer active:bg-slate-50"
+                  >
+                    <div className="font-medium text-slate-800 text-sm truncate">{v.address}</div>
+                    <div className="text-xs text-slate-400 mt-0.5 mb-2">{v.area_m2} m² · {PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type}</div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-sm" style={{ color: PRIMARY }}>
                         {v.static_market_value_brl != null ? fmt(v.static_market_value_brl) : '—'}
-                      </td>
-                      <td className="px-4 py-3.5 text-center">
-                        {v.confidence_score != null ? (
-                          <ConfidenceBadge score={v.confidence_score} />
-                        ) : '—'}
-                      </td>
-                      <td className="px-5 py-3.5 text-right text-slate-400 text-xs whitespace-nowrap">
-                        {fmtDate(v.created_at)}
-                      </td>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {v.confidence_score != null && <ConfidenceBadge score={v.confidence_score} />}
+                        <span className="text-xs text-slate-400">{fmtDate(v.created_at)}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tablet+: tabela */}
+              <div className="hidden sm:block bg-white rounded-xl border border-slate-200 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
+                      <th className="text-left px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Imóvel</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Tipo</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Valor</th>
+                      <th className="text-center px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Confiança</th>
+                      <th className="text-right px-5 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Data</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filtered.map((v, i) => (
+                      <tr
+                        key={v.id}
+                        onClick={() => navigate(`/resultado/${v.id}`)}
+                        className="cursor-pointer transition-colors"
+                        style={{ borderTop: i === 0 ? 'none' : '1px solid #F1F5F9', background: 'white' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = '#F8FAFC')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'white')}
+                      >
+                        <td className="px-5 py-3.5">
+                          <div className="font-medium text-slate-800 truncate max-w-xs">{v.address}</div>
+                          <div className="text-xs text-slate-400 mt-0.5">{v.area_m2} m²</div>
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600">{PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type}</td>
+                        <td className="px-4 py-3.5 text-right font-semibold" style={{ color: PRIMARY }}>
+                          {v.static_market_value_brl != null ? fmt(v.static_market_value_brl) : '—'}
+                        </td>
+                        <td className="px-4 py-3.5 text-center">
+                          {v.confidence_score != null ? <ConfidenceBadge score={v.confidence_score} /> : '—'}
+                        </td>
+                        <td className="px-5 py-3.5 text-right text-slate-400 text-xs whitespace-nowrap">
+                          {fmtDate(v.created_at)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
 
           {/* Paginação */}

@@ -219,16 +219,18 @@ export default function Report() {
       <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, marginBottom: 14, overflow: 'hidden' }}>
         <div style={{
           background: PRIMARY,
-          padding: '18px 24px',
+          padding: '18px 16px',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'flex-start',
+          flexWrap: 'wrap',
+          gap: 12,
         }}>
           <div>
             <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700, marginBottom: 6 }}>
               Parecer Técnico de Avaliação Mercadológica
             </div>
-            <div style={{ color: '#fff', fontSize: 24, fontWeight: 800, fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: 0.5 }}>
+            <div style={{ color: '#fff', fontSize: 22, fontWeight: 800, fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: 0.5 }}>
               ValoraIA
             </div>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 3 }}>
@@ -237,11 +239,11 @@ export default function Report() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Nº do Laudo</div>
-            <div style={{ color: '#fff', fontSize: 18, fontWeight: 800, fontFamily: 'monospace', letterSpacing: 1.5 }}>{laudoId}</div>
+            <div style={{ color: '#fff', fontSize: 16, fontWeight: 800, fontFamily: 'monospace', letterSpacing: 1.5 }}>{laudoId}</div>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 6 }}>{laudoDate}</div>
           </div>
         </div>
-        <div style={{ padding: '10px 24px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ padding: '10px 16px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>Imóvel:</span>
           <span style={{ fontSize: 13, color: '#1E293B', fontWeight: 600 }}>{valuation.address}</span>
         </div>
@@ -250,20 +252,18 @@ export default function Report() {
       {/* ── 01. FICHA TÉCNICA ───────────────────────────────────── */}
       <SectionCard>
         <SectionHeader number="01" title="Ficha Técnica do Laudo" />
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-          <tbody>
-            {fichaRows.map((row, i) => (
-              <tr key={i} style={{ borderBottom: '1px solid #F1F5F9', background: i % 2 === 0 ? '#FAFBFD' : '#fff' }}>
-                <td style={{ padding: '9px 20px', color: '#64748B', fontWeight: 700, width: '32%', fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.3 }}>
-                  {row.label}
-                </td>
-                <td style={{ padding: '9px 20px', color: '#1E293B', fontWeight: 500 }}>
-                  {row.value}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div>
+          {fichaRows.map((row, i) => (
+            <div key={i} style={{ borderBottom: '1px solid #F1F5F9', background: i % 2 === 0 ? '#FAFBFD' : '#fff', display: 'flex', flexWrap: 'wrap', gap: '2px 12px', padding: '9px 16px' }}>
+              <span style={{ color: '#64748B', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.3, minWidth: 140 }}>
+                {row.label}
+              </span>
+              <span style={{ color: '#1E293B', fontWeight: 500, fontSize: 13 }}>
+                {row.value}
+              </span>
+            </div>
+          ))}
+        </div>
       </SectionCard>
 
       {/* ── 01b. COMODIDADES POR ESCOPO ─────────────────────────── */}
@@ -279,8 +279,8 @@ export default function Report() {
       {/* ── 02. VALOR DE MERCADO DETERMINADO ───────────────────── */}
       <SectionCard>
         <SectionHeader number="02" title="Valor de Mercado Determinado" />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
-          <div style={{ padding: '24px 28px', borderRight: '1px solid #F1F5F9' }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 0 }}>
+          <div style={{ padding: '20px 16px', borderBottom: '1px solid #F1F5F9' }} className="sm:border-b-0 sm:border-r sm:border-slate-100 sm:!p-[24px_28px]">
             <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
               Valor de Mercado (Método Comparativo)
             </div>
@@ -293,7 +293,7 @@ export default function Report() {
               </div>
             )}
           </div>
-          <div style={{ padding: '24px 28px' }}>
+          <div style={{ padding: '20px 16px' }} className="sm:!p-[24px_28px]">
             <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
               Grau de Confiança da Estimativa
             </div>
@@ -570,7 +570,7 @@ export default function Report() {
       </div>
 
       {/* ── AÇÕES ───────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'center', paddingBottom: 40 }}>
+      <div className="flex flex-col sm:flex-row gap-3 sm:justify-center pb-10">
         <button
           onClick={() => navigate('/')}
           style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontFamily: 'inherit' }}

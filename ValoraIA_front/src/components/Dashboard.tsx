@@ -118,7 +118,7 @@ export default function Dashboard() {
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {METRIC_CARDS.map((m, i) => (
           <div key={i} className="bg-white rounded-xl p-5 border border-slate-200 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-3">
@@ -136,7 +136,7 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div className="grid gap-5" style={{ gridTemplateColumns: '1fr 360px' }}>
+      <div className="grid gap-5 grid-cols-1 lg:grid-cols-[1fr_360px]">
         {/* Recent Valuations */}
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-200 flex justify-between items-center">
@@ -149,11 +149,11 @@ export default function Dashboard() {
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50">
-                  {['Imóvel', 'Tipo', 'Preço IA', 'Confiança', 'Data'].map(h => (
-                    <th key={h} className="px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">
-                      {h}
-                    </th>
-                  ))}
+                  <th className="px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">Imóvel</th>
+                  <th className="hidden sm:table-cell px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">Tipo</th>
+                  <th className="px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">Preço IA</th>
+                  <th className="hidden md:table-cell px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">Confiança</th>
+                  <th className="hidden sm:table-cell px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">Data</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,15 +164,13 @@ export default function Dashboard() {
                     className="cursor-pointer transition-colors hover:bg-slate-50 border-t border-slate-100"
                   >
                     <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900">{v.address}</div>
-                      <div className="text-xs text-slate-400 mt-0.5">
-                        {v.area_m2}m²
-                      </div>
+                      <div className="font-medium text-slate-900 truncate max-w-[160px] sm:max-w-none">{v.address}</div>
+                      <div className="text-xs text-slate-400 mt-0.5">{v.area_m2}m²</div>
                     </td>
-                    <td className="px-4 py-3 text-slate-500">{PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type}</td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-slate-500">{PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type}</td>
                     <td className="px-4 py-3 font-semibold text-slate-900">{v.static_market_value_brl != null ? fmt(v.static_market_value_brl) : '—'}</td>
-                    <td className="px-4 py-3"><ConfidenceBadge score={v.confidence_score ?? 0} /></td>
-                    <td className="px-4 py-3 text-slate-400">{fmtDate(v.created_at)}</td>
+                    <td className="hidden md:table-cell px-4 py-3"><ConfidenceBadge score={v.confidence_score ?? 0} /></td>
+                    <td className="hidden sm:table-cell px-4 py-3 text-slate-400">{fmtDate(v.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
