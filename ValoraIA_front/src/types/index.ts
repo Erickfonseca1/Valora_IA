@@ -1,5 +1,8 @@
 export type Screen = 'dashboard' | 'valuation-flow' | 'report'
 
+export type AmenityScope = 'interno' | 'condo' | 'proximo'
+export interface AmenitySelection { item: string; scope: AmenityScope }
+
 export type PropertyType = 'apartment' | 'house' | 'commercial' | 'land'
 export type MarketTemperature = 'hot' | 'warm' | 'cold'
 
@@ -120,6 +123,8 @@ export interface ValuationRecord {
   // Report metadata
   comparables: FrontendComparable[] | null
   neighborhood_pois: NeighborhoodData | null
+  amenities: AmenitySelection[]
+  in_gated_community: boolean
   created_at: string
 }
 
@@ -168,6 +173,8 @@ export interface CreateValuationBody {
   is_corner?: boolean
   lat?: number
   lng?: number
+  amenities?: AmenitySelection[]
+  in_gated_community?: boolean
 }
 
 export interface ValuationForm {
@@ -184,4 +191,6 @@ export interface ValuationForm {
   street_level: StreetLevel | ''
   photos: File[]
   photoUrls: string[]
+  amenities: AmenitySelection[]
+  in_gated_community: boolean
 }
