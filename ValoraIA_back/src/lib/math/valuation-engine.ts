@@ -13,36 +13,9 @@ import type {
   ValuationResult,
 } from "@/types";
 import { runEnsemble, type EnsembleSample, type EnsembleTarget } from "./ensemble";
-
-// ─── Amenity weights ──────────────────────────────────────────────────────────
-
-const AMENITY_WEIGHTS: Record<string, number> = {
-  // Premium (0.20)
-  "Piscina": 0.20, "Rooftop": 0.20, "Vista Mar": 0.20, "Cobertura": 0.20,
-  // Alto (0.15)
-  "Academia": 0.15, "Portaria 24h": 0.15, "Portaria": 0.15,
-  "Segurança 24h": 0.15, "Elevador": 0.15, "Salão de Festas": 0.15, "Área Gourmet": 0.15, "Quintal": 0.15,
-  // Médio (0.10)
-  "Varanda": 0.10, "Sacada": 0.10, "Churrasqueira": 0.10, "Playground": 0.10,
-  "Salão de Jogos": 0.10, "Espaço Kids": 0.10, "Coworking": 0.10,
-  "Quadra": 0.10, "Quadra Esportiva": 0.10, "Jardim": 0.10, "Lareira": 0.10,
-  // Básico (0.05)
-  "Portão eletrônico": 0.05, "Interfone": 0.05, "Câmeras de segurança": 0.05,
-  "Área de serviço": 0.05, "Armários planejados": 0.05,
-  "Ar condicionado": 0.05, "Pet friendly": 0.05,
-};
-
-const AMENITY_WEIGHT_DEFAULT = 0.05;
-const AMENITY_SCORE_BASE = 0.40;
-
-function computeAmenityScore(amenities: string[]): number {
-  if (amenities.length === 0) return AMENITY_SCORE_BASE;
-  const totalWeight = amenities.reduce(
-    (sum, a) => sum + (AMENITY_WEIGHTS[a] ?? AMENITY_WEIGHT_DEFAULT),
-    0
-  );
-  return clamp(AMENITY_SCORE_BASE + totalWeight, AMENITY_SCORE_BASE, 1.0);
-}
+import {
+  computeScopeFactors, computeProximoFactor, type AmenitySelection,
+} from "@/lib/amenities/factors";
 
 // ─── NBR 14653 Constants ──────────────────────────────────────────────────────
 
@@ -64,6 +37,13 @@ const SLOPE_FACTORS: Record<string, number> = {
   aclive_acentuado: 0.80, declive_acentuado: 0.80,
 };
 const LEVEL_FACTORS: Record<string, number> = { no_nivel: 1.0, acima_nivel: 0.95, abaixo_nivel: 0.80 };
+
+export function applyScopeFactorsToCombined(
+  base: number,
+  f: { internalFactor: number; condoFactor: number; proximoFactor: number }
+): number {
+  return Number((base * f.internalFactor * f.condoFactor * f.proximoFactor).toFixed(6));
+}
 
 // ─── Typology Factor (NBR 14653 homogenization) ───────────────────────────────
 //
@@ -335,7 +315,7 @@ function computePriceFactors(
   candidates: WeightedCandidate[],
   targetArea: number,
   radiusUsed: number,
-  amenities: string[],
+  amenityFactor: number,           // internalFactor*condoFactor
   neighborhoodScore?: number
 ): PriceFactor[] {
   const n = candidates.length;
@@ -357,7 +337,7 @@ function computePriceFactors(
   const cov = ppm2Sd / ppm2Mean;
   const conditionScore = clamp(1 - cov * 2, 0.3, 1.0);
 
-  const amenityScore = computeAmenityScore(amenities);
+  const amenityScoreDisplay = clamp(amenityFactor, 0.5, 1.0);
 
   const distSd = stdDev(distances, avgDist);
   const transportScore = clamp(1 - distSd / radiusUsed, 0.4, 1.0);
@@ -367,7 +347,7 @@ function computePriceFactors(
     { label: "Consistência",   score: Number(conditionScore.toFixed(2)) },
     { label: "Volume de Dados",score: Number(demandScore.toFixed(2)) },
     { label: "Perfil da Região",score: Number(sizeScore.toFixed(2)) },
-    { label: "Comodidades",    score: Number(amenityScore.toFixed(2)) },
+    { label: "Comodidades",    score: Number(amenityScoreDisplay.toFixed(2)) },
     { label: "Cobertura",      score: Number(transportScore.toFixed(2)) },
     { label: "Vizinhança",     score: neighborhoodScore ?? 0.50 },
   ];
@@ -420,19 +400,23 @@ export interface ExtendedValuationResult extends ValuationResult {
   typology_factor: number;
   neighborhood_pois: NeighborhoodData | null;
   price_per_m2_homogenized: number;
+  amenity_breakdown: import("@/lib/amenities/factors").ScopeContribution[];
+  amenity_factors: { internal: number; condo: number; proximo: number };
 }
 
 // ─── Main Engine ──────────────────────────────────────────────────────────────
 
 export async function runValuation(
   req: ValuationRequest & {
-    amenities?: string[];
+    amenities?: AmenitySelection[];
+    in_gated_community?: boolean;
     is_corner?: boolean;
     terrain_slope?: TerrainSlope;
     street_level?: StreetLevel;
   }
 ): Promise<ExtendedValuationResult> {
-  const { lat, lng, target_area, target_bedrooms, amenities = [] } = req;
+  const { lat, lng, target_area, target_bedrooms } = req;
+  const amenities = req.amenities ?? [];
   const targetPropertyType = req.target_property_type ?? null;
 
   const { candidates, radiusUsed, typologyFactorUsed } = await fetchIDWCandidates(
@@ -521,17 +505,7 @@ export async function runValuation(
   const finalCiLowerBrl = Math.max(0, ensemble.ci_lower_ppm2 * target_area);
   const finalCiUpperBrl = ensemble.ci_upper_ppm2 * target_area;
 
-  // ── NBR post-ensemble homogenization (corner, slope, street level) ────────
-  const cornerFactor = req.is_corner ? CORNER_FACTOR : 1.0;
-  const slopeFactor  = SLOPE_FACTORS[req.terrain_slope ?? 'plano'] ?? 1.0;
-  const levelFactor  = LEVEL_FACTORS[req.street_level ?? 'no_nivel'] ?? 1.0;
-  const combinedFactor = cornerFactor * slopeFactor * levelFactor;
-
-  const adjustedEstimatedValue = Number((finalEstimatedValue * combinedFactor).toFixed(2));
-  const adjustedCiLower = Number((Math.max(0, finalCiLowerBrl) * combinedFactor).toFixed(2));
-  const adjustedCiUpper = Number((finalCiUpperBrl * combinedFactor).toFixed(2));
-  const pricePerM2Homogenized = Number((finalPpm2 * combinedFactor).toFixed(2));
-
+  // ── Fetch neighborhood (needed for proximoFactor before combinedFactor) ────
   let neighborhood: NeighborhoodData | null = null;
   try {
     neighborhood = await fetchNearbyPlaces(lat, lng);
@@ -539,8 +513,31 @@ export async function runValuation(
     // Google Places API unavailable → proceed without neighborhood data
   }
 
+  const scope = computeScopeFactors(amenities, req.in_gated_community ?? false);
+  const proximoFactor = computeProximoFactor(neighborhood?.totalScore);
+
+  // ── NBR post-ensemble homogenization (corner, slope, street level) ────────
+  const cornerFactor = req.is_corner ? CORNER_FACTOR : 1.0;
+  const slopeFactor  = SLOPE_FACTORS[req.terrain_slope ?? 'plano'] ?? 1.0;
+  const levelFactor  = LEVEL_FACTORS[req.street_level ?? 'no_nivel'] ?? 1.0;
+  const physicalFactor = cornerFactor * slopeFactor * levelFactor;
+  const combinedFactor = applyScopeFactorsToCombined(physicalFactor, {
+    internalFactor: scope.internalFactor,
+    condoFactor: scope.condoFactor,
+    proximoFactor,
+  });
+
+  const adjustedEstimatedValue = Number((finalEstimatedValue * combinedFactor).toFixed(2));
+  const adjustedCiLower = Number((Math.max(0, finalCiLowerBrl) * combinedFactor).toFixed(2));
+  const adjustedCiUpper = Number((finalCiUpperBrl * combinedFactor).toFixed(2));
+  const pricePerM2Homogenized = Number((finalPpm2 * combinedFactor).toFixed(2));
+
   const confidenceScore = computeConfidenceScore(nEff, finalCiLowerBrl, finalCiUpperBrl, finalEstimatedValue);
-  const priceFactors = computePriceFactors(candidates, target_area, radiusUsed, amenities, neighborhood?.totalScore);
+  const priceFactors = computePriceFactors(
+    candidates, target_area, radiusUsed,
+    scope.internalFactor * scope.condoFactor,
+    neighborhood?.totalScore
+  );
   const frontendComparables = toFrontendComparables(candidates);
 
   return {
@@ -564,6 +561,12 @@ export async function runValuation(
     typology_factor: Number(typologyFactorUsed.toFixed(3)),
     neighborhood_pois: neighborhood,
     price_per_m2_homogenized: pricePerM2Homogenized,
+    amenity_breakdown: scope.breakdown,
+    amenity_factors: {
+      internal: scope.internalFactor,
+      condo: scope.condoFactor,
+      proximo: proximoFactor,
+    },
   };
 }
 
