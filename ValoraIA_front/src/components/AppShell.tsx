@@ -5,14 +5,15 @@ interface NavItem {
   icon: string
   label: string
   path: string
+  disabled?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
   { icon: '⊞', label: 'Painel', path: '/' },
   { icon: '⊕', label: 'Nova Avaliação', path: '/nova-avaliacao' },
-  { icon: '◉', label: 'Relatórios', path: '/resultado' },
-  { icon: '☰', label: 'Portfólio', path: '/portfolio' },
-  { icon: '⚙', label: 'Configurações', path: '/configuracoes' },
+  { icon: '◉', label: 'Relatórios', path: '/relatorios' },
+  { icon: '☰', label: 'Portfólio', path: '/portfolio', disabled: true },
+  { icon: '⚙', label: 'Configurações', path: '/configuracoes', disabled: true },
 ]
 
 interface AppShellProps {
@@ -44,28 +45,32 @@ export default function AppShell({ children }: AppShellProps) {
 
         <nav className="flex-1 p-2.5 mt-4">
           {NAV_ITEMS.map(item => {
-            const active = location.pathname === item.path ||
-              (item.path === '/resultado' && location.pathname.startsWith('/resultado'))
+            const active = !item.disabled && (
+              location.pathname === item.path ||
+              (item.path === '/relatorios' && location.pathname.startsWith('/relatorios'))
+            )
             return (
               <button
                 key={item.path}
-                onClick={() => navigate(item.path)}
-                className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg border-none cursor-pointer text-sm text-left mb-0.5 transition-all duration-150"
+                onClick={() => !item.disabled && navigate(item.path)}
+                disabled={item.disabled}
+                className="flex items-center gap-2.5 w-full px-3 py-2.5 rounded-lg border-none text-sm text-left mb-0.5 transition-all duration-150"
                 style={{
                   background: active ? 'rgba(255,255,255,0.15)' : 'transparent',
                   color: '#fff',
                   fontWeight: active ? 600 : 400,
-                  opacity: active ? 1 : 0.7,
+                  opacity: item.disabled ? 0.3 : active ? 1 : 0.7,
+                  cursor: item.disabled ? 'not-allowed' : 'pointer',
                   fontFamily: 'inherit',
                 }}
                 onMouseEnter={e => {
-                  if (!active) {
+                  if (!active && !item.disabled) {
                     e.currentTarget.style.opacity = '0.9'
                     e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
                   }
                 }}
                 onMouseLeave={e => {
-                  if (!active) {
+                  if (!active && !item.disabled) {
                     e.currentTarget.style.opacity = '0.7'
                     e.currentTarget.style.background = 'transparent'
                   }
@@ -96,23 +101,14 @@ export default function AppShell({ children }: AppShellProps) {
 
       {/* Main area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-[60px] px-7 flex items-center justify-between bg-white border-b border-slate-200 flex-shrink-0">
-          <div className="relative w-80">
-            <input
-              placeholder="Buscar imóveis, endereços..."
-              className="w-full py-2 pl-9 pr-3.5 rounded-lg border border-slate-200 text-sm bg-slate-50 outline-none focus:border-primary transition-colors"
-            />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-slate-400">⌕</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => navigate('/nova-avaliacao')}
-              className="px-4 py-2 rounded-lg border-none cursor-pointer text-sm font-semibold text-white transition-opacity hover:opacity-85"
-              style={{ background: '#1E3A8A', fontFamily: 'inherit' }}
-            >
-              + Nova Avaliação
-            </button>
-          </div>
+        <header className="h-[60px] px-7 flex items-center justify-end bg-white border-b border-slate-200 flex-shrink-0">
+          <button
+            onClick={() => navigate('/nova-avaliacao')}
+            className="px-4 py-2 rounded-lg border-none cursor-pointer text-sm font-semibold text-white transition-opacity hover:opacity-85"
+            style={{ background: '#1E3A8A', fontFamily: 'inherit' }}
+          >
+            + Nova Avaliação
+          </button>
         </header>
 
         <main className="flex-1 overflow-auto p-7">
