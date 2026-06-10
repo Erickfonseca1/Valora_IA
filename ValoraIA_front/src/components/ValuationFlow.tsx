@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import type { ValuationForm, PropertyType } from '../types'
 import type { ConservationState, TerrainSlope, StreetLevel, AmenityScope, AmenitySelection } from '../types'
 import { createValuation, uploadPhotos, analyzePhotos } from '../api'
-import { itemsForScope } from '../amenities'
+import { itemsForScope, FRONT_CATALOG } from '../amenities'
 
 const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Apartamento', value: 'apartment' },
@@ -16,6 +16,14 @@ const STEPS = ['Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio
 
 function hasAmenityIn(list: AmenitySelection[], item: string, scope: AmenityScope) {
   return list.some(a => a.item === item && a.scope === scope)
+}
+
+function mapLabelToItem(label: string): string | null {
+  const n = label.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
+  const hit = Object.entries(FRONT_CATALOG).find(
+    ([, e]) => e.label.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().includes(n)
+  )
+  return hit ? hit[0] : null
 }
 
 const PRIMARY = '#1E3A8A'
@@ -71,6 +79,7 @@ export default function ValuationFlow() {
   const [processing, setProcessing] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [suggested, setSuggested] = useState<AmenitySelection[]>([])
 
   const set = <K extends keyof ValuationForm>(k: K, v: ValuationForm[K]) =>
     setForm(f => ({ ...f, [k]: v }))
@@ -119,6 +128,13 @@ export default function ValuationFlow() {
           if (analysis.estado_conservacao_sugerido) {
             setForm(f => ({ ...f, conservation_state: analysis.estado_conservacao_sugerido }))
           }
+          const defScope: AmenityScope =
+            form.propertyType === 'apartment' ? 'condo' : 'interno'
+          const sugg = (analysis.comodidades_detectadas ?? [])
+            .map((c: string) => mapLabelToItem(c))
+            .filter((id: string | null): id is string => !!id && !hasAmenityIn(form.amenities, id, defScope))
+            .map((id: string) => ({ item: id, scope: defScope }))
+          if (sugg.length > 0) setSuggested(sugg)
         } catch {
           // non-fatal — analysis failure doesn't block the flow
         }
@@ -536,6 +552,25 @@ export default function ValuationFlow() {
           /* Last step — Review */
           <div>
             <h3 className="text-base font-semibold mb-4 text-slate-900">Revisar Detalhes</h3>
+            {suggested.length > 0 && (
+              <div style={{ marginBottom: 16, padding: 12, background: '#F0FDF4', borderRadius: 10, border: '1px solid #BBF7D0' }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#15803D', marginBottom: 8 }}>
+                  Sugestões da IA — clique para confirmar
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {suggested.map(s => (
+                    <button key={`sug-${s.item}`} type="button"
+                      onClick={() => {
+                        toggleAmenity(s.item, s.scope)
+                        setSuggested(list => list.filter(x => x.item !== s.item))
+                      }}
+                      style={pillStyle(false)}>
+                      + {FRONT_CATALOG[s.item]?.label ?? s.item}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: 'Endereço', value: form.address },

@@ -39,7 +39,7 @@ vi.mock('../api', () => ({
   }),
 }))
 
-import { createValuation } from '../api'
+import { createValuation, analyzePhotos } from '../api'
 
 function renderFlow() {
   return render(
@@ -315,5 +315,42 @@ describe('ValuationFlow', () => {
     // marca condomínio fechado → reaparece
     fireEvent.click(screen.getByLabelText('Imóvel em condomínio fechado'))
     expect(screen.getByText('Do condomínio')).toBeInTheDocument()
+  })
+
+  it('exibe chip de sugestão da IA e remove ao clicar', async () => {
+    vi.mocked(analyzePhotos).mockResolvedValueOnce({
+      padrao_construtivo: 'Médio',
+      estado_conservacao_sugerido: null,
+      comodidades_detectadas: ['Piscina'],
+    })
+
+    renderFlow()
+    await fillStep0AndAdvance()
+
+    // On step 1 (Fotos), simulate uploading a file so analyzePhotos gets called
+    const fakeFile = new File(['fake'], 'foto.jpg', { type: 'image/jpeg' })
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [fakeFile] } })
+    })
+
+    // Advance through photo step (triggers upload + analyzePhotos)
+    await act(async () => {
+      fireEvent.click(screen.getByText('Continuar'))
+    })
+
+    // Chip da sugestão deve aparecer na seção de revisão
+    await waitFor(() => {
+      expect(screen.getByText('Sugestões da IA — clique para confirmar')).toBeInTheDocument()
+    })
+    // Botão com o label da comodidade detectada
+    const chip = screen.getByRole('button', { name: /\+ Piscina/i })
+    expect(chip).toBeInTheDocument()
+
+    // Ao clicar, o chip deve desaparecer
+    await act(async () => {
+      fireEvent.click(chip)
+    })
+    expect(screen.queryByText('Sugestões da IA — clique para confirmar')).not.toBeInTheDocument()
   })
 })
