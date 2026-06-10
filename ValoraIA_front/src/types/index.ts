@@ -94,6 +94,24 @@ export interface PhotoAnalysisResult {
   comodidades_detectadas: string[]
 }
 
+export interface HomogenizationFactors {
+  ensemble_ppm2: number
+  offer_factor: number
+  typology_factor: number
+  corner_factor: number
+  slope_factor: number
+  level_factor: number
+  physical_factor: number
+  amenity_internal: number
+  amenity_condo: number
+  amenity_proximo: number
+  amenity_factor: number
+  combined_factor: number
+  ppm2_homogenized: number
+  area_m2: number
+  market_value: number
+}
+
 // Maps 1:1 to valuations table columns
 export interface ValuationRecord {
   id: string
@@ -127,6 +145,7 @@ export interface ValuationRecord {
   in_gated_community: boolean
   amenity_factors?: { internal: number; condo: number; proximo: number }
   amenity_breakdown?: { scope: AmenityScope; item: string; contribution: number; derived: boolean }[]
+  homogenization_factors?: HomogenizationFactors | null
   created_at: string
 }
 
