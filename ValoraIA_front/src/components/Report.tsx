@@ -4,6 +4,8 @@ import type { ValuationRecord } from '../types'
 import { getValuation } from '../api'
 import { FRONT_CATALOG } from '../amenities'
 import ValueWaterfall from './ValueWaterfall'
+import { pdf } from '@react-pdf/renderer'
+import LaudoPDF from './LaudoPDF'
 
 const PRIMARY = '#1E3A8A'
 const ACCENT = '#10B981'
@@ -132,6 +134,7 @@ export default function Report() {
   const [valuation, setValuation] = useState<ValuationRecord | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+  const [pdfLoading, setPdfLoading] = useState(false)
 
   useEffect(() => {
     if (!id) { navigate('/'); return }
@@ -174,6 +177,22 @@ export default function Report() {
   })
   const laudoId = `PTAM-${valuation.id.slice(-6).toUpperCase()}`
   const confidenceScore = valuation.confidence_score ?? 0
+
+  const handleDownloadPdf = async () => {
+    if (!valuation) return
+    setPdfLoading(true)
+    try {
+      const blob = await pdf(<LaudoPDF valuation={valuation} />).toBlob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${laudoId}.pdf`
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setPdfLoading(false)
+    }
+  }
   const comparables = valuation.comparables ?? []
 
   const fichaRows: { label: string; value: string }[] = [
@@ -565,10 +584,11 @@ export default function Report() {
           + Nova Avaliação
         </button>
         <button
-          onClick={() => window.print()}
-          style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontFamily: 'inherit' }}
+          onClick={handleDownloadPdf}
+          disabled={pdfLoading}
+          style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: pdfLoading ? 'default' : 'pointer', border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontFamily: 'inherit', opacity: pdfLoading ? 0.6 : 1 }}
         >
-          Imprimir / PDF
+          {pdfLoading ? 'Gerando PDF…' : 'Baixar PDF'}
         </button>
       </div>
     </div>
