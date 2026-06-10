@@ -127,6 +127,7 @@ export default function Relatorios() {
 
               {/* Tablet+: tabela */}
               <div className="hidden sm:block bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr style={{ borderBottom: '1px solid #E2E8F0' }}>
@@ -165,6 +166,7 @@ export default function Relatorios() {
                     ))}
                   </tbody>
                 </table>
+              </div>
               </div>
             </>
           )}

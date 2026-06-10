@@ -146,6 +146,7 @@ export default function Dashboard() {
           {valuations.length === 0 ? (
             <div className="px-5 py-10 text-center text-slate-400 text-sm">Nenhuma avaliação encontrada.</div>
           ) : (
+          <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
                 <tr className="bg-slate-50">
@@ -175,6 +176,7 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
+          </div>
           )}
         </div>
 
