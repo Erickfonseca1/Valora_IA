@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { ValuationForm, PropertyType } from '../types'
-import type { ConservationState, TerrainSlope, StreetLevel } from '../types'
+import type { ConservationState, TerrainSlope, StreetLevel, AmenityScope, AmenitySelection } from '../types'
 import { createValuation, uploadPhotos, analyzePhotos } from '../api'
+import { itemsForScope } from '../amenities'
 
 const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Apartamento', value: 'apartment' },
@@ -13,11 +14,8 @@ const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
 
 const STEPS = ['Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio']
 
-const STEPS_BY_TYPE: Record<PropertyType, string[]> = {
-  apartment: STEPS,
-  house: STEPS,
-  commercial: STEPS,
-  land: STEPS,
+function hasAmenityIn(list: AmenitySelection[], item: string, scope: AmenityScope) {
+  return list.some(a => a.item === item && a.scope === scope)
 }
 
 const PRIMARY = '#1E3A8A'
@@ -67,6 +65,8 @@ export default function ValuationFlow() {
     street_level: '' as StreetLevel | '',
     photos: [] as File[],
     photoUrls: [] as string[],
+    amenities: [],
+    in_gated_community: false,
   })
   const [processing, setProcessing] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
@@ -75,9 +75,31 @@ export default function ValuationFlow() {
   const set = <K extends keyof ValuationForm>(k: K, v: ValuationForm[K]) =>
     setForm(f => ({ ...f, [k]: v }))
 
+  const hasAmenity = (item: string, scope: AmenityScope) =>
+    form.amenities.some(a => a.item === item && a.scope === scope)
+
+  const toggleAmenity = (item: string, scope: AmenityScope) =>
+    setForm(f => ({
+      ...f,
+      amenities: hasAmenityIn(f.amenities, item, scope)
+        ? f.amenities.filter(a => !(a.item === item && a.scope === scope))
+        : [...f.amenities, { item, scope }],
+    }))
+
+  const condoVisible =
+    form.propertyType === 'apartment' ||
+    ((form.propertyType === 'house' || form.propertyType === 'commercial') && form.in_gated_community)
+
+  const internoVisible = form.propertyType !== 'land'
+
   const handlePropertyTypeChange = (value: PropertyType) => {
-    setForm(f => ({ ...f, propertyType: value }))
-    setStep(s => Math.min(s, STEPS_BY_TYPE[value].length - 1))
+    setForm(f => ({
+      ...f,
+      propertyType: value,
+      amenities: value === 'land' ? [] : f.amenities,
+      in_gated_community: value === 'apartment' ? false : f.in_gated_community,
+    }))
+    setStep(s => Math.min(s, STEPS.length - 1))
   }
 
   const advanceFromPhotoStep = async () => {
@@ -126,6 +148,8 @@ export default function ValuationFlow() {
         is_corner: form.is_corner || undefined,
         terrain_slope: (form.terrain_slope || undefined) as TerrainSlope | undefined,
         street_level: (form.street_level || undefined) as StreetLevel | undefined,
+        amenities: form.amenities,
+        in_gated_community: form.in_gated_community || undefined,
       })
       navigate(`/resultado/${result.id}`)
     } catch (e) {
@@ -150,7 +174,7 @@ export default function ValuationFlow() {
     fontFamily: 'inherit',
   })
 
-  const steps = STEPS_BY_TYPE[form.propertyType]
+  const steps = STEPS
   const maxStep = steps.length - 1
   const isReviewStep = step === maxStep
 
@@ -370,8 +394,64 @@ export default function ValuationFlow() {
                 style={{ width: 18, height: 18, cursor: 'pointer' }}
               />
               <label htmlFor="is_corner" style={{ fontSize: 14, color: '#334155', cursor: 'pointer' }}>
-                Imóvel de esquina (fator +5%)
+                Imóvel de esquina
               </label>
+            </div>
+
+            {/* Comodidades & Diferenciais */}
+            <div style={{ marginTop: 8 }}>
+              <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#475569', marginBottom: 8 }}>
+                Comodidades & Diferenciais
+              </label>
+
+              {(form.propertyType === 'house' || form.propertyType === 'commercial') && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <input
+                    type="checkbox"
+                    id="in_gated"
+                    checked={form.in_gated_community}
+                    onChange={e => setForm(f => ({ ...f, in_gated_community: e.target.checked }))}
+                    style={{ width: 18, height: 18, cursor: 'pointer' }}
+                  />
+                  <label htmlFor="in_gated" style={{ fontSize: 14, color: '#334155', cursor: 'pointer' }}>
+                    Imóvel em condomínio fechado
+                  </label>
+                </div>
+              )}
+
+              {internoVisible && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: '#64748B', marginBottom: 6 }}>Do imóvel</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {itemsForScope('interno').map(a => (
+                      <button key={`int-${a.id}`} type="button"
+                        onClick={() => toggleAmenity(a.id, 'interno')}
+                        style={pillStyle(hasAmenity(a.id, 'interno'))}>
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {condoVisible && (
+                <div style={{ marginBottom: 14 }}>
+                  <div style={{ fontSize: 12, color: '#64748B', marginBottom: 6 }}>Do condomínio</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                    {itemsForScope('condo').map(a => (
+                      <button key={`con-${a.id}`} type="button"
+                        onClick={() => toggleAmenity(a.id, 'condo')}
+                        style={pillStyle(hasAmenity(a.id, 'condo'))}>
+                        {a.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <p style={{ fontSize: 12, color: '#94A3B8', margin: 0 }}>
+                Comodidades próximas (entorno) são detectadas automaticamente pela localização.
+              </p>
             </div>
           </div>
         ) : step === 1 ? (
