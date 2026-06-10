@@ -320,7 +320,7 @@ describe('ValuationFlow', () => {
   it('exibe chip de sugestão da IA e remove ao clicar', async () => {
     vi.mocked(analyzePhotos).mockResolvedValueOnce({
       padrao_construtivo: 'Médio',
-      estado_conservacao_sugerido: null,
+      estado_conservacao_sugerido: 'regular' as const,
       comodidades_detectadas: ['Piscina'],
     })
 

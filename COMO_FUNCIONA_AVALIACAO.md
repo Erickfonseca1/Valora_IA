@@ -236,10 +236,10 @@ Combinação de dois sinais, com resultado **limitado ao intervalo [40, 99]**:
 | Volume de Dados | Quantidade de comparáveis encontrados | `0,4 + (n/100) × 0,6`, [0,4 – 1,0] |
 | Perfil da Região | Similaridade de área entre comparáveis e alvo | `1 − |área_alvo − área_média| / área_média`, [0,4 – 1,0] |
 | Cobertura | Dispersão espacial dos comparáveis | `1 − (σ_dist / raioUsado)`, [0,4 – 1,0] |
-| Comodidades | Amenidades do imóvel informadas no formulário | score aditivo [0,40 – 1,0] |
+| Comodidades | Comodidades internas e do condomínio por escopo hierárquico | fatores multiplicativos: interno [0,80–1,25], condo [0,90–1,15] |
 | Vizinhança | Pontos de interesse ao redor via Google Maps | `totalScore` do Google Places, ou 0,50 se indisponível |
 
-> **Importante:** Comodidades e Vizinhança são fatores do radar chart — não entram diretamente no cálculo do preço estimado. O preço é determinado exclusivamente pelos comparáveis de mercado e pelos ajustes NBR 14653.
+> **Comodidades por escopo:** comodidades internas do imóvel e do condomínio entram no preço como fatores multiplicativos de homogeneização (interno, condo), classificados por escopo hierárquico. O entorno (próximo) entra como fator delta-only fraco sobre o baseline de vizinhança, para não duplicar o valor locacional já embutido nos comparáveis. Cada fator respeita o intervalo NBR [0,50; 2,00] e tetos de saneamento (interno ±25%, condo ±15%, próximo ±5%). Na Fase 1 o peso vem de tabela de referência (Grau I); a Fase 2 deriva o fator da própria amostra.
 
 ---
 
