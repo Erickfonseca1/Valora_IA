@@ -330,3 +330,7 @@ export interface ApiError {
 }
 
 export type ApiResponse<T> = ApiSuccess<T> | ApiError;
+
+// ─── Extraction (entrada natural por IA) ──────────────────────────────────────
+
+export type { ExtractedField, ExtractionResult } from "./extraction";
