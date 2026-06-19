@@ -5,6 +5,7 @@ import type {
   MarketTrendResponse,
   CreateValuationBody,
   PhotoAnalysisResult,
+  ExtractionResult,
 } from './types'
 
 const BASE = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:3000' : '')
@@ -44,6 +45,25 @@ export async function analyzePhotos(photos: string[]): Promise<PhotoAnalysisResu
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ photos }),
   });
+}
+
+export async function extractProperty(input: Blob | string): Promise<ExtractionResult> {
+  if (typeof input === 'string') {
+    return callApi<ExtractionResult>('/api/extract-property', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: input }),
+    })
+  }
+  const formData = new FormData()
+  formData.append('audio', input, 'audio.webm')
+  const res = await fetch(`${BASE}/api/extract-property`, {
+    method: 'POST',
+    body: formData,
+  })
+  const json = await res.json() as { success: boolean; data?: ExtractionResult; error?: string }
+  if (!json.success) throw new Error(json.error ?? 'Erro ao processar áudio')
+  return json.data!
 }
 
 export function getValuation(id: string): Promise<ValuationRecord> {
