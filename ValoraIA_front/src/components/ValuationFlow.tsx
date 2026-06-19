@@ -2,8 +2,12 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { ValuationForm, PropertyType } from '../types'
 import type { ConservationState, TerrainSlope, StreetLevel, AmenityScope, AmenitySelection } from '../types'
+import type { ExtractionResult, FormFieldSource } from '../types'
 import { createValuation, uploadPhotos, analyzePhotos } from '../api'
 import { itemsForScope, FRONT_CATALOG } from '../amenities'
+import { mergeExtraction } from '../lib/mergeExtraction'
+import IntakeStep from './IntakeStep'
+import ExtractionCard from './ExtractionCard'
 
 const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Apartamento', value: 'apartment' },
@@ -12,7 +16,7 @@ const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Terreno', value: 'land' },
 ]
 
-const STEPS = ['Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio']
+const STEPS = ['Entrada por IA', 'Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio']
 
 function hasAmenityIn(list: AmenitySelection[], item: string, scope: AmenityScope) {
   return list.some(a => a.item === item && a.scope === scope)
@@ -80,6 +84,8 @@ export default function ValuationFlow() {
   const [photoUploading, setPhotoUploading] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
   const [suggested, setSuggested] = useState<AmenitySelection[]>([])
+  const [fieldSource, setFieldSource] = useState<FormFieldSource>({})
+  const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null)
 
   const set = <K extends keyof ValuationForm>(k: K, v: ValuationForm[K]) =>
     setForm(f => ({ ...f, [k]: v }))
@@ -111,6 +117,23 @@ export default function ValuationFlow() {
     setStep(s => Math.min(s, STEPS.length - 1))
   }
 
+  const handleExtracted = (result: ExtractionResult) => {
+    setExtractionResult(result)
+  }
+
+  const handleUseExtraction = () => {
+    if (!extractionResult) return
+    const { form: merged, source } = mergeExtraction(form, extractionResult, fieldSource)
+    setForm(merged)
+    setFieldSource(source)
+    setExtractionResult(null)
+    setStep(1)
+  }
+
+  const handleRedoExtraction = () => {
+    setExtractionResult(null)
+  }
+
   const advanceFromPhotoStep = async () => {
     if (form.photos.length === 0) {
       setStep(s => s + 1)
@@ -121,12 +144,13 @@ export default function ValuationFlow() {
       const { urls } = await uploadPhotos(form.photos)
       setForm(f => ({ ...f, photoUrls: urls }))
 
-      // If conservation state not already set, try AI analysis (non-fatal)
-      if (!form.conservation_state) {
+      // If conservation state not already set by audio/manual, try AI analysis (non-fatal)
+      if (fieldSource.conservation_state !== 'audio' && fieldSource.conservation_state !== 'manual') {
         try {
           const analysis = await analyzePhotos(urls)
-          if (analysis.estado_conservacao_sugerido) {
+          if (analysis.estado_conservacao_sugerido && !form.conservation_state) {
             setForm(f => ({ ...f, conservation_state: analysis.estado_conservacao_sugerido }))
+            setFieldSource(s => ({ ...s, conservation_state: 'photo' }))
           }
           const defScope: AmenityScope =
             form.propertyType === 'apartment' ? 'condo' : 'interno'
@@ -195,11 +219,13 @@ export default function ValuationFlow() {
   const isReviewStep = step === maxStep
 
   const canAdvance = step === 0
+    ? true  // IntakeStep controla seu próprio avanço
+    : step === 1
     ? form.address.trim().length > 0 && form.area.trim().length > 0 && parseFloat(form.area) > 0
     : true
 
   const handleContinue = () => {
-    if (step === 1) {
+    if (step === 2) {
       advanceFromPhotoStep()
     } else if (step < maxStep) {
       setStep(s => s + 1)
@@ -253,7 +279,21 @@ export default function ValuationFlow() {
             </div>
           </div>
         ) : step === 0 ? (
-          /* Step 0 — Details */
+          /* Step 0 — Entrada por IA */
+          extractionResult ? (
+            <ExtractionCard
+              result={extractionResult}
+              onUse={handleUseExtraction}
+              onRedo={handleRedoExtraction}
+            />
+          ) : (
+            <IntakeStep
+              onExtracted={handleExtracted}
+              onSkip={() => setStep(1)}
+            />
+          )
+        ) : step === 1 ? (
+          /* Step 1 — Details */
           <div className="flex flex-col gap-[18px]">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Endereço do Imóvel</label>
@@ -470,8 +510,8 @@ export default function ValuationFlow() {
               </p>
             </div>
           </div>
-        ) : step === 1 ? (
-          /* Step 1 — Conservação & Fotos */
+        ) : step === 2 ? (
+          /* Step 2 — Conservação & Fotos */
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1E293B', margin: 0 }}>
               Fotos do Imóvel
@@ -602,14 +642,14 @@ export default function ValuationFlow() {
       </div>
 
       {/* Navigation */}
-      {!processing && (
+      {!processing && step > 0 && (
         <div className="flex justify-between mt-5">
           <button
-            onClick={() => step === 0 ? navigate('/') : setStep(s => s - 1)}
+            onClick={() => setStep(s => s - 1)}
             className="px-5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-500 text-sm font-medium transition-opacity"
             style={{ cursor: 'pointer', fontFamily: 'inherit' }}
           >
-            {step === 0 ? 'Cancelar' : 'Voltar'}
+            Voltar
           </button>
           <button
             onClick={handleContinue}

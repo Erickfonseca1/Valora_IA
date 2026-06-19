@@ -37,6 +37,7 @@ vi.mock('../api', () => ({
     estado_conservacao_sugerido: 'B',
     comodidades_detectadas: [],
   }),
+  extractProperty: vi.fn().mockResolvedValue({}),
 }))
 
 import { createValuation, analyzePhotos } from '../api'
@@ -49,7 +50,16 @@ function renderFlow() {
   )
 }
 
-async function fillStep0AndAdvance() {
+// Step 0 is now IntakeStep — skip it to land on step 1 (Detalhes do Imóvel)
+async function skipIntakeStep() {
+  const pularBtn = screen.getByText('Pular')
+  await act(async () => {
+    fireEvent.click(pularBtn)
+  })
+}
+
+// Fill step 1 (Detalhes do Imóvel) and advance to step 2 (Conservação & Fotos)
+async function fillStep1AndAdvance() {
   const addressInput = screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB')
   const areaInput = screen.getByPlaceholderText('ex. 98')
 
@@ -62,8 +72,14 @@ async function fillStep0AndAdvance() {
   })
 }
 
-// After fillStep0AndAdvance, we are on step 1 (Conservação & Fotos).
-// This helper advances through that photo step to reach step 2 (Revisão & Envio).
+// Combined: skip IntakeStep + fill details step
+async function fillStep0AndAdvance() {
+  await skipIntakeStep()
+  await fillStep1AndAdvance()
+}
+
+// After fillStep0AndAdvance, we are on step 2 (Conservação & Fotos).
+// This helper advances through that photo step to reach step 3 (Revisão & Envio).
 async function advanceThroughPhotoStep() {
   const continuarBtn = screen.getByText('Continuar')
   await act(async () => {
@@ -80,25 +96,35 @@ describe('ValuationFlow', () => {
 
   it('renderiza os indicadores de passo', () => {
     renderFlow()
+    expect(screen.getByText('Entrada por IA')).toBeInTheDocument()
     expect(screen.getByText('Detalhes do Imóvel')).toBeInTheDocument()
     expect(screen.getByText('Conservação & Fotos')).toBeInTheDocument()
     expect(screen.getByText('Revisão & Envio')).toBeInTheDocument()
   })
 
-  it('começa no passo 0 com formulário de detalhes', () => {
+  it('começa no passo 0 com IntakeStep (Entrada por IA)', () => {
     renderFlow()
+    expect(screen.getByText('Descreva o imóvel')).toBeInTheDocument()
+    expect(screen.getByText('Pular')).toBeInTheDocument()
+  })
+
+  it('passo 1 exibe formulário de detalhes após pular IntakeStep', async () => {
+    renderFlow()
+    await skipIntakeStep()
     expect(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB')).toBeInTheDocument()
     expect(screen.getByPlaceholderText('ex. 98')).toBeInTheDocument()
   })
 
-  it('botão Continuar fica desabilitado sem endereço', () => {
+  it('botão Continuar fica desabilitado sem endereço no passo 1', async () => {
     renderFlow()
+    await skipIntakeStep()
     const btn = screen.getByText('Continuar')
     expect(btn).toBeDisabled()
   })
 
-  it('botão Continuar fica desabilitado sem área', () => {
+  it('botão Continuar fica desabilitado sem área no passo 1', async () => {
     renderFlow()
+    await skipIntakeStep()
     fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
       target: { value: 'Rua Teste, 123' },
     })
@@ -106,8 +132,9 @@ describe('ValuationFlow', () => {
     expect(btn).toBeDisabled()
   })
 
-  it('botão Continuar fica habilitado com endereço e área preenchidos', () => {
+  it('botão Continuar fica habilitado com endereço e área preenchidos no passo 1', async () => {
     renderFlow()
+    await skipIntakeStep()
     fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
       target: { value: 'Rua Teste, 123' },
     })
@@ -118,21 +145,22 @@ describe('ValuationFlow', () => {
     expect(btn).not.toBeDisabled()
   })
 
-  it('navega para passo 1 (Conservação & Fotos) após preencher passo 0', async () => {
+  it('navega para passo 2 (Conservação & Fotos) após preencher passo 1', async () => {
     renderFlow()
     await fillStep0AndAdvance()
     expect(screen.getByText('Fotos do Imóvel')).toBeInTheDocument()
   })
 
-  it('navega para passo 2 (revisão) após passo 1', async () => {
+  it('navega para passo 3 (revisão) após passo 2', async () => {
     renderFlow()
     await fillStep0AndAdvance()
     await advanceThroughPhotoStep()
     expect(screen.getByText('Revisar Detalhes')).toBeInTheDocument()
   })
 
-  it('passo 0 exibe comodidades para seleção', () => {
+  it('passo 1 exibe comodidades para seleção', async () => {
     renderFlow()
+    await skipIntakeStep()
     expect(screen.getByText('Comodidades & Diferenciais')).toBeInTheDocument()
     // Piscina appears in both "interno" and "condo" scopes for apartment
     expect(screen.getAllByText('Piscina').length).toBeGreaterThan(0)
@@ -187,49 +215,56 @@ describe('ValuationFlow', () => {
     })
   })
 
-  it('botão Cancelar no passo 0 é exibido', () => {
+  it('nav não exibe botões no passo 0 (IntakeStep)', () => {
     renderFlow()
-    expect(screen.getByText('Cancelar')).toBeInTheDocument()
+    expect(screen.queryByText('Cancelar')).not.toBeInTheDocument()
+    expect(screen.queryByText('Voltar')).not.toBeInTheDocument()
+    expect(screen.queryByText('Continuar')).not.toBeInTheDocument()
   })
 
   it('botão Voltar aparece nos passos > 0', async () => {
     renderFlow()
-    await fillStep0AndAdvance()
+    await skipIntakeStep()
     expect(screen.getByText('Voltar')).toBeInTheDocument()
   })
 
-  it('botão Voltar retorna ao passo anterior', async () => {
+  it('botão Voltar retorna ao IntakeStep', async () => {
     renderFlow()
-    await fillStep0AndAdvance()
+    await skipIntakeStep()
     fireEvent.click(screen.getByText('Voltar'))
-    expect(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB')).toBeInTheDocument()
+    expect(screen.getByText('Descreva o imóvel')).toBeInTheDocument()
+    expect(screen.getByText('Pular')).toBeInTheDocument()
   })
 
-  it('exibe campos de quartos/banheiros/vagas para Apartamento', () => {
+  it('exibe campos de quartos/banheiros/vagas para Apartamento no passo 1', async () => {
     renderFlow()
+    await skipIntakeStep()
     expect(screen.getByText('Quartos')).toBeInTheDocument()
     expect(screen.getByText('Banheiros')).toBeInTheDocument()
     expect(screen.getByText('Vagas')).toBeInTheDocument()
   })
 
-  it('exibe mesmos campos para Casa', () => {
+  it('exibe mesmos campos para Casa no passo 1', async () => {
     renderFlow()
+    await skipIntakeStep()
     fireEvent.click(screen.getByText('Casa'))
     expect(screen.getByText('Quartos')).toBeInTheDocument()
     expect(screen.getByText('Banheiros')).toBeInTheDocument()
     expect(screen.getByText('Vagas')).toBeInTheDocument()
   })
 
-  it('Comercial não mostra Quartos, Banheiros nem Vagas', () => {
+  it('Comercial não mostra Quartos, Banheiros nem Vagas no passo 1', async () => {
     renderFlow()
+    await skipIntakeStep()
     fireEvent.click(screen.getByText('Comercial'))
     expect(screen.queryByText('Quartos')).not.toBeInTheDocument()
     expect(screen.queryByText('Banheiros')).not.toBeInTheDocument()
     expect(screen.queryByText('Vagas')).not.toBeInTheDocument()
   })
 
-  it('Terreno não mostra Quartos, Banheiros nem Vagas', () => {
+  it('Terreno não mostra Quartos, Banheiros nem Vagas no passo 1', async () => {
     renderFlow()
+    await skipIntakeStep()
     fireEvent.click(screen.getByText('Terreno'))
     expect(screen.queryByText('Quartos')).not.toBeInTheDocument()
     expect(screen.queryByText('Banheiros')).not.toBeInTheDocument()
@@ -239,6 +274,9 @@ describe('ValuationFlow', () => {
   it('Terreno envia bedrooms/bathrooms/parking como undefined', async () => {
     renderFlow()
 
+    // Step 0 → Step 1 (skip IntakeStep)
+    await act(async () => { fireEvent.click(screen.getByText('Pular')) })
+
     fireEvent.click(screen.getByText('Terreno'))
     fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
       target: { value: 'Loteamento Alphaville, Barueri, SP' },
@@ -247,9 +285,9 @@ describe('ValuationFlow', () => {
       target: { value: '500' },
     })
 
-    // Step 0 → Step 1 (Conservação & Fotos)
+    // Step 1 → Step 2 (Conservação & Fotos)
     await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
-    // Step 1 → Step 2 (Revisão)
+    // Step 2 → Step 3 (Revisão)
     await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
     await act(async () => { fireEvent.click(screen.getByText('✦ Gerar Avaliação IA')) })
 
@@ -263,6 +301,9 @@ describe('ValuationFlow', () => {
   it('review step não exibe campos ocultos para Terreno', async () => {
     renderFlow()
 
+    // Step 0 → Step 1 (skip IntakeStep)
+    await act(async () => { fireEvent.click(screen.getByText('Pular')) })
+
     fireEvent.click(screen.getByText('Terreno'))
     fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
       target: { value: 'Rua Teste, 100' },
@@ -271,9 +312,9 @@ describe('ValuationFlow', () => {
       target: { value: '300' },
     })
 
-    // Step 0 → Step 1 (Conservação & Fotos)
+    // Step 1 → Step 2 (Conservação & Fotos)
     await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
-    // Step 1 → Step 2 (Revisão)
+    // Step 2 → Step 3 (Revisão)
     await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
 
     expect(screen.queryByText('Quartos')).not.toBeInTheDocument()
@@ -282,16 +323,19 @@ describe('ValuationFlow', () => {
     expect(screen.getByText('300m²')).toBeInTheDocument()
   })
 
-  it('exibe campos de conservação no passo 0', () => {
+  it('exibe campos de conservação no passo 1', async () => {
     renderFlow()
+    await skipIntakeStep()
     expect(screen.getByText(/Estado de Conservação/i)).toBeTruthy()
     expect(screen.getByText(/Imóvel de esquina/i)).toBeTruthy()
     expect(screen.getByText(/Topografia/i)).toBeTruthy()
   })
 
-  it('exibe etapa de fotos após avançar do passo 0', async () => {
+  it('exibe etapa de fotos após avançar do passo 1', async () => {
     renderFlow()
-    // Fill required fields in step 0
+    await skipIntakeStep()
+
+    // Fill required fields in step 1
     const addressInput = screen.getByPlaceholderText(/Epitácio/i)
     const areaInput = screen.getByPlaceholderText(/ex\. 98/i)
     fireEvent.change(addressInput, { target: { value: 'Rua Teste, 100, São Paulo, SP' } })
@@ -307,6 +351,7 @@ describe('ValuationFlow', () => {
 
   it('mostra comodidades de condomínio para apartamento e oculta para casa sem flag', async () => {
     render(<MemoryRouter><ValuationFlow /></MemoryRouter>)
+    await skipIntakeStep()
     // apartment é default → "Do condomínio" visível
     expect(screen.getByText('Do condomínio')).toBeInTheDocument()
     // troca para Casa → some
