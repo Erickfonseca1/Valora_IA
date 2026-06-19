@@ -4,7 +4,7 @@ import type { ExtractionResult } from "@/types/extraction";
 import { AMENITY_CATALOG } from "@/lib/amenities/catalog";
 
 const GEMINI_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 // Lista de IDs e labels para ancorar o modelo
 const CATALOG_ITEMS = Object.entries(AMENITY_CATALOG)
@@ -206,7 +206,8 @@ async function callGemini(parts: unknown[]): Promise<ExtractionResult> {
         responseMimeType: "application/json",
         responseSchema: RESPONSE_SCHEMA,
         temperature: 0,
-        maxOutputTokens: 1024,
+        maxOutputTokens: 4096,
+        thinkingConfig: { thinkingBudget: 0 },
       },
     }),
   });

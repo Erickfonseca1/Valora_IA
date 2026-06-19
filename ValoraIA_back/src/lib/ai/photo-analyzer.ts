@@ -1,7 +1,7 @@
 import type { PhotoAnalysisResult, ConservationState } from "@/types";
 
 const GEMINI_API_URL =
-  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
 
 const ANALYSIS_PROMPT = `You are a Brazilian real estate appraiser AI. Analyze these property photos and respond ONLY with a valid JSON object (no markdown, no code fences, no explanation) with exactly these fields:
 {

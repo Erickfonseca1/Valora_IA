@@ -121,9 +121,19 @@ export default function ValuationFlow() {
     setExtractionResult(result)
   }
 
-  const handleUseExtraction = () => {
+  const handleUseExtraction = (gapFills: Record<string, string>) => {
     if (!extractionResult) return
-    const { form: merged, source } = mergeExtraction(form, extractionResult, fieldSource)
+    const filledFields = Object.fromEntries(
+      Object.entries(gapFills)
+        .filter(([, v]) => v.trim() !== '')
+        .map(([k, v]) => [k, { value: k === 'area_m2' ? Number(v) : v, confidence: 0.95 }])
+    )
+    const augmented: ExtractionResult = {
+      ...extractionResult,
+      fields: { ...extractionResult.fields, ...filledFields },
+      gaps: extractionResult.gaps.filter(g => !gapFills[g]?.trim()),
+    }
+    const { form: merged, source } = mergeExtraction(form, augmented, fieldSource)
     setForm(merged)
     setFieldSource(source)
     setExtractionResult(null)
