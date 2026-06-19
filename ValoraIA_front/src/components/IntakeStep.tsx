@@ -11,7 +11,7 @@ interface Props {
   onSkip: () => void
 }
 
-type RecordingState = 'idle' | 'recording' | 'processing' | 'error'
+type RecordingState = 'idle' | 'recording' | 'processing'
 
 export default function IntakeStep({ onExtracted, onSkip }: Props) {
   const [mode, setMode] = useState<'audio' | 'text'>('audio')
@@ -57,8 +57,14 @@ export default function IntakeStep({ onExtracted, onSkip }: Props) {
     if (!mr) return
     setRecordingState('processing')
 
+    // Keep a reference to the stream to stop tracks after onstop fires
+    const stream = mr.stream
+
     await new Promise<void>(resolve => {
-      mr.onstop = () => resolve()
+      mr.onstop = () => {
+        stream.getTracks().forEach(t => t.stop())
+        resolve()
+      }
       mr.stop()
     })
 
@@ -224,11 +230,14 @@ export default function IntakeStep({ onExtracted, onSkip }: Props) {
       ) : (
         <div className="flex flex-col gap-3">
           <textarea
-            className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm outline-none bg-white resize-none focus:border-primary"
+            className="w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm outline-none bg-white resize-none"
             rows={5}
             placeholder="Ex: Apartamento de 3 quartos, 98m², no bairro Manaíra em João Pessoa. 2 banheiros, 1 vaga, condomínio com piscina e academia. Estado de conservação regular, construído há 8 anos."
             value={text}
             onChange={e => setText(e.target.value)}
+            onFocus={e => e.currentTarget.style.borderColor = PRIMARY}
+            onBlur={e => e.currentTarget.style.borderColor = '#e2e8f0'}
+            style={{ borderColor: '#e2e8f0' }}
           />
           <button
             onClick={submitText}
