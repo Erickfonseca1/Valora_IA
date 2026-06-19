@@ -12,10 +12,12 @@ vi.mock('../api', () => ({
 }))
 
 describe('IntakeStep', () => {
-  const onExtracted = vi.fn()
-  const onSkip = vi.fn()
+  let onExtracted: ReturnType<typeof vi.fn>
+  let onSkip: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
+    onExtracted = vi.fn()
+    onSkip = vi.fn()
     vi.clearAllMocks()
     // Mock MediaDevices
     Object.defineProperty(navigator, 'mediaDevices', {
