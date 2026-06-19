@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import IntakeStep from '../components/IntakeStep'
+import type { ExtractionResult } from '../types'
 
 vi.mock('../api', () => ({
   extractProperty: vi.fn().mockResolvedValue({
@@ -12,8 +13,10 @@ vi.mock('../api', () => ({
 }))
 
 describe('IntakeStep', () => {
-  let onExtracted: ReturnType<typeof vi.fn>
-  let onSkip: ReturnType<typeof vi.fn>
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let onExtracted: (result: ExtractionResult) => void
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let onSkip: () => void
 
   beforeEach(() => {
     onExtracted = vi.fn()
@@ -27,12 +30,15 @@ describe('IntakeStep', () => {
       writable: true,
     })
     // Mock MediaRecorder
-    vi.stubGlobal('MediaRecorder', class {
+    const MockMediaRecorder = class {
       ondataavailable: ((e: { data: Blob }) => void) | null = null
       onstop: (() => void) | null = null
+      stream = { getTracks: () => [{ stop: vi.fn() }] }
       start() { this.ondataavailable?.({ data: new Blob(['a']) }) }
       stop() { this.onstop?.() }
-    })
+      static isTypeSupported(mime: string) { return mime === 'audio/webm' }
+    }
+    vi.stubGlobal('MediaRecorder', MockMediaRecorder)
   })
 
   it('renderiza botão de gravar e botão Pular', () => {
@@ -71,6 +77,32 @@ describe('IntakeStep', () => {
     fireEvent.click(screen.getByLabelText('Iniciar gravação'))
     await waitFor(() => expect(screen.getByRole('textbox')).toBeDefined())
     expect(screen.getByText(/Microfone não disponível/)).toBeDefined()
+  })
+
+  it('grava áudio e chama onExtracted com resultado', async () => {
+    const { extractProperty } = await import('../api')
+    vi.mocked(extractProperty).mockResolvedValueOnce({
+      summary: 'Casa gravada.',
+      fields: { property_type: { value: 'house', confidence: 0.9 } },
+      amenities: [],
+      gaps: [],
+    })
+    render(<IntakeStep onExtracted={onExtracted} onSkip={onSkip} />)
+
+    // Start recording (async: getUserMedia resolves before state updates)
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Iniciar gravação'))
+    })
+
+    // Stop recording
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('Parar gravação'))
+    })
+
+    await waitFor(() => expect(onExtracted).toHaveBeenCalledOnce())
+    expect(onExtracted).toHaveBeenCalledWith(expect.objectContaining({
+      summary: 'Casa gravada.',
+    }))
   })
 
   it('erro de API: mostra mensagem de erro e link para pular', async () => {

@@ -24,6 +24,7 @@ export default function IntakeStep({ onExtracted, onSkip }: Props) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const chunksRef = useRef<Blob[]>([])
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const mimeTypeRef = useRef<string>('audio/webm')
 
   useEffect(() => {
     return () => {
@@ -36,7 +37,14 @@ export default function IntakeStep({ onExtracted, onSkip }: Props) {
     setError(null)
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const mr = new MediaRecorder(stream, { mimeType: 'audio/webm' })
+      const supportedMime = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/mp4')
+        ? 'audio/mp4'
+        : ''
+      mimeTypeRef.current = supportedMime || 'audio/webm'
+      const options = supportedMime ? { mimeType: supportedMime } : {}
+      const mr = new MediaRecorder(stream, options)
       chunksRef.current = []
       mr.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data) }
       mr.onstop = () => stream.getTracks().forEach(t => t.stop())
@@ -68,7 +76,7 @@ export default function IntakeStep({ onExtracted, onSkip }: Props) {
       mr.stop()
     })
 
-    const blob = new Blob(chunksRef.current, { type: 'audio/webm' })
+    const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current })
     try {
       const result = await extractProperty(blob)
       onExtracted(result)

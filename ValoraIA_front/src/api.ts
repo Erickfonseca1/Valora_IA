@@ -63,7 +63,8 @@ export async function extractProperty(input: Blob | string): Promise<ExtractionR
   })
   const json = await res.json() as { success: boolean; data?: ExtractionResult; error?: string }
   if (!json.success) throw new Error(json.error ?? 'Erro ao processar áudio')
-  return json.data!
+  if (!json.data) throw new Error('Resposta inválida do servidor')
+  return json.data
 }
 
 export function getValuation(id: string): Promise<ValuationRecord> {
