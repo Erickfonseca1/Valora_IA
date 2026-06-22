@@ -65,19 +65,25 @@ describe('ConfidenceBadge', () => {
     expect(screen.getByText('85% Conf.')).toBeInTheDocument()
   })
 
-  it('usa cor verde para score >= 90', () => {
+  it('usa cor ouro para score >= 75', () => {
     const { container } = render(<ConfidenceBadge score={95} />)
     const span = container.firstElementChild as HTMLElement
-    expect(span.style.color).toBe('rgb(16, 185, 129)')
+    expect(span.style.color).toBe('rgb(201, 162, 39)')
   })
 
-  it('usa cor amarela para score entre 75 e 89', () => {
+  it('usa cor ouro para score entre 75 e 89', () => {
     const { container } = render(<ConfidenceBadge score={80} />)
+    const span = container.firstElementChild as HTMLElement
+    expect(span.style.color).toBe('rgb(201, 162, 39)')
+  })
+
+  it('usa cor amarela para score entre 60 e 74', () => {
+    const { container } = render(<ConfidenceBadge score={65} />)
     const span = container.firstElementChild as HTMLElement
     expect(span.style.color).toBe('rgb(245, 158, 11)')
   })
 
-  it('usa cor vermelha para score < 75', () => {
+  it('usa cor vermelha para score < 60', () => {
     const { container } = render(<ConfidenceBadge score={50} />)
     const span = container.firstElementChild as HTMLElement
     expect(span.style.color).toBe('rgb(239, 68, 68)')

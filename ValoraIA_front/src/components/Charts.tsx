@@ -7,7 +7,7 @@ interface MiniLineChartProps {
   height?: number
 }
 
-export function MiniLineChart({ data, color = '#10B981', width = 280, height = 120 }: MiniLineChartProps) {
+export function MiniLineChart({ data, color = '#C9A227', width = 280, height = 120 }: MiniLineChartProps) {
   const max = Math.max(...data)
   const min = Math.min(...data)
   const range = max - min || 1
@@ -24,7 +24,7 @@ export function MiniLineChart({ data, color = '#10B981', width = 280, height = 1
     <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: '100%' }}>
       <defs>
         <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
@@ -73,23 +73,23 @@ export function RadarChart({ factors, size = 240 }: RadarChartProps) {
             key={li}
             points={pts.map(p => `${p.x},${p.y}`).join(' ')}
             fill="none"
-            stroke="#E2E8F0"
+            stroke="#E8E0CF"
             strokeWidth="1"
           />
         )
       })}
       {factors.map((_, i) => {
         const p = getPoint(i, 1)
-        return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#E2E8F0" strokeWidth="1" />
+        return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#E8E0CF" strokeWidth="1" />
       })}
       <polygon
         points={dataPoints.map(p => `${p.x},${p.y}`).join(' ')}
-        fill="rgba(16,185,129,0.15)"
-        stroke="#10B981"
+        fill="rgba(201,162,39,0.12)"
+        stroke="#C9A227"
         strokeWidth="2"
       />
       {dataPoints.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="4" fill="#10B981" stroke="#fff" strokeWidth="2" />
+        <circle key={i} cx={p.x} cy={p.y} r="4" fill="#C9A227" stroke="#fff" strokeWidth="2" />
       ))}
       {factors.map((f, i) => {
         const p = getPoint(i, 1.18)
@@ -101,7 +101,7 @@ export function RadarChart({ factors, size = 240 }: RadarChartProps) {
             textAnchor="middle"
             dominantBaseline="middle"
             fontSize="11"
-            fill="#64748B"
+            fill="#6B6B6B"
             fontWeight="500"
           >
             {f.label}
@@ -117,8 +117,8 @@ interface ConfidenceBadgeProps {
 }
 
 export function ConfidenceBadge({ score }: ConfidenceBadgeProps) {
-  const color = score >= 90 ? '#10B981' : score >= 75 ? '#F59E0B' : '#EF4444'
-  const bg = score >= 90 ? '#ECFDF5' : score >= 75 ? '#FFFBEB' : '#FEF2F2'
+  const color = score >= 75 ? '#C9A227' : score >= 60 ? '#F59E0B' : '#EF4444'
+  const bg = score >= 75 ? '#FEFCF5' : score >= 60 ? '#FFFBEB' : '#FEF2F2'
 
   return (
     <span
@@ -157,7 +157,7 @@ export function BarIndicator({ label, value, color = '#1E3A8A', tooltip }: BarIn
         </span>
         <span className="font-semibold">{value}%</span>
       </div>
-      <div className="h-1.5 rounded-full bg-slate-200">
+      <div className="h-1.5 rounded-full" style={{ background: '#E8E0CF' }}>
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ background: color, width: `${value}%` }}
