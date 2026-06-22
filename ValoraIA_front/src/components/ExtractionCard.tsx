@@ -3,8 +3,8 @@ import type { ExtractionResult, PropertyType, ConservationState, TerrainSlope, S
 import { FRONT_CATALOG } from '../amenities'
 import { extractProperty } from '../api'
 
-const PRIMARY = '#1E3A8A'
-const ACCENT = '#10B981'
+const NAVY = '#1E3A8A'
+const GOLD = '#C9A227'
 
 interface Props {
   result: ExtractionResult
@@ -13,8 +13,8 @@ interface Props {
 }
 
 function confidenceBadge(confidence: number) {
-  if (confidence >= 0.75) return { label: 'Alta', bg: '#D1FAE5', color: '#065F46' }
-  if (confidence >= 0.5) return { label: 'Média', bg: '#FEF3C7', color: '#92400E' }
+  if (confidence >= 0.75) return { label: 'Alta', bg: '#FEFCF5', color: '#92720A' }
+  if (confidence >= 0.5) return { label: 'Média', bg: '#FFFBEB', color: '#92400E' }
   return { label: 'Baixa', bg: '#F1F5F9', color: '#475569' }
 }
 
@@ -265,10 +265,10 @@ export default function ExtractionCard({ result, onUse, onRedo }: Props) {
   return (
     <div className="flex flex-col gap-5">
       {/* Summary */}
-      <div className="p-4 rounded-xl" style={{ background: PRIMARY + '08', border: `1px solid ${PRIMARY}22` }}>
+      <div className="p-4 rounded-xl" style={{ background: '#F7F4EE', border: '1px solid #E8E0CF' }}>
         <div className="flex items-center gap-2 mb-2">
-          <span style={{ color: PRIMARY, fontSize: 16 }}>✦</span>
-          <span className="text-sm font-semibold" style={{ color: PRIMARY }}>Resumo da IA</span>
+          <span style={{ color: GOLD, fontSize: 16 }}>✦</span>
+          <span className="text-sm font-semibold" style={{ color: '#1A1A1A' }}>Resumo da IA</span>
         </div>
         <p className="text-sm text-slate-700 leading-relaxed">{result.summary}</p>
       </div>
@@ -286,7 +286,11 @@ export default function ExtractionCard({ result, onUse, onRedo }: Props) {
               return (
                 <div
                   key={key}
-                  className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-50"
+                  className="flex items-center justify-between px-3 py-2 rounded-lg"
+                  style={{
+                    background: '#FEFCF5',
+                    borderLeft: '2px solid #C9A227',
+                  }}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-slate-700">
@@ -320,7 +324,7 @@ export default function ExtractionCard({ result, onUse, onRedo }: Props) {
               <span
                 key={a.item}
                 className="px-3 py-1 rounded-full text-xs font-medium"
-                style={{ background: ACCENT + '15', color: ACCENT, border: `1px solid ${ACCENT}33` }}
+                style={{ background: '#FEFCF5', color: '#92720A', border: '1px solid #E8D99A' }}
               >
                 {FRONT_CATALOG[a.item]?.label ?? a.item}
               </span>
@@ -358,7 +362,7 @@ export default function ExtractionCard({ result, onUse, onRedo }: Props) {
         <button
           onClick={() => onUse(gapValues)}
           className="flex-1 px-4 py-2.5 rounded-lg text-sm font-semibold text-white border-none cursor-pointer"
-          style={{ background: PRIMARY, fontFamily: 'inherit' }}
+          style={{ background: NAVY, fontFamily: 'inherit' }}
         >
           Usar e revisar
         </button>
