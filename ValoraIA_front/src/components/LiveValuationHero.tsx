@@ -4,7 +4,6 @@ import ConfidenceGauge from './ConfidenceGauge'
 import ComparablesMap from './ComparablesMap'
 
 const PRIMARY = '#1E3A8A'
-const ACCENT = '#10B981'
 
 interface Props {
   record: ValuationRecord

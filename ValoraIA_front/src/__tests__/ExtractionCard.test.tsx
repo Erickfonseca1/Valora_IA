@@ -25,7 +25,7 @@ describe('ExtractionCard', () => {
   it('exibe campos extraídos com label PT-BR', () => {
     render(<ExtractionCard result={FULL_RESULT} onUse={vi.fn()} onRedo={vi.fn()} />)
     expect(screen.getByText('Endereço')).toBeDefined()
-    expect(screen.getByText('Tipo')).toBeDefined()
+    expect(screen.getByText('Tipo de imóvel')).toBeDefined()
     expect(screen.getByText('Área (m²)')).toBeDefined()
     expect(screen.getByText('Apartamento')).toBeDefined()
   })
@@ -48,14 +48,14 @@ describe('ExtractionCard', () => {
 
   it('exibe bloco âmbar de gaps com campos obrigatórios', () => {
     render(<ExtractionCard result={FULL_RESULT} onUse={vi.fn()} onRedo={vi.fn()} />)
-    expect(screen.getByText(/Faltou informar/)).toBeDefined()
+    expect(screen.getByText(/Completar campos obrigatórios/)).toBeDefined()
     expect(screen.getByText(/Vagas/)).toBeDefined()
   })
 
   it('sem gaps: bloco âmbar não aparece', () => {
     const noGaps: ExtractionResult = { ...FULL_RESULT, gaps: [] }
     render(<ExtractionCard result={noGaps} onUse={vi.fn()} onRedo={vi.fn()} />)
-    expect(screen.queryByText(/Faltou informar/)).toBeNull()
+    expect(screen.queryByText(/Completar campos obrigatórios/)).toBeNull()
   })
 
   it('botão "Usar e revisar" chama onUse', () => {

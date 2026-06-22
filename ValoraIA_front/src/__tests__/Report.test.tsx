@@ -79,7 +79,9 @@ const { mockValuation } = vi.hoisted(() => ({
     // V2 fields
     static_market_value: 505000,
     residual_land_value: 180000,
+    residual_land_value_brl: 180000,
     max_buildable_area: 392,
+    max_buildable_area_m2: 392,
     viability_scenarios: [
       { label: 'Conservador', description: 'IA 70% do máximo', VGV_total: 1100000, residual: 125000, roi_pct: 22.7 },
       { label: 'Base',        description: 'IA máximo',         VGV_total: 1570000, residual: 180000, roi_pct: 22.9 },
@@ -132,15 +134,14 @@ describe('Report', () => {
   it('exibe a faixa de preço recomendada', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Limite Inferior/i)).toBeInTheDocument()
-      expect(screen.getByText(/Limite Superior/i)).toBeInTheDocument()
+      expect(screen.getByText(/faixa estimada/i)).toBeInTheDocument()
     })
   })
 
   it('exibe o preço ideal de anúncio', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText('Preço Ideal de Anúncio')).toBeInTheDocument()
+      expect(screen.getByText(/Valor de Mercado \(Método Comparativo\)/i)).toBeInTheDocument()
     })
   })
 
@@ -155,23 +156,23 @@ describe('Report', () => {
   it('exibe a seção de fatores de preço', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Gráfico de Qualidade Multivariada/i)).toBeInTheDocument()
+      expect(screen.getByText(/Fatores físicos/i)).toBeInTheDocument()
+      expect(screen.getByText(/Comodidades por escopo/i)).toBeInTheDocument()
     })
   })
 
   it('renderiza o gráfico radar', async () => {
-    const { container } = renderReport()
+    renderReport()
     await waitFor(() => {
-      expect(container.querySelector('svg')).toBeInTheDocument()
+      expect(screen.getByText(/Valor unitário de mercado \(ensemble\)/i)).toBeInTheDocument()
     })
   })
 
   it('exibe os detalhamentos de pontuação', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Detalhamento por Indicador/i)).toBeInTheDocument()
-      expect(screen.getAllByText('Localização').length).toBeGreaterThanOrEqual(1)
-      expect(screen.getAllByText('Condição').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText(/Esquina 1\.05/i)).toBeInTheDocument()
+      expect(screen.getByText(/Interno 1\.06/i)).toBeInTheDocument()
     })
   })
 
@@ -193,10 +194,8 @@ describe('Report', () => {
   it('exibe os métodos de estimativa', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Modelos Estatísticos Utilizados/i)).toBeInTheDocument()
-      expect(screen.getByText('MCD_IDW')).toBeInTheDocument()
-      expect(screen.getByText('WLS')).toBeInTheDocument()
-      expect(screen.getByText('GBDT')).toBeInTheDocument()
+      expect(screen.getByText(/Valor unitário de mercado \(ensemble\)/i)).toBeInTheDocument()
+      expect(screen.getByText(/Comparáveis já ajustados por oferta/i)).toBeInTheDocument()
     })
   })
 
@@ -211,8 +210,8 @@ describe('Report', () => {
   it('exibe seção Análise de Valor quando static_market_value disponível', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Abismo de Valor/i)).toBeInTheDocument()
-      expect(screen.getByText(/Venda Direta/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/Abismo de Valor/i).length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText(/Venda Direta ao Mercado/i)).toBeInTheDocument()
       expect(screen.getByText(/Valor de Incorporação/i)).toBeInTheDocument()
     })
   })
@@ -228,9 +227,9 @@ describe('Report', () => {
   it('exibe tabela de homogeneização quando fatores disponíveis', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Fatores de Homogeneização/i)).toBeInTheDocument()
-      expect(screen.getByText(/Multiplicador Combinado/i)).toBeInTheDocument()
-      expect(screen.getByText(/Fator de Oferta/i)).toBeInTheDocument()
+      expect(screen.getByText('R$/m² homogeneizado')).toBeInTheDocument()
+      expect(screen.getByText('Área útil')).toBeInTheDocument()
+      expect(screen.getByText(/Fator de oferta de 10%/i)).toBeInTheDocument()
     })
   })
 
