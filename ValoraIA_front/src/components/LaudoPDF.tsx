@@ -2,7 +2,7 @@ import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
 import type { ValuationRecord } from '../types'
 import { FRONT_CATALOG } from '../amenities'
 
-const PRIMARY = '#1E3A8A'
+const PRIMARY = '#111827'
 const ACCENT = '#10B981'
 const MUTED = '#94A3B8'
 

@@ -4,7 +4,7 @@ import type { LatLngBoundsExpression } from 'leaflet'
 import type { FrontendComparable, NeighborhoodData } from '../types'
 import 'leaflet/dist/leaflet.css'
 
-const PRIMARY = '#0F2561'
+const PRIMARY = '#111827'
 const ACCENT = '#C9A227'
 const AMBER = '#F59E0B'
 

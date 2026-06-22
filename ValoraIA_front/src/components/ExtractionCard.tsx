@@ -3,7 +3,7 @@ import type { ExtractionResult, PropertyType, ConservationState, TerrainSlope, S
 import { FRONT_CATALOG } from '../amenities'
 import { extractProperty } from '../api'
 
-const NAVY = '#1E3A8A'
+const NAVY = '#111827'
 const GOLD = '#C9A227'
 
 interface Props {

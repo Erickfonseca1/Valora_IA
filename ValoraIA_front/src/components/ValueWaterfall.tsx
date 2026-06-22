@@ -1,6 +1,6 @@
 import type { HomogenizationFactors } from '../types'
 
-const NAVY = '#0F2561'
+const NAVY = '#111827'
 const GOLD = '#C9A227'
 const BORDER = '#E8E0CF'
 

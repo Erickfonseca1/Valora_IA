@@ -138,7 +138,7 @@ interface BarIndicatorProps {
   tooltip?: string
 }
 
-export function BarIndicator({ label, value, color = '#1E3A8A', tooltip }: BarIndicatorProps) {
+export function BarIndicator({ label, value, color = '#111827', tooltip }: BarIndicatorProps) {
   return (
     <div className="mb-3">
       <div className="flex justify-between text-xs mb-1 text-slate-500">

@@ -8,7 +8,7 @@ import LiveValuationHero from './LiveValuationHero'
 import { pdf } from '@react-pdf/renderer'
 import LaudoPDF from './LaudoPDF'
 
-const PRIMARY = '#0F2561'
+const PRIMARY = '#111827'
 const ACCENT = '#C9A227'
 
 const SCOPE_TITLES: Record<string, string> = {

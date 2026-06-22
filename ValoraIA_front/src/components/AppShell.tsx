@@ -60,7 +60,7 @@ export default function AppShell({ children }: AppShellProps) {
   const Sidebar = (
     <aside
       className="flex flex-col flex-shrink-0 py-6"
-      style={{ background: '#0F2561', width: 220, height: '100%' }}
+      style={{ background: '#111827', width: 220, height: '100%' }}
     >
       <div className="px-5 pb-7" style={{ borderBottom: '1px solid rgba(255,255,255,0.10)' }}>
         <AvaliaWordmark />
@@ -162,7 +162,7 @@ export default function AppShell({ children }: AppShellProps) {
           <button
             onClick={() => navigate('/nova-avaliacao')}
             className="flex items-center gap-1.5 px-3 md:px-4 py-2 rounded-lg border-none cursor-pointer text-xs md:text-sm font-semibold text-white transition-opacity hover:opacity-85 whitespace-nowrap flex-shrink-0"
-            style={{ background: '#1E3A8A', fontFamily: 'inherit' }}
+            style={{ background: '#111827', fontFamily: 'inherit' }}
           >
             <Plus size={14} strokeWidth={2.5} />
             Nova Avaliação

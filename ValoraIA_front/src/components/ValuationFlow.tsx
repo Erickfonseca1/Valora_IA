@@ -31,7 +31,7 @@ function mapLabelToItem(label: string): string | null {
   return hit ? hit[0] : null
 }
 
-const PRIMARY = '#1E3A8A'
+const PRIMARY = '#111827'
 
 function SkeletonStep({ label, delay }: { label: string; delay: number }) {
   const [done, setDone] = useState(false)
@@ -216,8 +216,8 @@ export default function ValuationFlow() {
   const pillStyle = (active: boolean) => ({
     padding: '8px 16px',
     borderRadius: 20,
-    border: `1.5px solid ${active ? '#0F2561' : '#E8E0CF'}`,
-    background: active ? '#0F2561' : '#fff',
+    border: `1.5px solid ${active ? '#111827' : '#E8E0CF'}`,
+    background: active ? '#111827' : '#fff',
     color: active ? '#FFFFFF' : '#6B6B6B',
     fontSize: 13,
     fontWeight: active ? 600 : 400,
@@ -283,7 +283,7 @@ export default function ValuationFlow() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  background: i < step ? '#C9A227' : i === step ? '#0F2561' : '#FFFFFF',
+                  background: i < step ? '#C9A227' : i === step ? '#111827' : '#FFFFFF',
                   border: i === step ? '2px solid #C9A227' : i < step ? 'none' : '1.5px solid #E8E0CF',
                   boxSizing: 'border-box',
                   flexShrink: 0,

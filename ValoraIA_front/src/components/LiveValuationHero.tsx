@@ -3,7 +3,7 @@ import ValueCountUp from './ValueCountUp'
 import ConfidenceGauge from './ConfidenceGauge'
 import ComparablesMap from './ComparablesMap'
 
-const PRIMARY = '#1E3A8A'
+const PRIMARY = '#111827'
 
 interface Props {
   record: ValuationRecord

@@ -4,7 +4,7 @@ import type { DashboardValuationItem } from '../types'
 import { getDashboardValuations } from '../api'
 import { ConfidenceBadge } from './Charts'
 
-const PRIMARY = '#1E3A8A'
+const PRIMARY = '#111827'
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   apartment: 'Apartamento',

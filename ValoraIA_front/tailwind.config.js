@@ -8,8 +8,8 @@ export default {
         mono: ['"DM Mono"', 'monospace'],
       },
       colors: {
-        primary: '#1E3A8A',
-        'navy-deep': '#0F2561',
+        primary: '#111827',
+        'navy-deep': '#111827',
         gold: '#C9A227',
         'gold-tint': '#FEFCF5',
         'gold-border': '#E8D99A',

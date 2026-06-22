@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import type { ExtractionResult } from '../types'
 import { extractProperty } from '../api'
 
-const PRIMARY = '#1E3A8A'
+const PRIMARY = '#111827'
 
 interface Props {
   onExtracted: (result: ExtractionResult) => void
