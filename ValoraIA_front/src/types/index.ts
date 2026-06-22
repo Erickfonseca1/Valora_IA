@@ -39,6 +39,8 @@ export interface NearbyPlace {
   vicinity: string
   type: string
   distance_m: number
+  lat: number | null
+  lng: number | null
 }
 
 export interface NeighborhoodPOI {
@@ -65,6 +67,8 @@ export interface FrontendComparable {
   transaction_date: string
   source_url?: string
   images?: string[]
+  lat: number | null
+  lng: number | null
 }
 
 export interface MethodEstimate {
