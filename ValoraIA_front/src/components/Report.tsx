@@ -88,27 +88,30 @@ const fmtM2 = (v: number) =>
 function SectionHeader({ number, title }: { number: string; title: string }) {
   return (
     <div style={{
-      background: PRIMARY,
-      color: '#fff',
-      padding: '10px 20px',
+      borderLeft: '3px solid #C9A227',
+      paddingLeft: 16,
+      paddingTop: 10,
+      paddingBottom: 10,
+      borderBottom: '1px solid #E8E0CF',
       display: 'flex',
       alignItems: 'center',
-      gap: 14,
+      gap: 12,
+      background: 'transparent',
     }}>
       <span style={{
-        fontSize: 10,
+        fontFamily: "'DM Mono', monospace",
+        fontSize: 11,
         fontWeight: 700,
-        letterSpacing: 2,
-        opacity: 0.55,
-        fontFamily: 'monospace',
+        color: '#C9A227',
+        letterSpacing: 1,
         minWidth: 20,
       }}>{number}</span>
       <span style={{
-        fontSize: 12,
+        fontSize: 13,
         fontWeight: 700,
-        letterSpacing: 1,
+        color: '#1A1A1A',
+        letterSpacing: '-0.2px',
         textTransform: 'uppercase',
-        fontFamily: 'Georgia, "Times New Roman", serif',
       }}>{title}</span>
     </div>
   )
@@ -118,10 +121,11 @@ function SectionCard({ children, style }: { children: ReactNode; style?: React.C
   return (
     <div style={{
       background: '#fff',
-      border: '1px solid #E2E8F0',
-      borderRadius: 8,
+      border: '1px solid #E8E0CF',
+      borderRadius: 12,
       marginBottom: 14,
       overflow: 'hidden',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       ...style,
     }}>
       {children}
@@ -148,10 +152,10 @@ export default function Report() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div
-          className="w-10 h-10 rounded-full border-[3px] border-slate-200 animate-spin"
-          style={{ borderTopColor: PRIMARY }}
-        />
+        <svg width="40" height="40" viewBox="0 0 40 40" className="animate-spin-slow">
+          <circle cx="20" cy="20" r="17" fill="none" stroke="#E8E0CF" strokeWidth="3" />
+          <path d="M 20 3 A 17 17 0 0 1 37 20" fill="none" stroke="#C9A227" strokeWidth="3" strokeLinecap="round" />
+        </svg>
       </div>
     )
   }
@@ -590,7 +594,26 @@ export default function Report() {
         <button
           onClick={handleDownloadPdf}
           disabled={pdfLoading}
-          style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: pdfLoading ? 'default' : 'pointer', border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontFamily: 'inherit', opacity: pdfLoading ? 0.6 : 1 }}
+          style={{
+            border: '1px solid #E8E0CF',
+            background: '#FFFFFF',
+            color: '#1A1A1A',
+            borderRadius: 8,
+            padding: '8px 16px',
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: pdfLoading ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+            transition: 'border-color 0.15s, color 0.15s',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = '#C9A227'
+            ;(e.currentTarget as HTMLButtonElement).style.color = '#C9A227'
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.borderColor = '#E8E0CF'
+            ;(e.currentTarget as HTMLButtonElement).style.color = '#1A1A1A'
+          }}
         >
           {pdfLoading ? 'Gerando PDF…' : 'Baixar PDF'}
         </button>
