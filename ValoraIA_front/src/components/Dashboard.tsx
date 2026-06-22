@@ -4,7 +4,6 @@ import type { DashboardMetrics, DashboardValuationItem, MarketTrendResponse } fr
 import { getDashboardMetrics, getDashboardValuations, getMarketTrend } from '../api'
 import { ConfidenceBadge, MiniLineChart } from './Charts'
 
-const PRIMARY = '#111827'
 const GOLD = '#C9A227'
 const MONO = "'DM Mono', monospace"
 

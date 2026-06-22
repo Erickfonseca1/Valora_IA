@@ -10,7 +10,7 @@ export default defineConfig({
       usePolling: true,
     },
     proxy: {
-      '/api': process.env.VITE_BACKEND_HOST || 'http://localhost:3000',
+      '/api': 'http://localhost:3000',
     },
   },
 })
