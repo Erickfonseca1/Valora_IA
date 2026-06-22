@@ -4,8 +4,8 @@ import type { LatLngBoundsExpression } from 'leaflet'
 import type { FrontendComparable, NeighborhoodData } from '../types'
 import 'leaflet/dist/leaflet.css'
 
-const PRIMARY = '#1E3A8A'
-const ACCENT = '#10B981'
+const PRIMARY = '#0F2561'
+const ACCENT = '#C9A227'
 const AMBER = '#F59E0B'
 
 const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
