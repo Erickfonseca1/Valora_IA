@@ -38,5 +38,9 @@ export default function ValueCountUp({ value, animate = true, className }: Props
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current) }
   }, [value, animate])
 
-  return <span className={className}>{BRL.format(display)}</span>
+  return (
+    <span className={className} style={{ fontFamily: "'DM Mono', monospace" }}>
+      {BRL.format(display)}
+    </span>
+  )
 }
