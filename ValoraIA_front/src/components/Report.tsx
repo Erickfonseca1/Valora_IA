@@ -4,6 +4,7 @@ import type { ValuationRecord } from '../types'
 import { getValuation } from '../api'
 import { FRONT_CATALOG } from '../amenities'
 import ValueWaterfall from './ValueWaterfall'
+import LiveValuationHero from './LiveValuationHero'
 import { pdf } from '@react-pdf/renderer'
 import LaudoPDF from './LaudoPDF'
 
@@ -277,6 +278,9 @@ export default function Report() {
       )}
 
       {/* ── 02. VALOR DE MERCADO DETERMINADO ───────────────────── */}
+      <div style={{ marginBottom: 16 }}>
+        <LiveValuationHero record={valuation} mode="static" />
+      </div>
       <SectionCard>
         <SectionHeader number="02" title="Valor de Mercado Determinado" />
         <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 0 }}>

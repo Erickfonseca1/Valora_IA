@@ -1,7 +1,16 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
+import type { ReactNode } from 'react'
 import Report from '../components/Report'
+
+vi.mock('react-leaflet', () => ({
+  MapContainer: ({ children }: { children: ReactNode }) => <div data-testid="map">{children}</div>,
+  TileLayer: () => <div />,
+  CircleMarker: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
+  Popup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  useMap: () => ({ fitBounds: vi.fn() }),
+}))
 
 const { mockValuation } = vi.hoisted(() => ({
   mockValuation: {
@@ -23,7 +32,10 @@ const { mockValuation } = vi.hoisted(() => ({
     price_range_min_brl: 485000,
     price_range_max_brl: 525000,
     recommended_listing_price_brl: 505000,
+    static_market_value_brl: 505000,
     confidence_score: 88,
+    lat: null,
+    lng: null,
     price_factors: [
       { label: 'Localização', score: 0.85 },
       { label: 'Condição', score: 0.72 },
@@ -106,6 +118,7 @@ describe('Report', () => {
     renderReport()
     await waitFor(() => {
       expect(screen.getByText('Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB')).toBeInTheDocument()
+      expect(screen.getByTestId('live-hero')).toBeInTheDocument()
     })
   })
 
