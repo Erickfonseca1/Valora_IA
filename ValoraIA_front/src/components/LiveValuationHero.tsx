@@ -40,7 +40,7 @@ export default function LiveValuationHero({ record, mode, onSeeReport }: Props) 
       className="live-hero"
     >
       {/* Coluna esquerda: valor + gauge */}
-      <div style={{ padding: '28px 28px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <div style={{ padding: '28px 28px', display: 'flex', flexDirection: 'column', gap: 18, background: '#FEFCF5' }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
             Valor de Mercado
@@ -92,7 +92,7 @@ export default function LiveValuationHero({ record, mode, onSeeReport }: Props) 
 
       {/* Coluna direita: mapa */}
       {hasMap && (
-        <div style={{ minHeight: 320, borderLeft: '1px solid #F1F5F9' }}>
+        <div style={{ minHeight: 320, borderLeft: '1px solid #E8E0CF' }}>
           <ComparablesMap
             subject={{ lat: record.lat, lng: record.lng }}
             comparables={record.comparables ?? []}
