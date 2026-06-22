@@ -5,6 +5,8 @@ export interface NearbyPlace {
   vicinity: string;
   type: string;
   distance_m: number;
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface NeighborhoodPOI {
@@ -69,7 +71,14 @@ export async function fetchNearbyPlaces(lat: number, lng: number): Promise<Neigh
       const places: NearbyPlace[] = data.results
         .map((r) => {
           const dist = haversineMeters(lat, lng, r.geometry.location.lat, r.geometry.location.lng);
-          return { name: r.name, vicinity: r.vicinity, type: config.type, distance_m: Math.round(dist) };
+          return {
+            name: r.name,
+            vicinity: r.vicinity,
+            type: config.type,
+            distance_m: Math.round(dist),
+            lat: r.geometry.location.lat,
+            lng: r.geometry.location.lng,
+          };
         })
         .filter((p) => p.distance_m <= config.maxDistance)
         .slice(0, 5);
