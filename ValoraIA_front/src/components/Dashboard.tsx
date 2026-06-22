@@ -5,7 +5,8 @@ import { getDashboardMetrics, getDashboardValuations, getMarketTrend } from '../
 import { ConfidenceBadge, MiniLineChart } from './Charts'
 
 const PRIMARY = '#1E3A8A'
-const ACCENT = '#10B981'
+const GOLD = '#C9A227'
+const MONO = "'DM Mono', monospace"
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
   apartment: 'Apartamento',
@@ -62,10 +63,10 @@ export default function Dashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div
-          className="w-10 h-10 rounded-full border-[3px] border-slate-200 animate-spin"
-          style={{ borderTopColor: PRIMARY }}
-        />
+        <svg width="40" height="40" viewBox="0 0 40 40" className="animate-spin-slow">
+          <circle cx="20" cy="20" r="17" fill="none" stroke="#E8E0CF" strokeWidth="3" />
+          <path d="M 20 3 A 17 17 0 0 1 37 20" fill="none" stroke="#C9A227" strokeWidth="3" strokeLinecap="round" />
+        </svg>
       </div>
     )
   }
@@ -73,7 +74,7 @@ export default function Dashboard() {
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="text-slate-400 text-sm">Erro ao carregar dados</div>
+        <div className="text-sm" style={{ color: '#9E9E9E' }}>Erro ao carregar dados</div>
         <div className="text-xs text-red-400">{error}</div>
       </div>
     )
@@ -91,38 +92,52 @@ export default function Dashboard() {
       label: 'Avaliações Este Mês',
       value: String(metrics.valuations_this_month),
       sub: monthChange !== null ? `${monthChange >= 0 ? '+' : ''}${monthChange}% em relação ao mês anterior` : 'Sem dados do mês anterior',
-      icon: '⊞',
-      color: PRIMARY,
+      icon: '▦',
+      color: GOLD,
+      anchor: true,
     },
     {
       label: 'Confiança Média',
       value: `${metrics.avg_confidence.toFixed(1)}%`,
       sub: 'Em todas as avaliações',
-      icon: '◉',
-      color: ACCENT,
+      icon: '◎',
+      color: GOLD,
+      anchor: false,
     },
     {
       label: 'Temperatura do Mercado',
       value: tempConfig!.label,
       sub: `${metrics.market_city} · ${metrics.market_temperature === 'hot' ? 'Tendência de alta' : metrics.market_temperature === 'warm' ? 'Mercado estável' : 'Mercado em baixa'}`,
-      icon: '▲',
+      icon: '△',
       color: tempConfig!.color,
+      anchor: false,
     },
   ] : []
 
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold m-0 text-slate-900">Painel</h1>
-        <p className="text-sm text-slate-500 mt-1">Bem-vinda de volta, Maria. Aqui está seu panorama de mercado.</p>
+        <h1 className="text-2xl font-bold m-0" style={{ color: '#1A1A1A' }}>Painel</h1>
+        <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>Bem-vinda de volta, Maria. Aqui está seu panorama de mercado.</p>
       </div>
 
       {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {METRIC_CARDS.map((m, i) => (
-          <div key={i} className="bg-white rounded-xl p-5 border border-slate-200 hover:shadow-md transition-shadow">
+          <div
+            key={i}
+            className="bg-white rounded-xl p-5 transition-shadow"
+            style={{
+              border: m.anchor ? '1px solid #E8D99A' : '1px solid #E8E0CF',
+              borderLeft: m.anchor ? '3px solid #C9A227' : '1px solid #E8E0CF',
+              background: m.anchor ? '#FEFCF5' : '#FFFFFF',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            }}
+            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 16px rgba(201,162,39,0.10)' }}
+            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)' }}
+          >
             <div className="flex justify-between items-start mb-3">
-              <span className="text-xs text-slate-500 font-medium uppercase tracking-wide">{m.label}</span>
+              <span className="text-xs font-medium uppercase tracking-wide" style={{ color: '#9E9E9E' }}>{m.label}</span>
               <span
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
                 style={{ background: m.color + '20', color: m.color }}
@@ -130,31 +145,36 @@ export default function Dashboard() {
                 {m.icon}
               </span>
             </div>
-            <div className="text-[26px] font-bold text-slate-900 mb-1">{m.value}</div>
-            <div className="text-xs text-slate-500">{m.sub}</div>
+            <div
+              className="text-[26px] font-bold mb-1"
+              style={{ color: i === 1 ? GOLD : '#1A1A1A', fontFamily: i < 2 ? MONO : 'inherit' }}
+            >
+              {m.value}
+            </div>
+            <div className="text-xs" style={{ color: '#6B6B6B' }}>{m.sub}</div>
           </div>
         ))}
       </div>
 
       <div className="grid gap-5 grid-cols-1 lg:grid-cols-[1fr_360px]">
         {/* Recent Valuations */}
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-200 flex justify-between items-center">
-            <h2 className="text-[15px] font-semibold m-0 text-slate-900">Avaliações Recentes</h2>
-            <span className="text-xs font-medium cursor-pointer" style={{ color: PRIMARY }}>Ver todas</span>
+        <div className="bg-white rounded-xl overflow-hidden" style={{ border: '1px solid #E8E0CF' }}>
+          <div className="px-5 py-4 flex justify-between items-center" style={{ borderBottom: '1px solid #E8E0CF' }}>
+            <h2 className="text-[15px] font-semibold m-0" style={{ color: '#1A1A1A' }}>Avaliações Recentes</h2>
+            <span className="text-xs font-medium cursor-pointer" style={{ color: GOLD }}>Ver todas</span>
           </div>
           {valuations.length === 0 ? (
-            <div className="px-5 py-10 text-center text-slate-400 text-sm">Nenhuma avaliação encontrada.</div>
+            <div className="px-5 py-10 text-center text-sm" style={{ color: '#9E9E9E' }}>Nenhuma avaliação encontrada.</div>
           ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="bg-slate-50">
-                  <th className="px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">Imóvel</th>
-                  <th className="hidden sm:table-cell px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">Tipo</th>
-                  <th className="px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">Preço IA</th>
-                  <th className="hidden md:table-cell px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">Confiança</th>
-                  <th className="hidden sm:table-cell px-4 py-2.5 text-left font-medium text-slate-500 text-xs uppercase tracking-wide">Data</th>
+                <tr style={{ background: '#F7F4EE' }}>
+                  <th className="px-4 py-2.5 text-left font-medium text-xs uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Imóvel</th>
+                  <th className="hidden sm:table-cell px-4 py-2.5 text-left font-medium text-xs uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Tipo</th>
+                  <th className="px-4 py-2.5 text-left font-medium text-xs uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Preço IA</th>
+                  <th className="hidden md:table-cell px-4 py-2.5 text-left font-medium text-xs uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Confiança</th>
+                  <th className="hidden sm:table-cell px-4 py-2.5 text-left font-medium text-xs uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Data</th>
                 </tr>
               </thead>
               <tbody>
@@ -162,16 +182,19 @@ export default function Dashboard() {
                   <tr
                     key={v.id}
                     onClick={() => navigate(`/resultado/${v.id}`)}
-                    className="cursor-pointer transition-colors hover:bg-slate-50 border-t border-slate-100"
+                    className="cursor-pointer transition-colors"
+                    style={{ borderTop: '1px solid #E8E0CF' }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = '#F7F4EE' }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLTableRowElement).style.background = '' }}
                   >
                     <td className="px-4 py-3">
-                      <div className="font-medium text-slate-900 truncate max-w-[160px] sm:max-w-none">{v.address}</div>
-                      <div className="text-xs text-slate-400 mt-0.5">{v.area_m2}m²</div>
+                      <div className="font-medium truncate max-w-[160px] sm:max-w-none" style={{ color: '#1A1A1A' }}>{v.address}</div>
+                      <div className="text-xs mt-0.5" style={{ color: '#9E9E9E' }}>{v.area_m2}m²</div>
                     </td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-slate-500">{PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type}</td>
-                    <td className="px-4 py-3 font-semibold text-slate-900">{v.static_market_value_brl != null ? fmt(v.static_market_value_brl) : '—'}</td>
+                    <td className="hidden sm:table-cell px-4 py-3" style={{ color: '#6B6B6B' }}>{PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type}</td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: '#1A1A1A', fontFamily: MONO }}>{v.static_market_value_brl != null ? fmt(v.static_market_value_brl) : '—'}</td>
                     <td className="hidden md:table-cell px-4 py-3"><ConfidenceBadge score={v.confidence_score ?? 0} /></td>
-                    <td className="hidden sm:table-cell px-4 py-3 text-slate-400">{fmtDate(v.created_at)}</td>
+                    <td className="hidden sm:table-cell px-4 py-3" style={{ color: '#9E9E9E' }}>{fmtDate(v.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -181,29 +204,29 @@ export default function Dashboard() {
         </div>
 
         {/* Market Trends */}
-        <div className="bg-white rounded-xl p-5 border border-slate-200 flex flex-col">
+        <div className="bg-white rounded-xl p-5 flex flex-col" style={{ border: '1px solid #E8E0CF' }}>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-[15px] font-semibold m-0 text-slate-900">Tendência Preço/m²</h2>
-            <span className="text-xs text-slate-400 font-medium">
+            <h2 className="text-[15px] font-semibold m-0" style={{ color: '#1A1A1A' }}>Tendência Preço/m²</h2>
+            <span className="text-xs font-medium" style={{ color: '#9E9E9E' }}>
               {trend ? `${trend.city} · ${trend.period_months} meses` : '—'}
             </span>
           </div>
           <div className="flex-1 min-h-[160px]">
-            {trend && <MiniLineChart data={trend.data_points} color={ACCENT} />}
+            {trend && <MiniLineChart data={trend.data_points} color={GOLD} />}
           </div>
-          <div className="flex justify-between mt-3 pt-3 border-t border-slate-100">
+          <div className="flex justify-between mt-3 pt-3" style={{ borderTop: '1px solid #E8E0CF' }}>
             <div>
-              <div className="text-[11px] text-slate-400 uppercase tracking-wide">Atual</div>
-              <div className="text-lg font-bold text-slate-900">
+              <div className="text-[11px] uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Atual</div>
+              <div className="text-lg font-bold" style={{ color: '#1A1A1A', fontFamily: MONO }}>
                 {trend ? fmt(trend.current_price_m2) : '—'}
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[11px] text-slate-400 uppercase tracking-wide">Variação Anual</div>
+              <div className="text-[11px] uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Variação Anual</div>
               {trend && (
                 <div
                   className="text-lg font-bold"
-                  style={{ color: trend.yearly_change_pct >= 0 ? ACCENT : '#EF4444' }}
+                  style={{ color: trend.yearly_change_pct >= 0 ? '#10B981' : '#EF4444', fontFamily: MONO }}
                 >
                   {trend.yearly_change_pct >= 0 ? '+' : ''}{trend.yearly_change_pct.toFixed(1)}%
                 </div>
