@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { ValuationForm, PropertyType, ValuationRecord } from '../types'
 import type { ConservationState, TerrainSlope, StreetLevel, AmenityScope, AmenitySelection } from '../types'
@@ -32,7 +32,6 @@ function mapLabelToItem(label: string): string | null {
 }
 
 const PRIMARY = '#1E3A8A'
-const ACCENT = '#10B981'
 
 function SkeletonStep({ label, delay }: { label: string; delay: number }) {
   const [done, setDone] = useState(false)
@@ -46,7 +45,7 @@ function SkeletonStep({ label, delay }: { label: string; delay: number }) {
     <div className="flex items-center gap-2.5">
       <div
         className="w-5 h-5 rounded-full flex items-center justify-center text-xs text-white transition-all duration-300"
-        style={{ background: done ? ACCENT : '#E2E8F0' }}
+        style={{ background: done ? '#C9A227' : '#E8E0CF' }}
       >
         {done ? '✓' : ''}
       </div>
@@ -212,17 +211,17 @@ export default function ValuationFlow() {
   }
 
   const inputClass =
-    'w-full px-3.5 py-2.5 rounded-lg border border-slate-200 text-sm outline-none bg-white transition-colors focus:border-primary'
+    'w-full px-3.5 py-2.5 rounded-lg border border-border-warm text-sm bg-white transition-colors input-focus'
 
   const pillStyle = (active: boolean) => ({
     padding: '8px 16px',
     borderRadius: 20,
-    border: `1.5px solid ${active ? PRIMARY : '#E2E8F0'}`,
-    background: active ? PRIMARY + '0D' : '#fff',
-    color: active ? PRIMARY : '#64748B',
+    border: `1.5px solid ${active ? '#0F2561' : '#E8E0CF'}`,
+    background: active ? '#0F2561' : '#fff',
+    color: active ? '#FFFFFF' : '#6B6B6B',
     fontSize: 13,
-    fontWeight: 500,
-    cursor: 'pointer',
+    fontWeight: active ? 600 : 400,
+    cursor: 'pointer' as const,
     transition: 'all 0.15s',
     fontFamily: 'inherit',
   })
@@ -251,7 +250,7 @@ export default function ValuationFlow() {
     return (
       <div style={{ maxWidth: 880, margin: '0 auto', padding: '32px 16px' }}>
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#10B981', textTransform: 'uppercase', letterSpacing: 1 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#C9A227', textTransform: 'uppercase', letterSpacing: 1 }}>
             Avaliação concluída
           </div>
         </div>
@@ -272,23 +271,55 @@ export default function ValuationFlow() {
       </div>
 
       {/* Step indicator */}
-      <div className="flex gap-2 mb-8">
+      <div className="flex items-center mb-8">
         {steps.map((s, i) => (
-          <div key={i} className="flex-1">
-            <div
-              className="h-[3px] rounded-sm mb-2 transition-all duration-300"
-              style={{ background: i <= step ? PRIMARY : '#E2E8F0' }}
-            />
-            <span
-              className="text-[11px] uppercase tracking-wide"
-              style={{
+          <Fragment key={i}>
+            <div className="flex flex-col items-center" style={{ gap: 6 }}>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: i < step ? '#C9A227' : i === step ? '#0F2561' : '#FFFFFF',
+                  border: i === step ? '2px solid #C9A227' : i < step ? 'none' : '1.5px solid #E8E0CF',
+                  boxSizing: 'border-box',
+                  flexShrink: 0,
+                }}
+              >
+                {i < step ? (
+                  <svg width="12" height="12" viewBox="0 0 12 12">
+                    <polyline points="2,6 5,9 10,3" fill="none" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                ) : (
+                  <span style={{ fontSize: 11, fontWeight: 700, color: i === step ? '#FFFFFF' : '#9E9E9E' }}>{i + 1}</span>
+                )}
+              </div>
+              <span style={{
+                fontSize: 10,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.05em',
                 fontWeight: i === step ? 600 : 400,
-                color: i <= step ? PRIMARY : '#94A3B8',
-              }}
-            >
-              {s}
-            </span>
-          </div>
+                color: i <= step ? '#1A1A1A' : '#9E9E9E',
+                textAlign: 'center' as const,
+                maxWidth: 64,
+                lineHeight: 1.3,
+              }}>
+                {s}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{
+                flex: 1,
+                height: 1.5,
+                background: i < step ? '#C9A227' : '#E8E0CF',
+                margin: '0 4px',
+                marginBottom: 20,
+              }} />
+            )}
+          </Fragment>
         ))}
       </div>
 
@@ -296,10 +327,10 @@ export default function ValuationFlow() {
       <div className="bg-white rounded-xl border border-slate-200 p-7 min-h-[320px]">
         {processing ? (
           <div className="flex flex-col items-center justify-center min-h-[280px] gap-4">
-            <div
-              className="w-12 h-12 rounded-full border-[3px] border-slate-200 animate-spin"
-              style={{ borderTopColor: PRIMARY }}
-            />
+            <svg width="48" height="48" viewBox="0 0 48 48" className="animate-spin-slow">
+              <circle cx="24" cy="24" r="20" fill="none" stroke="#E8E0CF" strokeWidth="3" />
+              <path d="M 24 4 A 20 20 0 0 1 44 24" fill="none" stroke="#C9A227" strokeWidth="3" strokeLinecap="round" />
+            </svg>
             <div className="text-base font-semibold text-slate-900">A IA está analisando o imóvel...</div>
             <div className="text-sm text-slate-500">Comparando com transações recentes na região</div>
             <div className="flex flex-col gap-2 mt-2 w-[300px]">
