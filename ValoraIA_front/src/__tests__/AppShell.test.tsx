@@ -16,8 +16,8 @@ function renderWithRouter(initialRoute = '/') {
 describe('AppShell', () => {
   it('renderiza a logo e nome da aplicação', () => {
     renderWithRouter()
-    expect(screen.getAllByText('Valora AI').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Agente de Precificação').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('AVALIA').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Avaliação Imobiliária').length).toBeGreaterThan(0)
   })
 
   it('renderiza todos os itens de navegação', () => {
@@ -43,12 +43,12 @@ describe('AppShell', () => {
   it('renderiza o botão de Nova Avaliação no header', () => {
     renderWithRouter()
     expect(screen.getAllByText('Nova Avaliação').length).toBeGreaterThan(0)
-    expect(screen.getByText('+ Nova Avaliação')).toBeInTheDocument()
   })
 
   it('renderiza o campo de busca', () => {
     renderWithRouter()
-    expect(screen.getByText('+ Nova Avaliação')).toBeInTheDocument()
+    // Header contains Nova Avaliação button with lucide Plus icon
+    expect(screen.getAllByText('Nova Avaliação').length).toBeGreaterThan(0)
   })
 
   it('destaca o item ativo no sidebar com base na rota', () => {
@@ -56,7 +56,7 @@ describe('AppShell', () => {
     const painelButton = screen.getAllByText('Painel')[0].closest('button')!
     const novaButton = screen.getAllByText('Nova Avaliação')[0].closest('button')!
 
-    expect(painelButton.style.background).toBe('rgba(255, 255, 255, 0.15)')
+    expect(painelButton.style.background).toBe('rgba(201, 162, 39, 0.12)')
     expect(painelButton.style.fontWeight).toBe('600')
     expect(novaButton.style.fontWeight).toBe('400')
   })
@@ -65,13 +65,13 @@ describe('AppShell', () => {
     renderWithRouter('/nova-avaliacao')
     const novaButton = screen.getAllByText('Nova Avaliação')[0].closest('button')!
     expect(novaButton.style.fontWeight).toBe('600')
-    expect(novaButton.style.background).toBe('rgba(255, 255, 255, 0.15)')
+    expect(novaButton.style.background).toBe('rgba(201, 162, 39, 0.12)')
   })
 
   it('destaca Relatórios quando em uma rota de resultado', () => {
     renderWithRouter('/relatorios')
     const relatoriosButton = screen.getAllByText('Relatórios')[0].closest('button')!
-    expect(relatoriosButton.style.background).toBe('rgba(255, 255, 255, 0.15)')
+    expect(relatoriosButton.style.background).toBe('rgba(201, 162, 39, 0.12)')
     expect(relatoriosButton.style.fontWeight).toBe('600')
   })
 

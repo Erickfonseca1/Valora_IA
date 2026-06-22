@@ -144,8 +144,8 @@ describe('App', () => {
     renderApp('/')
     // AppShell sidebar content appears twice in jsdom (desktop + mobile drawer)
     // because CSS is not applied, both variants are visible in the DOM
-    expect(screen.getAllByText('Valora AI').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText('Agente de Precificação').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('AVALIA').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Avaliação Imobiliária').length).toBeGreaterThanOrEqual(1)
     expect(screen.getAllByText('Edizio Peixoto').length).toBeGreaterThanOrEqual(1)
   })
 })
