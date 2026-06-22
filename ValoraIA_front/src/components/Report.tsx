@@ -8,8 +8,8 @@ import LiveValuationHero from './LiveValuationHero'
 import { pdf } from '@react-pdf/renderer'
 import LaudoPDF from './LaudoPDF'
 
-const PRIMARY = '#1E3A8A'
-const ACCENT = '#10B981'
+const PRIMARY = '#0F2561'
+const ACCENT = '#C9A227'
 
 const SCOPE_TITLES: Record<string, string> = {
   interno: 'Diferencial do Imóvel',
@@ -221,7 +221,7 @@ export default function Report() {
     <div style={{ maxWidth: 940, margin: '0 auto', fontFamily: 'inherit' }}>
 
       {/* ── DOCUMENT LETTERHEAD ─────────────────────────────────── */}
-      <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, marginBottom: 14, overflow: 'hidden' }}>
+      <div style={{ background: '#fff', border: '1px solid #E8E0CF', borderRadius: 8, marginBottom: 14, overflow: 'hidden' }}>
         <div style={{
           background: PRIMARY,
           padding: '18px 16px',
@@ -244,11 +244,11 @@ export default function Report() {
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Nº do Laudo</div>
-            <div style={{ color: '#fff', fontSize: 16, fontWeight: 800, fontFamily: 'monospace', letterSpacing: 1.5 }}>{laudoId}</div>
+            <div style={{ color: '#fff', fontSize: 16, fontWeight: 800, fontFamily: "'DM Mono', monospace", letterSpacing: 1.5 }}>{laudoId}</div>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 6 }}>{laudoDate}</div>
           </div>
         </div>
-        <div style={{ padding: '10px 16px', background: '#F8FAFC', borderTop: '1px solid #E2E8F0', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ padding: '10px 16px', background: '#F7F4EE', borderTop: '1px solid #E8E0CF', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 0.5 }}>Imóvel:</span>
           <span style={{ fontSize: 13, color: '#1E293B', fontWeight: 600 }}>{valuation.address}</span>
         </div>
@@ -259,7 +259,7 @@ export default function Report() {
         <SectionHeader number="01" title="Ficha Técnica do Laudo" />
         <div>
           {fichaRows.map((row, i) => (
-            <div key={i} style={{ borderBottom: '1px solid #F1F5F9', background: i % 2 === 0 ? '#FAFBFD' : '#fff', display: 'flex', flexWrap: 'wrap', gap: '2px 12px', padding: '9px 16px' }}>
+            <div key={i} style={{ borderBottom: '1px solid #E8E0CF', background: i % 2 === 0 ? '#FAFBFD' : '#fff', display: 'flex', flexWrap: 'wrap', gap: '2px 12px', padding: '9px 16px' }}>
               <span style={{ color: '#64748B', fontWeight: 700, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.3, minWidth: 140 }}>
                 {row.label}
               </span>
@@ -288,11 +288,11 @@ export default function Report() {
       <SectionCard>
         <SectionHeader number="02" title="Valor de Mercado Determinado" />
         <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 0 }}>
-          <div style={{ padding: '20px 16px', borderBottom: '1px solid #F1F5F9' }} className="sm:border-b-0 sm:border-r sm:border-slate-100 sm:!p-[24px_28px]">
+          <div style={{ padding: '20px 16px', borderBottom: '1px solid #E8E0CF' }} className="sm:border-b-0 sm:border-r sm:border-slate-100 sm:!p-[24px_28px]">
             <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
               Valor de Mercado (Método Comparativo)
             </div>
-            <div style={{ fontSize: 34, fontWeight: 900, color: PRIMARY, fontFamily: 'monospace', lineHeight: 1 }}>
+            <div style={{ fontSize: 34, fontWeight: 900, color: PRIMARY, fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>
               {valuation.static_market_value_brl != null ? fmt(valuation.static_market_value_brl) : '—'}
             </div>
             {valuation.price_per_m2_homogenized != null && (
@@ -306,14 +306,14 @@ export default function Report() {
               Grau de Confiança da Estimativa
             </div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
-              <div style={{ fontSize: 34, fontWeight: 900, color: confidenceScore >= 75 ? ACCENT : '#F59E0B', fontFamily: 'monospace', lineHeight: 1 }}>
+              <div style={{ fontSize: 34, fontWeight: 900, color: confidenceScore >= 75 ? ACCENT : '#F59E0B', fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>
                 {confidenceScore}%
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#64748B' }}>
                 {CONFIDENCE_LABEL(confidenceScore)}
               </div>
             </div>
-            <div style={{ height: 6, background: '#F1F5F9', borderRadius: 3 }}>
+            <div style={{ height: 6, background: '#F7F4EE', borderRadius: 3 }}>
               <div style={{ height: '100%', background: confidenceScore >= 75 ? ACCENT : '#F59E0B', borderRadius: 3, width: `${confidenceScore}%`, transition: 'width 0.6s ease' }} />
             </div>
             <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 8 }}>
@@ -335,8 +335,8 @@ export default function Report() {
       {comparables.length > 0 && (
         <SectionCard>
           <SectionHeader number="03" title="Tabela de Imóveis Referenciais Homogeneizados" />
-          <div style={{ padding: '10px 20px 8px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #F1F5F9' }}>
-            <span style={{ background: '#F1F5F9', borderRadius: 4, padding: '2px 8px', fontWeight: 700, fontSize: 10, color: '#475569', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+          <div style={{ padding: '10px 20px 8px', display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid #E8E0CF' }}>
+            <span style={{ background: '#F7F4EE', borderRadius: 4, padding: '2px 8px', fontWeight: 700, fontSize: 10, color: '#475569', letterSpacing: 0.5, textTransform: 'uppercase' }}>
               Homogeneizados
             </span>
             <span style={{ fontSize: 11, color: '#94A3B8' }}>
@@ -346,7 +346,7 @@ export default function Report() {
           <div style={{ overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 560 }}>
               <thead>
-                <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
+                <tr style={{ background: '#F7F4EE', borderBottom: '2px solid #E8E0CF' }}>
                   <th style={{ padding: '9px 12px 9px 20px', textAlign: 'center', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, width: 36 }}>Nº</th>
                   <th style={{ padding: '9px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Endereço / Bairro</th>
                   <th style={{ padding: '9px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Área</th>
@@ -361,13 +361,13 @@ export default function Report() {
                   <tr
                     key={i}
                     style={{
-                      borderBottom: '1px solid #F1F5F9',
+                      borderBottom: '1px solid #E8E0CF',
                       background: i % 2 === 0 ? '#fff' : '#FAFBFD',
                       cursor: c.source_url ? 'pointer' : 'default',
                     }}
                     onClick={() => c.source_url && window.open(c.source_url, '_blank')}
                   >
-                    <td style={{ padding: '10px 12px 10px 20px', textAlign: 'center', color: '#94A3B8', fontWeight: 700, fontSize: 11, fontFamily: 'monospace' }}>
+                    <td style={{ padding: '10px 12px 10px 20px', textAlign: 'center', color: '#94A3B8', fontWeight: 700, fontSize: 11, fontFamily: "'DM Mono', monospace" }}>
                       {String(i + 1).padStart(2, '0')}
                     </td>
                     <td style={{ padding: '10px 12px' }}>
@@ -381,17 +381,17 @@ export default function Report() {
                     <td style={{ padding: '10px 12px', textAlign: 'center' }}>
                       <span style={{
                         fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 3,
-                        background: c.status === 'listed' ? '#ECFDF5' : '#F1F5F9',
+                        background: c.status === 'listed' ? '#ECFDF5' : '#F7F4EE',
                         color: c.status === 'listed' ? ACCENT : '#64748B',
                         textTransform: 'uppercase', letterSpacing: 0.5,
                       }}>
                         {c.status === 'listed' ? 'Oferta' : 'Venda'}
                       </span>
                     </td>
-                    <td style={{ padding: '10px 12px', textAlign: 'right', color: PRIMARY, fontWeight: 700, fontFamily: 'monospace', fontSize: 13 }}>
+                    <td style={{ padding: '10px 12px', textAlign: 'right', color: PRIMARY, fontWeight: 700, fontFamily: "'DM Mono', monospace", fontSize: 13 }}>
                       {fmtM2(c.price_m2_brl)}
                     </td>
-                    <td style={{ padding: '10px 20px 10px 12px', textAlign: 'right', color: '#1E293B', fontWeight: 700, fontFamily: 'monospace', fontSize: 13 }}>
+                    <td style={{ padding: '10px 20px 10px 12px', textAlign: 'right', color: '#1E293B', fontWeight: 700, fontFamily: "'DM Mono', monospace", fontSize: 13 }}>
                       {fmt(c.price_brl)}
                     </td>
                   </tr>
@@ -406,17 +406,17 @@ export default function Report() {
       {valuation.max_buildable_area_m2 != null && (
         <SectionCard>
           <SectionHeader number="04" title="Análise Involutiva — Potencial Construtivo" />
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', gap: 36, flexWrap: 'wrap' }}>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #E8E0CF', display: 'flex', gap: 36, flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Área Construível Máxima</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: PRIMARY, fontFamily: 'monospace' }}>
+              <div style={{ fontSize: 22, fontWeight: 800, color: PRIMARY, fontFamily: "'DM Mono', monospace" }}>
                 {valuation.max_buildable_area_m2.toLocaleString('pt-BR')} m²
               </div>
             </div>
             {valuation.zoning_params && (
               <div>
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Índice de Aproveitamento (IA)</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: PRIMARY, fontFamily: 'monospace' }}>{valuation.zoning_params.IAmax}×</div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: PRIMARY, fontFamily: "'DM Mono', monospace" }}>{valuation.zoning_params.IAmax}×</div>
                 {valuation.zoning_params.IAb != null && (
                   <div style={{ fontSize: 11, color: '#64748B', marginTop: 2 }}>IAb: {valuation.zoning_params.IAb}×</div>
                 )}
@@ -427,7 +427,7 @@ export default function Report() {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, minWidth: 560 }}>
                 <thead>
-                  <tr style={{ background: '#F8FAFC', borderBottom: '2px solid #E2E8F0' }}>
+                  <tr style={{ background: '#F7F4EE', borderBottom: '2px solid #E8E0CF' }}>
                     <th style={{ padding: '9px 20px', textAlign: 'left', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Cenário</th>
                     <th style={{ padding: '9px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>VGV Total</th>
                     <th style={{ padding: '9px 12px', textAlign: 'right', fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>Custo Obra (50%)</th>
@@ -438,16 +438,16 @@ export default function Report() {
                 <tbody>
                   {valuation.viability_scenarios.map((s, i) => (
                     <tr key={i} style={{
-                      borderBottom: '1px solid #F1F5F9',
-                      background: i === 1 ? `${ACCENT}09` : i % 2 === 0 ? '#fff' : '#FAFBFD',
+                      borderBottom: '1px solid #E8E0CF',
+                      background: i === 1 ? '#FEFCF5' : i % 2 === 0 ? '#fff' : '#FAFBFD',
                     }}>
                       <td style={{ padding: '12px 20px' }}>
                         <div style={{ fontWeight: 700, color: '#1E293B' }}>{s.label}</div>
                         <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 2 }}>{s.description}</div>
                       </td>
-                      <td style={{ padding: '12px', textAlign: 'right', color: '#475569', fontWeight: 600, fontFamily: 'monospace' }}>{fmt(s.VGV_total)}</td>
-                      <td style={{ padding: '12px', textAlign: 'right', color: '#475569', fontFamily: 'monospace' }}>{fmt(s.VGV_total * 0.5)}</td>
-                      <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, fontFamily: 'monospace', color: s.residual > 0 ? ACCENT : '#DC2626' }}>
+                      <td style={{ padding: '12px', textAlign: 'right', color: '#475569', fontWeight: 600, fontFamily: "'DM Mono', monospace" }}>{fmt(s.VGV_total)}</td>
+                      <td style={{ padding: '12px', textAlign: 'right', color: '#475569', fontFamily: "'DM Mono', monospace" }}>{fmt(s.VGV_total * 0.5)}</td>
+                      <td style={{ padding: '12px', textAlign: 'right', fontWeight: 700, fontFamily: "'DM Mono', monospace", color: s.residual > 0 ? ACCENT : '#DC2626' }}>
                         {fmt(s.residual)}
                       </td>
                       <td style={{ padding: '12px 20px', textAlign: 'right', fontWeight: 700, color: s.roi_pct > 15 ? ACCENT : '#F59E0B' }}>
@@ -474,11 +474,11 @@ export default function Report() {
               mantendo as margens mínimas do setor.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: 16, alignItems: 'center' }}>
-              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 10, padding: '20px 24px' }}>
+              <div style={{ background: '#F7F4EE', border: '1px solid #E8E0CF', borderRadius: 10, padding: '20px 24px' }}>
                 <div style={{ fontSize: 9, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
                   Venda Direta ao Mercado
                 </div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: PRIMARY, fontFamily: 'monospace', marginBottom: 6 }}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: PRIMARY, fontFamily: "'DM Mono', monospace", marginBottom: 6 }}>
                   {fmt(valuation.static_market_value_brl)}
                 </div>
                 <div style={{ fontSize: 11, color: '#94A3B8' }}>
@@ -490,7 +490,7 @@ export default function Report() {
                 <div style={{ fontSize: 9, fontWeight: 700, color: '#16A34A', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
                   Valor de Incorporação (Residual)
                 </div>
-                <div style={{ fontSize: 26, fontWeight: 800, color: ACCENT, fontFamily: 'monospace', marginBottom: 6 }}>
+                <div style={{ fontSize: 26, fontWeight: 800, color: ACCENT, fontFamily: "'DM Mono', monospace", marginBottom: 6 }}>
                   {fmt(valuation.residual_land_value_brl)}
                 </div>
                 <div style={{ fontSize: 11, color: '#64748B' }}>
@@ -501,7 +501,7 @@ export default function Report() {
             {valuation.residual_land_value_brl > 0 && (
               <div style={{ marginTop: 14, background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 6, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 12, color: '#92400E', fontWeight: 600 }}>Relação Incorporação / Venda Direta:</span>
-                <span style={{ fontSize: 15, fontWeight: 900, color: '#92400E', fontFamily: 'monospace' }}>
+                <span style={{ fontSize: 15, fontWeight: 900, color: '#92400E', fontFamily: "'DM Mono', monospace" }}>
                   {(valuation.residual_land_value_brl / valuation.static_market_value_brl).toFixed(2)}×
                 </span>
                 <span style={{ fontSize: 12, color: '#92400E' }}>
@@ -519,13 +519,13 @@ export default function Report() {
       {valuation.neighborhood_pois && valuation.neighborhood_pois.pois.length > 0 && (
         <SectionCard>
           <SectionHeader number="06" title="Análise de Vizinhança e Infraestrutura Urbana" />
-          <div style={{ padding: '10px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ padding: '10px 20px', borderBottom: '1px solid #E8E0CF', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 12, color: '#64748B' }}>
               Levantamento de serviços e equipamentos urbanos no entorno imediato do imóvel.
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 11, color: '#64748B', fontWeight: 600 }}>Score de Vizinhança:</span>
-              <span style={{ fontSize: 18, fontWeight: 800, color: PRIMARY, fontFamily: 'monospace' }}>
+              <span style={{ fontSize: 18, fontWeight: 800, color: PRIMARY, fontFamily: "'DM Mono', monospace" }}>
                 {Math.round(valuation.neighborhood_pois.totalScore * 100)}%
               </span>
             </div>
@@ -540,15 +540,15 @@ export default function Report() {
                   key={i}
                   style={{
                     padding: '14px 16px',
-                    borderRight: (i + 1) % 4 !== 0 ? '1px solid #F1F5F9' : undefined,
-                    borderBottom: i < valuation.neighborhood_pois!.pois.length - 4 ? '1px solid #F1F5F9' : undefined,
+                    borderRight: (i + 1) % 4 !== 0 ? '1px solid #E8E0CF' : undefined,
+                    borderBottom: i < valuation.neighborhood_pois!.pois.length - 4 ? '1px solid #E8E0CF' : undefined,
                   }}
                 >
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#334155', marginBottom: 6 }}>{cat.label}</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: count > 0 ? PRIMARY : '#CBD5E1', fontFamily: 'monospace', marginBottom: 4 }}>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: count > 0 ? PRIMARY : '#CBD5E1', fontFamily: "'DM Mono', monospace", marginBottom: 4 }}>
                     {count}
                   </div>
-                  <div style={{ height: 3, background: '#F1F5F9', borderRadius: 2, marginBottom: 4 }}>
+                  <div style={{ height: 3, background: '#F7F4EE', borderRadius: 2, marginBottom: 4 }}>
                     <div style={{ height: '100%', background: count > 0 ? ACCENT : '#CBD5E1', borderRadius: 2, width: `${scorePct}%` }} />
                   </div>
                   <div style={{ fontSize: 10, color: '#94A3B8' }}>
@@ -564,8 +564,8 @@ export default function Report() {
       {/* ── AVISO LEGAL ─────────────────────────────────────────── */}
       <div style={{
         padding: '14px 20px',
-        background: '#F8FAFC',
-        border: '1px solid #E2E8F0',
+        background: '#F7F4EE',
+        border: '1px solid #E8E0CF',
         borderRadius: 8,
         marginBottom: 14,
         fontSize: 11,
@@ -581,7 +581,7 @@ export default function Report() {
       <div className="flex flex-col sm:flex-row gap-3 sm:justify-center pb-10">
         <button
           onClick={() => navigate('/')}
-          style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1px solid #E2E8F0', background: '#fff', color: '#475569', fontFamily: 'inherit' }}
+          style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1px solid #E8E0CF', background: '#fff', color: '#475569', fontFamily: 'inherit' }}
         >
           ← Voltar ao Painel
         </button>

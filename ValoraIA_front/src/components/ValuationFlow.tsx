@@ -324,7 +324,7 @@ export default function ValuationFlow() {
       </div>
 
       {/* Card */}
-      <div className="bg-white rounded-xl border border-slate-200 p-7 min-h-[320px]">
+      <div className="bg-white rounded-xl border border-border-warm p-7 min-h-[320px]">
         {processing ? (
           <div className="flex flex-col items-center justify-center min-h-[280px] gap-4">
             <svg width="48" height="48" viewBox="0 0 48 48" className="animate-spin-slow">
@@ -632,13 +632,10 @@ export default function ValuationFlow() {
 
             {photoUploading && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#64748B', fontSize: 13 }}>
-                <div
-                  style={{
-                    width: 16, height: 16, borderRadius: '50%',
-                    border: '2px solid #E2E8F0', borderTopColor: PRIMARY,
-                    animation: 'spin 0.8s linear infinite',
-                  }}
-                />
+                <svg width="24" height="24" viewBox="0 0 24 24" className="animate-spin-slow">
+                  <circle cx="12" cy="12" r="10" fill="none" stroke="#E8E0CF" strokeWidth="2" />
+                  <path d="M 12 2 A 10 10 0 0 1 22 12" fill="none" stroke="#C9A227" strokeWidth="2" strokeLinecap="round" />
+                </svg>
                 Enviando fotos e analisando com IA...
               </div>
             )}
