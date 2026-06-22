@@ -370,7 +370,7 @@ function computeConfidenceScore(
 
 // ─── Frontend Comparables ─────────────────────────────────────────────────────
 
-function toFrontendComparables(
+export function toFrontendComparables(
   candidates: WeightedCandidate[],
   maxCount = 5
 ): FrontendComparable[] {
@@ -386,6 +386,8 @@ function toFrontendComparables(
     status: "listed" as const,
     transaction_date: row.last_seen,
     source_url: row.source_url,
+    lat: row.lat,
+    lng: row.lng,
   }));
 }
 

@@ -162,6 +162,8 @@ export interface FrontendComparable {
   transaction_date: string;
   source_url?: string;
   images?: string[];
+  lat: number | null;
+  lng: number | null;
 }
 
 // ─── Viability Scenarios stored in valuations.viability_scenarios JSONB ────────
