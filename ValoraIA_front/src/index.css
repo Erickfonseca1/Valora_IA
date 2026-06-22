@@ -8,12 +8,12 @@
 
 body {
   font-family: 'DM Sans', sans-serif;
-  background: #F8FAFC;
+  background: #F7F4EE;
   -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: #1E3A8A22;
+  background: #C9A22722;
 }
 
 ::-webkit-scrollbar {
@@ -25,8 +25,21 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #CBD5E1;
+  background: #E8E0CF;
   border-radius: 3px;
+}
+
+/* Input focus gold */
+.input-focus:focus {
+  border-color: #C9A227 !important;
+  box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15) !important;
+  outline: none;
+}
+
+/* Sidebar nav item hover */
+.sidebar-nav-item:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08) !important;
+  opacity: 1 !important;
 }
 
 @keyframes spin {
@@ -75,7 +88,7 @@ body {
 }
 
 .live-hero { grid-template-columns: minmax(260px, 1fr) minmax(280px, 1.2fr); }
-.live-hero > div:first-child span { font-size: 38px; font-weight: 900; color: #1E3A8A; font-family: monospace; line-height: 1; }
+.live-hero > div:first-child span { font-size: 38px; font-weight: 900; color: #1A1A1A; font-family: 'DM Mono', monospace; line-height: 1; }
 @media (max-width: 640px) {
   .live-hero { grid-template-columns: 1fr !important; }
 }
