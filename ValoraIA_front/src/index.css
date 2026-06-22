@@ -73,3 +73,9 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .comp-pin { animation: none; }
 }
+
+.live-hero { grid-template-columns: minmax(260px, 1fr) minmax(280px, 1.2fr); }
+.live-hero > div:first-child span { font-size: 38px; font-weight: 900; color: #1E3A8A; font-family: monospace; line-height: 1; }
+@media (max-width: 640px) {
+  .live-hero { grid-template-columns: 1fr !important; }
+}
