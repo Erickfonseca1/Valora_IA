@@ -56,3 +56,20 @@ body {
 .animate-spin-slow {
   animation: spin 0.8s linear infinite;
 }
+
+@keyframes pinDrop {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.comp-pin {
+  transform-origin: center;
+  animation: pinDrop 0.4s ease-out both;
+}
+.comp-pin-0 { animation-delay: 0.05s; }
+.comp-pin-1 { animation-delay: 0.13s; }
+.comp-pin-2 { animation-delay: 0.21s; }
+.comp-pin-3 { animation-delay: 0.29s; }
+.comp-pin-4 { animation-delay: 0.37s; }
+@media (prefers-reduced-motion: reduce) {
+  .comp-pin { animation: none; }
+}
