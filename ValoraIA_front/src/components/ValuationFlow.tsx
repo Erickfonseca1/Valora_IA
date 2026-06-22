@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { ValuationForm, PropertyType } from '../types'
+import type { ValuationForm, PropertyType, ValuationRecord } from '../types'
 import type { ConservationState, TerrainSlope, StreetLevel, AmenityScope, AmenitySelection } from '../types'
 import type { ExtractionResult, FormFieldSource } from '../types'
 import { createValuation, uploadPhotos, analyzePhotos } from '../api'
@@ -8,6 +8,7 @@ import { itemsForScope, FRONT_CATALOG } from '../amenities'
 import { mergeExtraction } from '../lib/mergeExtraction'
 import IntakeStep from './IntakeStep'
 import ExtractionCard from './ExtractionCard'
+import LiveValuationHero from './LiveValuationHero'
 
 const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Apartamento', value: 'apartment' },
@@ -86,6 +87,7 @@ export default function ValuationFlow() {
   const [suggested, setSuggested] = useState<AmenitySelection[]>([])
   const [fieldSource, setFieldSource] = useState<FormFieldSource>({})
   const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null)
+  const [revealRecord, setRevealRecord] = useState<ValuationRecord | null>(null)
 
   const set = <K extends keyof ValuationForm>(k: K, v: ValuationForm[K]) =>
     setForm(f => ({ ...f, [k]: v }))
@@ -201,7 +203,8 @@ export default function ValuationFlow() {
         amenities: form.amenities,
         in_gated_community: form.in_gated_community || undefined,
       })
-      navigate(`/resultado/${result.id}`)
+      setRevealRecord(result)
+      setProcessing(false)
     } catch (e) {
       setApiError(e instanceof Error ? e.message : 'Erro desconhecido')
       setProcessing(false)
@@ -242,6 +245,23 @@ export default function ValuationFlow() {
     } else {
       handleSubmit()
     }
+  }
+
+  if (revealRecord) {
+    return (
+      <div style={{ maxWidth: 880, margin: '0 auto', padding: '32px 16px' }}>
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#10B981', textTransform: 'uppercase', letterSpacing: 1 }}>
+            Avaliação concluída
+          </div>
+        </div>
+        <LiveValuationHero
+          record={revealRecord}
+          mode="reveal"
+          onSeeReport={() => navigate(`/resultado/${revealRecord.id}`)}
+        />
+      </div>
+    )
   }
 
   return (

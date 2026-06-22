@@ -1,7 +1,16 @@
 import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import type { ReactNode } from 'react'
 import ValuationFlow from '../components/ValuationFlow'
+
+vi.mock('react-leaflet', () => ({
+  MapContainer: ({ children }: { children: ReactNode }) => <div data-testid="map">{children}</div>,
+  TileLayer: () => <div data-testid="tiles" />,
+  CircleMarker: ({ children }: { children?: ReactNode }) => <div data-testid="marker">{children}</div>,
+  Popup: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+  useMap: () => ({ fitBounds: vi.fn() }),
+}))
 
 const { mockValuationResult } = vi.hoisted(() => ({
   mockValuationResult: {
@@ -18,10 +27,17 @@ const { mockValuationResult } = vi.hoisted(() => ({
     price_range_min_brl: 950000,
     price_range_max_brl: 1050000,
     recommended_listing_price_brl: 1000000,
+    static_market_value_brl: 1000000,
     confidence_score: 90,
+    lat: null,
+    lng: null,
     price_factors: [] as { label: string; score: number }[],
-    comparables: [] as { address: string; neighborhood: string; price_brl: number; area_m2: number; bedrooms: number | null; price_m2_brl: number; status: 'sold' | 'listed'; transaction_date: string; source_url?: string; images?: string[]; amenities?: string[] }[],
+    comparables: [] as { address: string; neighborhood: string; price_brl: number; area_m2: number; bedrooms: number | null; price_m2_brl: number; status: 'sold' | 'listed'; transaction_date: string; source_url?: string; images?: string[]; amenities?: string[]; lat?: number | null; lng?: number | null }[],
     created_at: '2025-05-01T10:00:00Z',
+    conservation_state: 'regular',
+    terrain_slope: 'plano',
+    street_level: 'no_nivel',
+    is_corner: false,
   },
 }))
 
@@ -183,7 +199,7 @@ describe('ValuationFlow', () => {
     expect(screen.getByText('✦ Gerar Avaliação IA')).toBeInTheDocument()
   })
 
-  it('chama a API ao submeter e exibe processing', async () => {
+  it('chama a API ao submeter e revela o herói com o valor', async () => {
     renderFlow()
     await fillStep0AndAdvance()
     await advanceThroughPhotoStep()
@@ -197,7 +213,26 @@ describe('ValuationFlow', () => {
       area_m2: 120,
     }))
 
-    expect(screen.getByText('A IA está analisando o imóvel...')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByTestId('live-hero')).toBeInTheDocument()
+    })
+  })
+
+  it('após submeter, o CTA do herói navega para o laudo', async () => {
+    renderFlow()
+    await fillStep0AndAdvance()
+    await advanceThroughPhotoStep()
+    await act(async () => {
+      fireEvent.click(screen.getByText('✦ Gerar Avaliação IA'))
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('live-hero')).toBeInTheDocument()
+    })
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Ver laudo completo →'))
+    })
   })
 
   it('exibe mensagem de erro da API', async () => {
