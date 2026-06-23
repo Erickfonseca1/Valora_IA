@@ -17,7 +17,10 @@ const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Terreno', value: 'land' },
 ]
 
-const STEPS = ['Entrada por IA', 'Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio']
+const PHOTOS_ENABLED = false
+const STEPS = PHOTOS_ENABLED
+  ? ['Entrada por IA', 'Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio']
+  : ['Entrada por IA', 'Detalhes do Imóvel', 'Revisão & Envio']
 
 function hasAmenityIn(list: AmenitySelection[], item: string, scope: AmenityScope) {
   return list.some(a => a.item === item && a.scope === scope)
@@ -237,7 +240,7 @@ export default function ValuationFlow() {
     : true
 
   const handleContinue = () => {
-    if (step === 2) {
+    if (PHOTOS_ENABLED && step === 2) {
       advanceFromPhotoStep()
     } else if (step < maxStep) {
       setStep(s => s + 1)
@@ -571,7 +574,7 @@ export default function ValuationFlow() {
               </p>
             </div>
           </div>
-        ) : step === 2 ? (
+        ) : PHOTOS_ENABLED && step === 2 ? (
           /* Step 2 — Conservação & Fotos */
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1E293B', margin: 0 }}>
@@ -711,11 +714,11 @@ export default function ValuationFlow() {
           </button>
           <button
             onClick={handleContinue}
-            disabled={!canAdvance || photoUploading}
+            disabled={!canAdvance || (PHOTOS_ENABLED && photoUploading)}
             className="px-6 py-2.5 rounded-lg border-none text-white text-sm font-semibold cursor-pointer transition-opacity hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{ background: PRIMARY, fontFamily: 'inherit' }}
           >
-            {photoUploading
+            {PHOTOS_ENABLED && photoUploading
               ? 'Enviando...'
               : step < maxStep
                 ? 'Continuar'
