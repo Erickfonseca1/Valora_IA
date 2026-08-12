@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -33,11 +34,18 @@ export async function createSupabaseServerClient() {
 }
 
 // Admin client — server-side only, bypasses RLS (service role)
+// Memoized: the client is stateless (persistSession disabled) and reusing it
+// avoids re-validating the service-role JWT on every request.
+let adminClient: SupabaseClient | null = null;
+
 export function getAdminClient() {
   if (!supabaseServiceKey) {
     throw new Error("Missing SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY) — server-side only");
   }
-  return createClient(supabaseUrl, supabaseServiceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
+  if (!adminClient) {
+    adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+  }
+  return adminClient;
 }

@@ -16,29 +16,33 @@ export async function GET(req: NextRequest): Promise<NextResponse<ApiResponse<Ma
 
   const db = getAdminClient();
 
-  // Fetch price_per_m2 grouped by month for the requested city
-  // We build month buckets from oldest to newest
-  const dataPoints: number[] = [];
+  // Single round trip: fetch all price points for the period, bucket by month in JS
   const now = new Date();
+  const oldestMonthStart = new Date(now.getFullYear(), now.getMonth() - (months - 1), 1);
 
+  const { data } = await db
+    .from("listings")
+    .select("price_per_m2, last_seen")
+    .ilike("city", `%${city.replace(/-/g, " ")}%`)
+    .gte("last_seen", oldestMonthStart.toISOString())
+    .not("price_per_m2", "is", null);
+
+  const dataPoints: number[] = [];
   for (let i = months - 1; i >= 0; i--) {
     const monthStart = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
 
-    const { data } = await db
-      .from("listings")
-      .select("price_per_m2")
-      .ilike("city", `%${city.replace(/-/g, " ")}%`)
-      .gte("last_seen", monthStart.toISOString())
-      .lt("last_seen", monthEnd.toISOString())
-      .not("price_per_m2", "is", null);
+    const values = (data ?? [])
+      .filter((r) => {
+        const t = new Date(r.last_seen).getTime();
+        return t >= monthStart.getTime() && t < monthEnd.getTime();
+      })
+      .map((r) => Number(r.price_per_m2))
+      .filter((v) => v > 0);
 
-    const values = (data ?? []).map((r) => Number(r.price_per_m2)).filter((v) => v > 0);
-    const avg = values.length > 0
+    dataPoints.push(values.length > 0
       ? Math.round(values.reduce((s, v) => s + v, 0) / values.length)
-      : 0;
-
-    dataPoints.push(avg);
+      : 0);
   }
 
   // Fill zero months with interpolated or last-known value
