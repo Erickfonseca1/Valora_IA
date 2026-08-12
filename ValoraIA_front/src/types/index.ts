@@ -159,6 +159,7 @@ export interface DashboardMetrics {
   avg_confidence: number
   market_temperature: MarketTemperature
   market_city: string
+  valuations_per_day: { date: string; count: number }[]
 }
 
 export interface DashboardValuationItem {

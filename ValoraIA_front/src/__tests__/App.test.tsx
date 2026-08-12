@@ -41,6 +41,11 @@ const mockMetrics: DashboardMetrics = {
   avg_confidence: 85.5,
   market_temperature: 'warm',
   market_city: 'João Pessoa',
+  valuations_per_day: [
+    { date: '2025-07-01', count: 1 },
+    { date: '2025-07-02', count: 3 },
+    { date: '2025-07-03', count: 0 },
+  ],
 }
 
 const mockValuationsResponse: DashboardValuationsResponse = {

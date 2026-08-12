@@ -41,6 +41,60 @@ export function MiniLineChart({ data, color = '#C9A227', width = 280, height = 1
   )
 }
 
+interface DailyActivityChartProps {
+  data: { date: string; count: number }[]
+  color?: string
+  height?: number
+}
+
+export function DailyActivityChart({ data, color = '#C9A227', height = 140 }: DailyActivityChartProps) {
+  const max = Math.max(...data.map(d => d.count), 1)
+  const width = 720
+  const gap = 3
+  const barWidth = Math.max(2, (width - data.length * gap) / data.length)
+  const labelEvery = Math.max(1, Math.ceil(data.length / 6))
+
+  const fmtLabel = (iso: string) => {
+    const [, m, d] = iso.split('-').map(Number)
+    return `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}`
+  }
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: '100%' }}>
+      {data.map((d, i) => {
+        const x = i * (barWidth + gap)
+        const h = d.count === 0 ? 3 : Math.max(4, (d.count / max) * (height - 34))
+        const y = height - 24 - h
+        const isMax = d.count === max && max > 0
+        const fill = d.count === 0 ? '#E8E0CF' : isMax ? '#B08A1D' : color
+        const label = fmtLabel(d.date)
+        return (
+          <g key={d.date}>
+            <title>{`${label} · ${d.count} avaliação${d.count === 1 ? '' : 'es'}`}</title>
+            <rect
+              x={x}
+              y={y}
+              width={barWidth}
+              height={h}
+              rx="2"
+              fill={fill}
+              opacity={d.count === 0 ? 1 : 0.9}
+              onMouseEnter={e => { (e.currentTarget as SVGRectElement).style.opacity = '1' }}
+              onMouseLeave={e => { (e.currentTarget as SVGRectElement).style.opacity = d.count === 0 ? '1' : '0.9' }}
+              style={{ transition: 'opacity 0.2s' }}
+            />
+            {(i % labelEvery === 0 || i === data.length - 1) && (
+              <text x={x + barWidth / 2} y={height - 8} textAnchor="middle" fontSize="10" fill="#9E9E9E">
+                {label}
+              </text>
+            )}
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
 interface RadarChartProps {
   factors: RadarFactor[]
   size?: number

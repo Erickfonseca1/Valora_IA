@@ -10,6 +10,11 @@ const { mockMetrics, mockValuations, mockTrend } = vi.hoisted(() => ({
     avg_confidence: 82.3,
     market_temperature: 'hot' as const,
     market_city: 'São Paulo',
+    valuations_per_day: [
+      { date: '2025-04-01', count: 2 },
+      { date: '2025-04-02', count: 4 },
+      { date: '2025-04-03', count: 1 },
+    ],
   },
   mockValuations: {
     total: 3,
@@ -143,5 +148,17 @@ describe('Dashboard', () => {
       expect(screen.getByText('Atual')).toBeInTheDocument()
       expect(screen.getByText('Variação Anual')).toBeInTheDocument()
     })
+  })
+
+  it('exibe o gráfico de avaliações por dia com total e média', async () => {
+    const { container } = renderDashboard()
+    await waitFor(() => {
+      expect(screen.getByText('Avaliações por Dia')).toBeInTheDocument()
+    })
+    expect(screen.getByText('Últimos 30 dias')).toBeInTheDocument()
+    expect(screen.getByText('7')).toBeInTheDocument()
+    expect(screen.getByText('2.3 aval.')).toBeInTheDocument()
+    const bars = container.querySelectorAll('svg rect')
+    expect(bars.length).toBe(3)
   })
 })

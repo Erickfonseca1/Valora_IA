@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { DashboardMetrics, DashboardValuationItem, MarketTrendResponse } from '../types'
 import { getDashboardMetrics, getDashboardValuations, getMarketTrend } from '../api'
-import { ConfidenceBadge, MiniLineChart } from './Charts'
+import { ConfidenceBadge, DailyActivityChart, MiniLineChart } from './Charts'
 
 const GOLD = '#C9A227'
 const MONO = "'DM Mono', monospace"
@@ -86,6 +86,11 @@ export default function Dashboard() {
       : null
     : null
 
+  const dailyTotal = metrics ? metrics.valuations_per_day.reduce((s, d) => s + d.count, 0) : 0
+  const dailyAvg = metrics && metrics.valuations_per_day.length > 0
+    ? (dailyTotal / metrics.valuations_per_day.length).toFixed(1)
+    : '0'
+
   const METRIC_CARDS = metrics ? [
     {
       label: 'Avaliações Este Mês',
@@ -153,6 +158,29 @@ export default function Dashboard() {
             <div className="text-xs" style={{ color: '#6B6B6B' }}>{m.sub}</div>
           </div>
         ))}
+      </div>
+
+      {/* Daily Valuations */}
+      <div className="bg-white rounded-xl p-5 mb-6" style={{ border: '1px solid #E8E0CF' }}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-[15px] font-semibold m-0" style={{ color: '#1A1A1A' }}>Avaliações por Dia</h2>
+          <span className="text-xs font-medium" style={{ color: '#9E9E9E' }}>Últimos 30 dias</span>
+        </div>
+        <div className="h-[150px]">
+          {metrics && metrics.valuations_per_day.length > 0 && (
+            <DailyActivityChart data={metrics.valuations_per_day} />
+          )}
+        </div>
+        <div className="flex justify-between mt-3 pt-3" style={{ borderTop: '1px solid #E8E0CF' }}>
+          <div>
+            <div className="text-[11px] uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Total 30 dias</div>
+            <div className="text-lg font-bold" style={{ color: '#1A1A1A', fontFamily: MONO }}>{dailyTotal}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[11px] uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Média por dia</div>
+            <div className="text-lg font-bold" style={{ color: GOLD, fontFamily: MONO }}>{dailyAvg} aval.</div>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-5 grid-cols-1 lg:grid-cols-[1fr_360px]">
