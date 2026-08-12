@@ -122,7 +122,7 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
         {/* Letterhead */}
         <View style={s.header}>
           <Text style={s.headerEyebrow}>PARECER TÉCNICO DE AVALIAÇÃO MERCADOLÓGICA</Text>
-          <Text style={s.headerTitle}>ValoraIA</Text>
+          <Text style={s.headerTitle}>AVALIA</Text>
           <Text style={s.headerSub}>Avaliação por Inteligência Artificial · Conforme ABNT NBR 14.653</Text>
           <Text style={s.headerMeta}>{laudoId} · {laudoDate}</Text>
           <Text style={s.headerMeta}>Imóvel: {v.address}</Text>
@@ -400,7 +400,7 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
         </Text>
 
         <View style={s.footer} fixed>
-          <Text>ValoraIA · {laudoId}</Text>
+          <Text>AVALIA · {laudoId}</Text>
           <Text render={({ pageNumber, totalPages }: { pageNumber: number; totalPages: number }) => `Página ${pageNumber} de ${totalPages}`} />
         </View>
       </Page>

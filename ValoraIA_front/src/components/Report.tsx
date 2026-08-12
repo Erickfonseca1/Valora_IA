@@ -329,7 +329,7 @@ export default function Report() {
               Parecer Técnico de Avaliação Mercadológica
             </div>
             <div style={{ color: '#fff', fontSize: 22, fontWeight: 800, fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: 0.5 }}>
-              ValoraIA
+              AVALIA
             </div>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 3 }}>
               Avaliação por Inteligência Artificial · Conforme ABNT NBR 14.653
