@@ -21,19 +21,40 @@ CREATE TYPE street_level_enum AS ENUM ('no_nivel', 'abaixo_nivel', 'acima_nivel'
 CREATE TABLE listings (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   source_url      TEXT NOT NULL UNIQUE,
+  source          TEXT,                            -- portal: vivareal, zap, ...
+  ad_id           TEXT,                            -- id do anúncio no portal
   price           NUMERIC(15,2) NOT NULL,
   usable_area     NUMERIC(10,2) NOT NULL,
+  total_area      NUMERIC(10,2),                   -- área total (vs privada)
   bedrooms        SMALLINT,
   bathrooms       SMALLINT,
+  suites          SMALLINT,
   parking_spaces  SMALLINT,
   property_type   property_type_enum NOT NULL,
   coordinates     GEOGRAPHY(POINT, 4326) NOT NULL,
   city            TEXT NOT NULL,
   neighborhood    TEXT,
+  address         TEXT,                            -- rua + número
+  state           CHAR(2),                         -- UF
+  
+  -- Custos do imóvel (homogeneização NBR 14653)
+  condo_fee       NUMERIC(12,2),                   -- condomínio mensal (R$)
+  iptu            NUMERIC(12,2),                   -- IPTU anual (R$)
   
   -- Campos para Homogeneização V2
   construction_age INTEGER, 
   conservation_state conservation_state_enum DEFAULT 'regular',
+  
+  -- Atributos do edifício/condomínio
+  floor           SMALLINT,                        -- andar
+  total_floors    SMALLINT,                        -- andares do prédio
+  is_condo        BOOLEAN NOT NULL DEFAULT TRUE,
+  is_new_launch   BOOLEAN NOT NULL DEFAULT FALSE,
+  listing_created_at TIMESTAMPTZ,                  -- publicação do anúncio
+  
+  images          TEXT[] DEFAULT '{}',
+  amenities       JSONB NOT NULL DEFAULT '[]'::jsonb, -- [{ "item", "scope" }]
+  unit_type       TEXT,                            -- tipo cru do portal
   
   created_at      TIMESTAMPTZ DEFAULT NOW(),
   last_seen       TIMESTAMPTZ DEFAULT NOW()
@@ -76,6 +97,7 @@ CREATE TABLE valuations (
 CREATE TABLE valuation_photos (
   id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   valuation_id    TEXT REFERENCES valuations(id) ON DELETE CASCADE,
+  room            TEXT, -- cômodo: sala, cozinha, quarto, banheiro, fachada, ...
   photo_url       TEXT NOT NULL,
   ai_analysis     JSONB, -- { "detected_state": "regular", "confidence": 0.95, "tags": ["fachada", "moderna"] }
   created_at      TIMESTAMPTZ DEFAULT NOW()
