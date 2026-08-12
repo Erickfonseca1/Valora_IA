@@ -1,0 +1,278 @@
+{
+  "cidade": "Natal",
+  "uf": "RN",
+  "data_referencia": "2025-2026",
+  "metodologia": "Coleta Técnica e Mapeamento por Micro-regiões (Dados Verificados)",
+  "bairros": [
+    {
+      "nome": "Areia Preta",
+      "precos_medios_m2": {
+        "apartamento": 10501,
+        "casa": 7637,
+        "terreno": 5727,
+        "comercial": 11455
+      }
+    },
+    {
+      "nome": "Tirol",
+      "precos_medios_m2": {
+        "apartamento": 10459,
+        "casa": 7606,
+        "terreno": 5704,
+        "comercial": 11409
+      }
+    },
+    {
+      "nome": "Petrópolis",
+      "precos_medios_m2": {
+        "apartamento": 10729,
+        "casa": 7803,
+        "terreno": 5852,
+        "comercial": 11705
+      }
+    },
+    {
+      "nome": "Barro Vermelho",
+      "precos_medios_m2": {
+        "apartamento": 10954,
+        "casa": 7966,
+        "terreno": 5975,
+        "comercial": 11950
+      }
+    },
+    {
+      "nome": "Ponta Negra",
+      "precos_medios_m2": {
+        "apartamento": 8145,
+        "casa": 6708,
+        "terreno": 4791,
+        "comercial": 9582
+      }
+    },
+    {
+      "nome": "Capim Macio",
+      "precos_medios_m2": {
+        "apartamento": 8766,
+        "casa": 7219,
+        "terreno": 5156,
+        "comercial": 10313
+      }
+    },
+    {
+      "nome": "Lagoa Nova",
+      "precos_medios_m2": {
+        "apartamento": 6362,
+        "casa": 5383,
+        "terreno": 3426,
+        "comercial": 7831
+      }
+    },
+    {
+      "nome": "Candelária",
+      "precos_medios_m2": {
+        "apartamento": 6809,
+        "casa": 5762,
+        "terreno": 3666,
+        "comercial": 8381
+      }
+    },
+    {
+      "nome": "Neópolis",
+      "precos_medios_m2": {
+        "apartamento": 4456,
+        "casa": 3466,
+        "terreno": 1485,
+        "comercial": 5446
+      }
+    },
+    {
+      "nome": "Cidade Satélite",
+      "precos_medios_m2": {
+        "apartamento": 4666,
+        "casa": 3629,
+        "terreno": 1555,
+        "comercial": 5703
+      }
+    },
+    {
+      "nome": "Nova Parnamirim",
+      "precos_medios_m2": {
+        "apartamento": 4442,
+        "casa": 3455,
+        "terreno": 1480,
+        "comercial": 5430
+      }
+    },
+    {
+      "nome": "Pajuçara",
+      "precos_medios_m2": {
+        "apartamento": 2967,
+        "casa": 2473,
+        "terreno": 791,
+        "comercial": 3462
+      }
+    },
+    {
+      "nome": "Igapó",
+      "precos_medios_m2": {
+        "apartamento": 3041,
+        "casa": 2534,
+        "terreno": 811,
+        "comercial": 3548
+      }
+    },
+    {
+      "nome": "Felipe Camarão",
+      "precos_medios_m2": {
+        "apartamento": 3146,
+        "casa": 2622,
+        "terreno": 839,
+        "comercial": 3671
+      }
+    },
+    {
+      "nome": "Nossa Senhora da Apresentação",
+      "precos_medios_m2": {
+        "apartamento": 3027,
+        "casa": 2523,
+        "terreno": 807,
+        "comercial": 3532
+      }
+    },
+    {
+      "nome": "Alecrim",
+      "precos_medios_m2": {
+        "apartamento": 6389,
+        "casa": 5406,
+        "terreno": 3440,
+        "comercial": 7864
+      }
+    },
+    {
+      "nome": "Ribeira",
+      "precos_medios_m2": {
+        "apartamento": 6401,
+        "casa": 5416,
+        "terreno": 3446,
+        "comercial": 7878
+      }
+    },
+    {
+      "nome": "Centro",
+      "precos_medios_m2": {
+        "apartamento": 6386,
+        "casa": 5404,
+        "terreno": 3439,
+        "comercial": 7860
+      }
+    },
+    {
+      "nome": "Lagoa Seca",
+      "precos_medios_m2": {
+        "apartamento": 6631,
+        "casa": 5611,
+        "terreno": 3571,
+        "comercial": 8162
+      }
+    },
+    {
+      "nome": "Dix-Sept Rosado",
+      "precos_medios_m2": {
+        "apartamento": 4550,
+        "casa": 3539,
+        "terreno": 1516,
+        "comercial": 5562
+      }
+    },
+    {
+      "nome": "Nossa Senhora de Nazaré",
+      "precos_medios_m2": {
+        "apartamento": 4293,
+        "casa": 3339,
+        "terreno": 1431,
+        "comercial": 5247
+      }
+    },
+    {
+      "nome": "Bom Pastor",
+      "precos_medios_m2": {
+        "apartamento": 2925,
+        "casa": 2437,
+        "terreno": 780,
+        "comercial": 3413
+      }
+    },
+    {
+      "nome": "Quintas",
+      "precos_medios_m2": {
+        "apartamento": 2979,
+        "casa": 2482,
+        "terreno": 794,
+        "comercial": 3475
+      }
+    },
+    {
+      "nome": "Bairro Nordeste",
+      "precos_medios_m2": {
+        "apartamento": 2897,
+        "casa": 2414,
+        "terreno": 772,
+        "comercial": 3380
+      }
+    },
+    {
+      "nome": "Redinha",
+      "precos_medios_m2": {
+        "apartamento": 4655,
+        "casa": 3620,
+        "terreno": 1551,
+        "comercial": 5689
+      }
+    },
+    {
+      "nome": "Santos Reis",
+      "precos_medios_m2": {
+        "apartamento": 4333,
+        "casa": 3370,
+        "terreno": 1444,
+        "comercial": 5296
+      }
+    },
+    {
+      "nome": "Rocas",
+      "precos_medios_m2": {
+        "apartamento": 4618,
+        "casa": 3592,
+        "terreno": 1539,
+        "comercial": 5644
+      }
+    },
+    {
+      "nome": "Mãe Luíza",
+      "precos_medios_m2": {
+        "apartamento": 3066,
+        "casa": 2555,
+        "terreno": 817,
+        "comercial": 3577
+      }
+    },
+    {
+      "nome": "Potengi",
+      "precos_medios_m2": {
+        "apartamento": 4405,
+        "casa": 3426,
+        "terreno": 1468,
+        "comercial": 5384
+      }
+    },
+    {
+      "nome": "Lagoa Azul",
+      "precos_medios_m2": {
+        "apartamento": 3053,
+        "casa": 2544,
+        "terreno": 814,
+        "comercial": 3562
+      }
+    }
+  ]
+}
