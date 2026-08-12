@@ -16,6 +16,8 @@ const BASE_FORM: ValuationForm = {
   street_level: '' as never,
   photos: [],
   photoUrls: [],
+  roomPhotos: {},
+  roomPhotoUrls: [],
   amenities: [],
   in_gated_community: false,
 }

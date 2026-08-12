@@ -39,6 +39,19 @@ export async function uploadPhotos(files: File[]): Promise<{ urls: string[] }> {
   return json.data!;
 }
 
+/** Uploads files per room and returns [{ room, url }] in submission order. */
+export async function uploadPhotosByRoom(
+  roomPhotos: Record<string, File[]>
+): Promise<{ room: string; url: string }[]> {
+  const out: { room: string; url: string }[] = [];
+  for (const [room, files] of Object.entries(roomPhotos)) {
+    if (!files.length) continue;
+    const { urls } = await uploadPhotos(files);
+    urls.forEach(url => out.push({ room, url }));
+  }
+  return out;
+}
+
 export async function analyzePhotos(photos: string[]): Promise<PhotoAnalysisResult> {
   return callApi<PhotoAnalysisResult>("/api/analyze-photos", {
     method: "POST",

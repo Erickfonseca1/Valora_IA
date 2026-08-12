@@ -48,6 +48,7 @@ vi.mock('../api', () => ({
   getDashboardValuations: vi.fn(),
   getMarketTrend: vi.fn(),
   uploadPhotos: vi.fn().mockResolvedValue({ urls: [] }),
+  uploadPhotosByRoom: vi.fn().mockResolvedValue([]),
   analyzePhotos: vi.fn().mockResolvedValue({
     padrao_construtivo: 'Médio',
     estado_conservacao_sugerido: 'B',
@@ -56,7 +57,7 @@ vi.mock('../api', () => ({
   extractProperty: vi.fn().mockResolvedValue({}),
 }))
 
-import { createValuation, analyzePhotos } from '../api'
+import { createValuation, analyzePhotos, uploadPhotosByRoom } from '../api'
 
 function renderFlow() {
   return render(
@@ -164,7 +165,7 @@ describe('ValuationFlow', () => {
   it('navega para passo 2 (Conservação & Fotos) após preencher passo 1', async () => {
     renderFlow()
     await fillStep0AndAdvance()
-    expect(screen.getByText('Fotos do Imóvel')).toBeInTheDocument()
+    expect(screen.getByText('Fotos do Imóvel por Cômodo')).toBeInTheDocument()
   })
 
   it('navega para passo 3 (revisão) após passo 2', async () => {
@@ -381,7 +382,7 @@ describe('ValuationFlow', () => {
     await act(async () => { fireEvent.click(btn) })
 
     // Should now be on Conservação & Fotos step
-    expect(screen.getByText(/Fotos do Imóvel/i)).toBeTruthy()
+    expect(screen.getByText(/Fotos do Imóvel por Cômodo/i)).toBeTruthy()
   })
 
   it('mostra comodidades de condomínio para apartamento e oculta para casa sem flag', async () => {
@@ -397,40 +398,25 @@ describe('ValuationFlow', () => {
     expect(screen.getByText('Do condomínio')).toBeInTheDocument()
   })
 
-  it('exibe chip de sugestão da IA e remove ao clicar', async () => {
-    vi.mocked(analyzePhotos).mockResolvedValueOnce({
-      padrao_construtivo: 'Médio',
-      estado_conservacao_sugerido: 'regular' as const,
-      comodidades_detectadas: ['Piscina'],
-    })
+  it('envia fotos por cômodo sem análise de IA e avança para a revisão', async () => {
+    const fakeFile = new File(['fake'], 'foto.jpg', { type: 'image/jpeg' })
 
     renderFlow()
     await fillStep0AndAdvance()
 
-    // On step 1 (Fotos), simulate uploading a file so analyzePhotos gets called
-    const fakeFile = new File(['fake'], 'foto.jpg', { type: 'image/jpeg' })
+    // On step 2 (Conservação & Fotos), add a photo to the active room
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
     await act(async () => {
       fireEvent.change(fileInput, { target: { files: [fakeFile] } })
     })
 
-    // Advance through photo step (triggers upload + analyzePhotos)
+    // Advance through photo step → uploads, does NOT call analyzePhotos
     await act(async () => {
       fireEvent.click(screen.getByText('Continuar'))
     })
 
-    // Chip da sugestão deve aparecer na seção de revisão
-    await waitFor(() => {
-      expect(screen.getByText('Sugestões da IA — clique para confirmar')).toBeInTheDocument()
-    })
-    // Botão com o label da comodidade detectada
-    const chip = screen.getByRole('button', { name: /\+ Piscina/i })
-    expect(chip).toBeInTheDocument()
-
-    // Ao clicar, o chip deve desaparecer
-    await act(async () => {
-      fireEvent.click(chip)
-    })
-    expect(screen.queryByText('Sugestões da IA — clique para confirmar')).not.toBeInTheDocument()
+    expect(uploadPhotosByRoom).toHaveBeenCalled()
+    expect(analyzePhotos).not.toHaveBeenCalled()
+    expect(screen.getByText('Revisar Detalhes')).toBeInTheDocument()
   })
 })

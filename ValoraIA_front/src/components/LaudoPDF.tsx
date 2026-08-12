@@ -1,6 +1,21 @@
-import { Document, Page, View, Text, StyleSheet } from '@react-pdf/renderer'
-import type { ValuationRecord } from '../types'
+import { Document, Page, View, Text, StyleSheet, Image } from '@react-pdf/renderer'
+import type { ValuationRecord, ValuationPhoto } from '../types'
 import { FRONT_CATALOG } from '../amenities'
+
+// ─── Photos per room (grouped, rooms in submission order) ─────────────────────
+
+function groupPhotosByRoom(photos: ValuationPhoto[]): [string, ValuationPhoto[]][] {
+  const order = ['Fachada', 'Sala', 'Cozinha', 'Quartos', 'Banheiros', 'Área de Serviço', 'Área Externa', 'Outros']
+  const map = new Map<string, ValuationPhoto[]>()
+  for (const p of photos) {
+    const room = p.room ?? 'Outros'
+    if (!map.has(room)) map.set(room, [])
+    map.get(room)!.push(p)
+  }
+  const known = order.filter(r => map.has(r)).map(r => [r, map.get(r)!] as [string, ValuationPhoto[]])
+  const rest = [...map.keys()].filter(r => !order.includes(r)).map(r => [r, map.get(r)!] as [string, ValuationPhoto[]])
+  return [...known, ...rest]
+}
 
 const PRIMARY = '#111827'
 const ACCENT = '#10B981'
@@ -21,6 +36,38 @@ const fmtBRL = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 const fmtPpm2 = (v: number) => fmtBRL(Math.round(v)) + '/m²'
 const fmtMult = (v: number) => '× ' + v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+// ─── Estimated value band (same logic as LiveValuationHero) ───────────────────
+
+function valueBandWidth(value: number, score: number | null): number | null {
+  if (!value) return null
+  const pct = score == null ? 50 : score <= 1 ? score * 100 : score
+  const bandPct = 0.20 - (Math.max(0, Math.min(100, pct)) / 100) * 0.12
+  return Math.round(value * bandPct)
+}
+
+// ─── Static map URL (proxied by the backend so the API key never leaks) ──────
+
+const API_BASE = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:3000' : '')
+
+function buildStaticMapUrl(v: ValuationRecord): string {
+  const comps = (v.comparables ?? [])
+    .filter((c) => c.lat != null && c.lng != null)
+    .map((c) => `${c.lat},${c.lng}`)
+    .join(',')
+  const url = new URL(`${API_BASE}/api/map-static`)
+  url.searchParams.set('lat', String(v.lat))
+  url.searchParams.set('lng', String(v.lng))
+  url.searchParams.set('zoom', '13')
+  if (comps) url.searchParams.set('comps', comps)
+  return url.toString()
+}
+
+function displayPhotoUrl(photo: ValuationPhoto): string {
+  return /\.(heic|heif)(?:\?|$)/i.test(photo.photo_url)
+    ? `${API_BASE}/api/valuation-photos/${encodeURIComponent(photo.id)}/image`
+    : photo.photo_url
+}
 
 const s = StyleSheet.create({
   page: { padding: 36, fontSize: 9, color: '#1E293B', fontFamily: 'Helvetica' },
@@ -57,6 +104,11 @@ export default function LaudoPDF({ valuation: v }: { valuation: ValuationRecord 
   const laudoDate = new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
   const propertyLabel = PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type
   const hf = v.homogenization_factors
+  const isPriorOnly = (v.comparables?.length ?? 0) === 0 && !!v.market_reference
+  const priorBairro = v.market_reference?.neighborhood ?? ''
+  const band = valueBandWidth(v.static_market_value_brl ?? 0, v.confidence_score)
+  const estimatedLower = (v.static_market_value_brl ?? 0) - (band ?? 0)
+  const estimatedUpper = (v.static_market_value_brl ?? 0) + (band ?? 0)
 
   const amenitiesByScope: Record<string, string[]> = {}
   for (const a of v.amenities ?? []) {
@@ -110,17 +162,97 @@ export default function LaudoPDF({ valuation: v }: { valuation: ValuationRecord 
         {/* Valor de mercado */}
         <Text style={s.sectionTitle}>02 · VALOR DE MERCADO DETERMINADO</Text>
         <View style={[s.card, { padding: 12 }]}>
-          <Text style={{ fontSize: 7, color: MUTED, letterSpacing: 1, marginBottom: 4 }}>VALOR DE MERCADO (MÉTODO COMPARATIVO)</Text>
+          <Text style={{ fontSize: 7, color: MUTED, letterSpacing: 1, marginBottom: 4 }}>VALOR DE MERCADO {isPriorOnly ? '(AVALIAÇÃO REFERENCIAL)' : '(MÉTODO COMPARATIVO)'}</Text>
           <Text style={s.valueBig}>{v.static_market_value_brl != null ? fmtBRL(v.static_market_value_brl) : '—'}</Text>
           {v.price_per_m2_homogenized != null && (
             <Text style={{ fontSize: 9, color: '#64748B', marginTop: 4 }}>
               {fmtPpm2(v.price_per_m2_homogenized)} · homogeneizado · Confiança {v.confidence_score ?? 0}%
             </Text>
           )}
+          {valueBandWidth != null && (
+            <Text style={{ fontSize: 8, color: MUTED, marginTop: 4 }}>
+              Faixa estimada: {fmtBRL(estimatedLower)} – {fmtBRL(estimatedUpper)}
+            </Text>
+          )}
+          {/* Barra de confiança */}
+          <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <View style={{ flex: 1, height: 6, backgroundColor: '#F1F5F9', borderRadius: 3 }}>
+              <View style={{ width: `${v.confidence_score ?? 0}%`, height: 6, backgroundColor: (v.confidence_score ?? 0) >= 75 ? ACCENT : '#F59E0B', borderRadius: 3 }} />
+            </View>
+            <Text style={{ fontSize: 8, color: MUTED }}>Confiança {(v.confidence_score ?? 0).toFixed(0)}%</Text>
+          </View>
         </View>
 
+        {/* Localização — mapa estático + comparáveis */}
+        {v.lat != null && v.lng != null && (
+          <>
+            <Text style={s.sectionTitle}>02a · LOCALIZAÇÃO E ENTORNO</Text>
+            <View style={[s.card, { padding: 8 }]}>
+              <Image
+                src={buildStaticMapUrl(v)}
+                style={{ width: '100%', height: 220, borderRadius: 3 }}
+              />
+              <View style={{ flexDirection: 'row', marginTop: 6, gap: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' }} />
+                  <Text style={{ fontSize: 7, color: MUTED }}>Imóvel avaliado</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#22C55E' }} />
+                  <Text style={{ fontSize: 7, color: MUTED }}>Imóveis comparáveis</Text>
+                </View>
+                <Text style={{ fontSize: 7, color: MUTED, marginLeft: 'auto' }}>
+                  Fonte: mapas abertos (OSM/Google)
+                </Text>
+              </View>
+            </View>
+          </>
+        )}
+
+        {/* Fundamentação referencial (prior-only) */}
+        {isPriorOnly && v.market_reference && (
+          <>
+            <Text style={s.sectionTitle}>02b · FUNDAMENTAÇÃO — REFERÊNCIA DE MERCADO</Text>
+            <View style={s.card}>
+              <View style={{ padding: 10 }}>
+                <Text style={{ fontSize: 8, color: '#92400E', fontFamily: 'Helvetica-Bold', marginBottom: 4 }}>
+                  AVALIAÇÃO REFERENCIAL
+                </Text>
+                <Text style={{ fontSize: 8, lineHeight: 1.6, color: '#1E293B' }}>
+                  No momento desta avaliação não havia um conjunto mínimo de anúncios comparáveis da
+                  mesma tipologia no bairro {priorBairro}. Para fundamentar o valor, foi utilizado o
+                  preço médio verificado do metro quadrado para {propertyLabel}s no bairro, levantado
+                  em pesquisa de mercado verificada de 2025/2026.
+                </Text>
+                <View style={{ flexDirection: 'row', marginTop: 8, borderTop: '1 solid #F1F5F9', paddingTop: 8 }}>
+                  <View style={{ width: '40%' }}>
+                    <Text style={s.sub}>R$/m² verificado no bairro</Text>
+                    <Text style={{ fontSize: 14, fontFamily: 'Helvetica-Bold', color: PRIMARY }}>{fmtPpm2(v.market_reference.raw_price_per_m2)}</Text>
+                  </View>
+                  <View style={{ width: '35%' }}>
+                    <Text style={s.sub}>Bairro de referência</Text>
+                    <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold' }}>{v.market_reference.neighborhood}</Text>
+                  </View>
+                  <View style={{ width: '25%' }}>
+                    <Text style={s.sub}>Confiança</Text>
+                    <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: '#F59E0B' }}>{v.confidence_score ?? 0}%</Text>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 7, color: MUTED, lineHeight: 1.5, marginTop: 8 }}>
+                  Nota metodológica: o R$/m² de referência foi obtido por curadoria especializada —
+                  pesquisa de mercado conduzida por especialistas com apoio de ferramentas de IA e
+                  validação técnica, conferindo grau de confiabilidade próprio à referência. A
+                  determinação segue os princípios da ABNT NBR 14.653; com a coleta de novos anúncios
+                  comparáveis da tipologia e bairro, esta avaliação poderá ser atualizada para o
+                  enquadramento pleno do Método Comparativo Direto de Dados de Mercado.
+                </Text>
+              </View>
+            </View>
+          </>
+        )}
+
         {/* Memória de cálculo */}
-        {hf && (
+        {hf && !isPriorOnly && (
           <>
             <Text style={s.sectionTitle}>02b · COMO CHEGAMOS A ESTE VALOR</Text>
             <View style={s.card}>
@@ -157,8 +289,40 @@ export default function LaudoPDF({ valuation: v }: { valuation: ValuationRecord 
           </>
         )}
 
+        {/* Referência de mercado verificada (blend com amostra de comparáveis) */}
+        {!isPriorOnly && v.market_reference && (
+          <>
+            <Text style={s.sectionTitle}>02c · REFERÊNCIA DE MERCADO VERIFICADA</Text>
+            <View style={s.card}>
+              <View style={s.row}>
+                <Text style={s.rowLabel}>R$/m² verificado · Bairro {v.market_reference.neighborhood}</Text>
+                <Text style={[s.rowValue, { fontFamily: 'Helvetica-Bold', color: PRIMARY }]}>
+                  {fmtPpm2(v.market_reference.price_per_m2)}
+                  <Text style={{ color: MUTED, fontFamily: 'Helvetica', fontSize: 7 }}>
+                    {' '}(anúncio: {fmtPpm2(v.market_reference.raw_price_per_m2)})
+                  </Text>
+                </Text>
+              </View>
+              <View style={s.row}>
+                <Text style={s.rowLabel}>Peso da referência no cálculo</Text>
+                <Text style={s.rowValue}>{Math.round(v.market_reference.blend_weight * 100)}%</Text>
+              </View>
+              <View style={s.row}>
+                <Text style={s.rowLabel}>Qualidade da amostra</Text>
+                <Text style={s.rowValue}>{Math.round(v.market_reference.sample_quality * 100)}%</Text>
+              </View>
+              <View style={[s.row, { borderBottom: 'none' }]}>
+                <Text style={s.rowLabel}>Origem</Text>
+                <Text style={s.rowValue}>
+                  Curadoria especializada — pesquisa de especialistas com apoio de IA, dados 2025/2026
+                </Text>
+              </View>
+            </View>
+          </>
+        )}
+
         {/* Comparáveis */}
-        {(v.comparables?.length ?? 0) > 0 && (
+        {(v.comparables?.length ?? 0) > 0 && !isPriorOnly && (
           <>
             <Text style={s.sectionTitle}>03 · IMÓVEIS REFERENCIAIS HOMOGENEIZADOS</Text>
             <View style={s.card}>
@@ -170,6 +334,60 @@ export default function LaudoPDF({ valuation: v }: { valuation: ValuationRecord 
                 </View>
               ))}
             </View>
+          </>
+        )}
+
+        {/* Análise de vizinhança — POIs por categoria */}
+        {v.neighborhood_pois && v.neighborhood_pois.pois.length > 0 && (
+          <>
+            <Text style={s.sectionTitle}>04 · ANÁLISE DE VIZINHANÇA E INFRAESTRUTURA URBANA</Text>
+            <View style={s.card}>
+              <View style={s.row}>
+                <Text style={s.rowLabel}>Score de Vizinhança</Text>
+                <Text style={[s.rowValue, { fontFamily: 'Helvetica-Bold', color: PRIMARY }]}>
+                  {Math.round(v.neighborhood_pois.totalScore * 100)}%
+                </Text>
+              </View>
+              <View style={s.row}>
+                <Text style={{ width: '30%', color: '#64748B', fontFamily: 'Helvetica-Bold', fontSize: 8 }}>Serviço / Equipamento</Text>
+                <Text style={{ width: '12%', textAlign: 'center', color: '#64748B', fontFamily: 'Helvetica-Bold', fontSize: 8 }}>Qtd.</Text>
+                <Text style={{ width: '20%', textAlign: 'center', color: '#64748B', fontFamily: 'Helvetica-Bold', fontSize: 8 }}>Dist. mínima</Text>
+                <Text style={{ width: '38%', color: '#64748B', fontFamily: 'Helvetica-Bold', fontSize: 8 }}>Estabelecimentos</Text>
+              </View>
+              {v.neighborhood_pois.pois.map((cat, i) => {
+                const minDist = cat.places.length > 0 ? Math.min(...cat.places.map((p) => p.distance_m)) : null
+                const names = cat.places.slice(0, 3).map((p) => p.name).join(', ')
+                return (
+                  <View key={i} style={[s.row, { backgroundColor: i % 2 === 0 ? undefined : '#FAFAFA' }]}>
+                    <Text style={{ width: '30%', fontSize: 8 }}>{cat.label}</Text>
+                    <Text style={{ width: '12%', textAlign: 'center', fontSize: 8, fontFamily: 'Helvetica-Bold' }}>{cat.places.length}</Text>
+                    <Text style={{ width: '20%', textAlign: 'center', fontSize: 8 }}>
+                      {minDist != null ? `${minDist}m` : '—'}
+                    </Text>
+                    <Text style={{ width: '38%', fontSize: 7, color: MUTED }}>{names || 'Não encontrado'}</Text>
+                  </View>
+                )
+              })}
+            </View>
+          </>
+        )}
+
+        {/* Documentação fotográfica por cômodo */}
+        {(v.photos?.length ?? 0) > 0 && (
+          <>
+            <Text style={s.sectionTitle}>04 · DOCUMENTAÇÃO FOTOGRÁFICA</Text>
+            {groupPhotosByRoom(v.photos!).map(([room, photos], gi) => (
+              <View key={gi} style={[s.card, { marginTop: 8, padding: 8 }]}>
+                <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#475569', marginBottom: 6 }}>
+                  {room} <Text style={{ color: MUTED, fontFamily: 'Helvetica' }}>({photos.length} foto{photos.length !== 1 ? 's' : ''})</Text>
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                  {photos.map((p) => (
+                    <Image key={p.id} src={displayPhotoUrl(p)} style={{ width: 90, height: 66, borderRadius: 3 }} />
+                  ))}
+                </View>
+              </View>
+            ))}
           </>
         )}
 

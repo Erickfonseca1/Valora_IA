@@ -150,6 +150,15 @@ export interface ValuationRecord {
   amenity_factors?: { internal: number; condo: number; proximo: number }
   amenity_breakdown?: { scope: AmenityScope; item: string; contribution: number; derived: boolean }[]
   homogenization_factors?: HomogenizationFactors | null
+  market_reference?: {
+    neighborhood: string
+    raw_price_per_m2: number
+    price_per_m2: number
+    match_score: number
+    blend_weight: number
+    sample_quality: number
+  } | null
+  photos?: ValuationPhoto[]
   created_at: string
 }
 
@@ -201,6 +210,15 @@ export interface CreateValuationBody {
   lng?: number
   amenities?: AmenitySelection[]
   in_gated_community?: boolean
+  photos?: { room: string; url: string }[]
+}
+
+export interface ValuationPhoto {
+  id: string
+  room: string | null
+  photo_url: string
+  ai_analysis: Record<string, unknown> | null
+  created_at: string
 }
 
 export interface ValuationForm {
@@ -217,6 +235,10 @@ export interface ValuationForm {
   street_level: StreetLevel | ''
   photos: File[]
   photoUrls: string[]
+  /** foto organizada por cômodo: { [room]: File[] } */
+  roomPhotos: Record<string, File[]>
+  /** mapeamento room→url persistido após upload (usado no submit) */
+  roomPhotoUrls: { room: string; url: string }[]
   amenities: AmenitySelection[]
   in_gated_community: boolean
 }

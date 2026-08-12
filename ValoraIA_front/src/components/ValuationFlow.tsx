@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import type { ValuationForm, PropertyType, ValuationRecord } from '../types'
 import type { ConservationState, TerrainSlope, StreetLevel, AmenityScope, AmenitySelection } from '../types'
 import type { ExtractionResult, FormFieldSource } from '../types'
-import { createValuation, uploadPhotos, analyzePhotos } from '../api'
+import { createValuation, uploadPhotosByRoom } from '../api'
 import { itemsForScope, FRONT_CATALOG } from '../amenities'
 import { mergeExtraction } from '../lib/mergeExtraction'
 import IntakeStep from './IntakeStep'
@@ -17,21 +17,25 @@ const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
   { label: 'Terreno', value: 'land' },
 ]
 
-const PHOTOS_ENABLED = false
+const PHOTOS_ENABLED = true
 const STEPS = PHOTOS_ENABLED
   ? ['Entrada por IA', 'Detalhes do Imóvel', 'Conservação & Fotos', 'Revisão & Envio']
   : ['Entrada por IA', 'Detalhes do Imóvel', 'Revisão & Envio']
 
+// Cômodos padrão do laudo PTAM — o usuário agrupa as fotos por cômodo
+const ROOMS = [
+  'Fachada',
+  'Sala',
+  'Cozinha',
+  'Quartos',
+  'Banheiros',
+  'Área de Serviço',
+  'Área Externa',
+  'Outros',
+]
+
 function hasAmenityIn(list: AmenitySelection[], item: string, scope: AmenityScope) {
   return list.some(a => a.item === item && a.scope === scope)
-}
-
-function mapLabelToItem(label: string): string | null {
-  const n = label.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
-  const hit = Object.entries(FRONT_CATALOG).find(
-    ([, e]) => e.label.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().includes(n)
-  )
-  return hit ? hit[0] : null
 }
 
 const PRIMARY = '#111827'
@@ -80,11 +84,14 @@ export default function ValuationFlow() {
     street_level: '' as StreetLevel | '',
     photos: [] as File[],
     photoUrls: [] as string[],
+    roomPhotos: {} as Record<string, File[]>,
+    roomPhotoUrls: [] as { room: string; url: string }[],
     amenities: [],
     in_gated_community: false,
   })
   const [processing, setProcessing] = useState(false)
   const [photoUploading, setPhotoUploading] = useState(false)
+  const [activeRoom, setActiveRoom] = useState(ROOMS[0])
   const [apiError, setApiError] = useState<string | null>(null)
   const [suggested, setSuggested] = useState<AmenitySelection[]>([])
   const [fieldSource, setFieldSource] = useState<FormFieldSource>({})
@@ -149,34 +156,18 @@ export default function ValuationFlow() {
   }
 
   const advanceFromPhotoStep = async () => {
-    if (form.photos.length === 0) {
+    const allFiles = Object.values(form.roomPhotos).flat()
+    if (allFiles.length === 0) {
       setStep(s => s + 1)
       return
     }
     setPhotoUploading(true)
     try {
-      const { urls } = await uploadPhotos(form.photos)
-      setForm(f => ({ ...f, photoUrls: urls }))
+      const roomUrls = await uploadPhotosByRoom(form.roomPhotos)
+      setForm(f => ({ ...f, roomPhotoUrls: roomUrls }))
 
-      // If conservation state not already set by audio/manual, try AI analysis (non-fatal)
-      if (fieldSource.conservation_state !== 'audio' && fieldSource.conservation_state !== 'manual') {
-        try {
-          const analysis = await analyzePhotos(urls)
-          if (analysis.estado_conservacao_sugerido && !form.conservation_state) {
-            setForm(f => ({ ...f, conservation_state: analysis.estado_conservacao_sugerido }))
-            setFieldSource(s => ({ ...s, conservation_state: 'photo' }))
-          }
-          const defScope: AmenityScope =
-            form.propertyType === 'apartment' ? 'condo' : 'interno'
-          const sugg = (analysis.comodidades_detectadas ?? [])
-            .map((c: string) => mapLabelToItem(c))
-            .filter((id: string | null): id is string => !!id && !hasAmenityIn(form.amenities, id, defScope))
-            .map((id: string) => ({ item: id, scope: defScope }))
-          if (sugg.length > 0) setSuggested(sugg)
-        } catch {
-          // non-fatal — analysis failure doesn't block the flow
-        }
-      }
+      // Análise de IA das fotos desativada por ora — o upload e a persistência
+      // das fotos por cômodo continuam normalmente.
 
       setStep(s => s + 1)
     } catch (e) {
@@ -190,6 +181,13 @@ export default function ValuationFlow() {
     setProcessing(true)
     setApiError(null)
     try {
+      // Photos were uploaded (room→url mapped) in the photo step; if the user
+      // reached submit without that step (edge case), upload now.
+      const photoPayload =
+        form.roomPhotoUrls.length > 0
+          ? form.roomPhotoUrls
+          : await uploadPhotosByRoom(form.roomPhotos)
+
       const result = await createValuation({
         address: form.address,
         property_type: form.propertyType,
@@ -204,6 +202,7 @@ export default function ValuationFlow() {
         street_level: (form.street_level || undefined) as StreetLevel | undefined,
         amenities: form.amenities,
         in_gated_community: form.in_gated_community || undefined,
+        photos: photoPayload,
       })
       setRevealRecord(result)
       setProcessing(false)
@@ -575,21 +574,57 @@ export default function ValuationFlow() {
             </div>
           </div>
         ) : PHOTOS_ENABLED && step === 2 ? (
-          /* Step 2 — Conservação & Fotos */
+          /* Step 2 — Conservação & Fotos (por cômodo) */
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700, color: '#1E293B', margin: 0 }}>
-              Fotos do Imóvel
+              Fotos do Imóvel por Cômodo
             </h3>
             <p style={{ fontSize: 13, color: '#64748B', margin: 0 }}>
-              Opcional. Quando enviadas, a IA analisa o padrão construtivo e pode sugerir o estado de conservação.
+              Opcional, porém recomendado. Selecione o cômodo e adicione as fotos.
+              Quando enviadas, a IA analisa o padrão construtivo e pode sugerir o estado de conservação.
             </p>
 
-            {/* File input area */}
+            {/* Room selector */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {ROOMS.map(r => {
+                const count = (form.roomPhotos[r] ?? []).length
+                const active = activeRoom === r
+                return (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => setActiveRoom(r)}
+                    style={{
+                      padding: '8px 14px', borderRadius: 20, fontSize: 13,
+                      border: `1.5px solid ${active ? '#111827' : '#E8E0CF'}`,
+                      background: active ? '#111827' : '#fff',
+                      color: active ? '#FFFFFF' : '#6B6B6B',
+                      fontWeight: active ? 600 : 400, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', gap: 8,
+                    }}
+                  >
+                    {r}
+                    {count > 0 && (
+                      <span style={{
+                        background: active ? '#C9A227' : '#E8E0CF',
+                        color: active ? '#fff' : '#475569',
+                        borderRadius: 10, fontSize: 11, fontWeight: 700,
+                        padding: '1px 7px',
+                      }}>
+                        {count}
+                      </span>
+                    )}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* File input for active room */}
             <label
               style={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center',
                 justifyContent: 'center', border: '2px dashed #CBD5E1', borderRadius: 12,
-                padding: 32, cursor: 'pointer', background: '#F8FAFC', gap: 8,
+                padding: 28, cursor: 'pointer', background: '#F8FAFC', gap: 8,
               }}
             >
               <input
@@ -599,37 +634,63 @@ export default function ValuationFlow() {
                 style={{ display: 'none' }}
                 onChange={e => {
                   const newFiles = Array.from(e.target.files ?? []);
-                  setForm(f => ({ ...f, photos: [...f.photos, ...newFiles].slice(0, 10) }));
+                  const roomKey = activeRoom;
+                  const current = form.roomPhotos[roomKey] ?? [];
+                  const total = Object.values(form.roomPhotos).flat().length;
+                  const roomBudget = 10 - (total - current.length);
+                  const allowed = newFiles.slice(0, Math.max(1, roomBudget));
+                  setForm(f => ({
+                    ...f,
+                    roomPhotos: { ...f.roomPhotos, [roomKey]: [...current, ...allowed] },
+                  }));
+                  e.target.value = '';
                 }}
               />
               <span style={{ fontSize: 28 }}>📷</span>
               <span style={{ fontSize: 14, color: '#64748B', textAlign: 'center' }}>
-                Clique para adicionar fotos (máx. 10)
+                Adicionar fotos ao cômodo <strong>{activeRoom}</strong> (máx. 10 no total)
               </span>
             </label>
 
-            {/* Thumbnails */}
-            {form.photos.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {form.photos.map((file, i) => (
-                  <div key={i} style={{ position: 'relative' }}>
-                    <img
-                      src={URL.createObjectURL(file)}
-                      alt={`foto ${i + 1}`}
-                      style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8 }}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, photos: f.photos.filter((_, j) => j !== i) }))}
-                      style={{
-                        position: 'absolute', top: -6, right: -6,
-                        background: '#EF4444', color: '#fff', border: 'none',
-                        borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 12,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}
-                    >×</button>
-                  </div>
-                ))}
+            {/* Thumbnails grouped per room */}
+            {Object.entries(form.roomPhotos).some(([, files]) => files.length > 0) && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {Object.entries(form.roomPhotos).map(([room, files]) =>
+                  files.length === 0 ? null : (
+                    <div key={room}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                        {room}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {files.map((file, i) => (
+                          <div key={`${room}-${i}`} style={{ position: 'relative' }}>
+                            <img
+                              src={URL.createObjectURL(file)}
+                              alt={`${room} ${i + 1}`}
+                              style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8 }}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setForm(f => ({
+                                ...f,
+                                roomPhotos: {
+                                  ...f.roomPhotos,
+                                  [room]: f.roomPhotos[room].filter((_, j) => j !== i),
+                                },
+                              }))}
+                              style={{
+                                position: 'absolute', top: -6, right: -6,
+                                background: '#EF4444', color: '#fff', border: 'none',
+                                borderRadius: '50%', width: 20, height: 20, cursor: 'pointer', fontSize: 12,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              }}
+                            >×</button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )
+                )}
               </div>
             )}
 
@@ -685,7 +746,15 @@ export default function ValuationFlow() {
                 ...(form.terrain_slope ? [{ label: 'Topografia', value: form.terrain_slope }] : []),
                 ...(form.street_level ? [{ label: 'Nível da Rua', value: form.street_level }] : []),
                 ...(form.is_corner ? [{ label: 'Esquina', value: 'Sim' }] : []),
-                ...(form.photos.length > 0 ? [{ label: 'Fotos', value: `${form.photos.length} foto(s)` }] : []),
+                ...(Object.values(form.roomPhotos).flat().length > 0
+                  ? [{
+                      label: 'Fotos por cômodo',
+                      value: Object.entries(form.roomPhotos)
+                        .filter(([, f]) => f.length > 0)
+                        .map(([r, f]) => `${r}: ${f.length}`)
+                        .join(' · '),
+                    }]
+                  : []),
               ].map((f, i) => (
                 <div key={i} className="p-3 bg-slate-50 rounded-lg">
                   <div className="text-[11px] text-slate-400 uppercase tracking-wide mb-1">{f.label}</div>

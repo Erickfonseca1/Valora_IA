@@ -1,6 +1,6 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import type { ValuationRecord } from '../types'
+import type { ValuationRecord, ValuationPhoto } from '../types'
 import { getValuation } from '../api'
 import { FRONT_CATALOG } from '../amenities'
 import ValueWaterfall from './ValueWaterfall'
@@ -84,6 +84,29 @@ const fmt = (v: number) =>
 
 const fmtM2 = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }) + '/m²'
+
+const API_BASE = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:3000' : '')
+
+function displayPhotoUrl(photo: ValuationPhoto): string {
+  return /\.(heic|heif)(?:\?|$)/i.test(photo.photo_url)
+    ? `${API_BASE}/api/valuation-photos/${encodeURIComponent(photo.id)}/image`
+    : photo.photo_url
+}
+
+// ─── Photos per room (grouped, rooms in submission order) ─────────────────────
+
+function groupPhotosByRoom(photos: ValuationPhoto[]): [string, ValuationPhoto[]][] {
+  const order = ['Fachada', 'Sala', 'Cozinha', 'Quartos', 'Banheiros', 'Área de Serviço', 'Área Externa', 'Outros']
+  const map = new Map<string, ValuationPhoto[]>()
+  for (const p of photos) {
+    const room = p.room ?? 'Outros'
+    if (!map.has(room)) map.set(room, [])
+    map.get(room)!.push(p)
+  }
+  const known = order.filter(r => map.has(r)).map(r => [r, map.get(r)!] as [string, ValuationPhoto[]])
+  const rest = [...map.keys()].filter(r => !order.includes(r)).map(r => [r, map.get(r)!] as [string, ValuationPhoto[]])
+  return [...known, ...rest]
+}
 
 function SectionHeader({ number, title }: { number: string; title: string }) {
   return (
@@ -199,6 +222,8 @@ export default function Report() {
     }
   }
   const comparables = valuation.comparables ?? []
+  const isPriorOnly = comparables.length === 0 && !!valuation.market_reference
+  const priorBairro = valuation.market_reference?.neighborhood ?? ''
 
   const fichaRows: { label: string; value: string }[] = [
     { label: 'Nº do Laudo', value: laudoId },
@@ -300,6 +325,11 @@ export default function Report() {
                 {fmtM2(Math.round(valuation.price_per_m2_homogenized))} · homogeneizado
               </div>
             )}
+            {isPriorOnly && (
+              <div style={{ fontSize: 11, color: '#B45309', marginTop: 8, fontWeight: 600 }}>
+                Baseado no R$/m² verificado do bairro {priorBairro} (sem comparáveis diretos)
+              </div>
+            )}
           </div>
           <div style={{ padding: '20px 16px' }} className="sm:!p-[24px_28px]">
             <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
@@ -331,7 +361,108 @@ export default function Report() {
         </SectionCard>
       )}
 
+      {/* ── 02c. REFERÊNCIA DE MERCADO VERIFICADA ────────────────── */}
+      {valuation.market_reference && (
+        <SectionCard>
+          <SectionHeader number="02c" title="Referência de Mercado Verificada" />
+          <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 6 }}>
+                R$/m² verificado · Bairro {valuation.market_reference.neighborhood}
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: PRIMARY, fontFamily: "'DM Mono', monospace" }}>
+                {fmtM2(valuation.market_reference.price_per_m2)}
+                <span style={{ fontSize: 11, fontWeight: 500, color: '#94A3B8', marginLeft: 8 }}>
+                  (anúncio: {fmtM2(valuation.market_reference.raw_price_per_m2)})
+                </span>
+              </div>
+              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 4 }}>
+                Fator de oferta de 10% aplicado · Dados verificados 2025/2026
+              </div>
+            </div>
+            <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div>
+                <span style={{ fontSize: 11, color: '#94A3B8', marginRight: 6 }}>Peso da referência no cálculo:</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#334155', fontFamily: "'DM Mono', monospace" }}>
+                  {Math.round(valuation.market_reference.blend_weight * 100)}%
+                </span>
+              </div>
+              <div>
+                <span style={{ fontSize: 11, color: '#94A3B8', marginRight: 6 }}>Qualidade da amostra:</span>
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#334155', fontFamily: "'DM Mono', monospace" }}>
+                  {Math.round(valuation.market_reference.sample_quality * 100)}%
+                </span>
+              </div>
+            </div>
+          </div>
+          <div style={{ padding: '0 20px 14px', fontSize: 11, color: '#94A3B8', lineHeight: 1.5 }}>
+            R$/m² obtido por curadoria especializada (pesquisa de especialistas com apoio de IA).
+            Amostra de comparáveis fraca ou de outra tipologia/bairro → a estimativa do
+            engine é combinada com a referência verificada do bairro, ancorando o valor ao
+            mercado local real. Quanto maior o peso, menos dependente da amostra direta.
+          </div>
+        </SectionCard>
+      )}
+
       {/* ── 03. IMÓVEIS REFERENCIAIS ─────────────────────────────── */}
+      {isPriorOnly && valuation.market_reference && (
+        <SectionCard>
+          <SectionHeader number="03" title="Fundamentação da Avaliação — Referência de Mercado" />
+          <div style={{ padding: '18px 20px', borderBottom: '1px solid #E8E0CF' }}>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+              <span style={{ background: '#FFFBEB', border: '1px solid #FDE68A', color: '#B45309', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 4, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+                Avaliação referencial
+              </span>
+            </div>
+            <div style={{ fontSize: 13, color: '#1E293B', lineHeight: 1.7 }}>
+              No momento desta avaliação não havia disponível um conjunto mínimo de anúncios
+              comparáveis da mesma tipologia no bairro <strong>{priorBairro}</strong>.
+              Para não deixar o imóvel sem parâmetro de mercado, o valor foi fundamentado no
+              <strong> preço médio verificado do metro quadrado</strong> para{' '}
+              {PROPERTY_TYPE_LABELS[valuation.property_type] ?? valuation.property_type}s no bairro,
+              levantado em pesquisa de mercado verificada de 2025/2026.
+            </div>
+          </div>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid #E8E0CF', display: 'flex', gap: 28, flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 5 }}>
+                R$/m² verificado no bairro
+              </div>
+              <div style={{ fontSize: 24, fontWeight: 800, color: PRIMARY, fontFamily: "'DM Mono', monospace" }}>
+                {fmtM2(valuation.market_reference.raw_price_per_m2)}
+              </div>
+              <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 3 }}>
+                após fator de oferta (−10%): {fmtM2(valuation.market_reference.price_per_m2)}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 5 }}>
+                Bairro de referência
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#1E293B' }}>{valuation.market_reference.neighborhood}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 5 }}>
+                Confiança da estimativa
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#F59E0B', fontFamily: "'DM Mono', monospace" }}>
+                {valuation.confidence_score ?? 0}%
+              </div>
+            </div>
+          </div>
+          <div style={{ padding: '14px 20px', background: '#F7F4EE', fontSize: 11, color: '#64748B', lineHeight: 1.6 }}>
+            <strong style={{ color: '#1E293B' }}>Nota metodológica:</strong> o R$/m² de referência foi obtido
+            por <strong style={{ color: '#1E293B' }}>curadoria especializada</strong> — pesquisa de mercado
+            conduzida por especialistas com apoio de ferramentas de IA e validação técnica, conferindo
+            grau de confiabilidade próprio à referência. A determinação do valor segue os princípios da
+            ABNT NBR 14.653; quando novos anúncios comparáveis da tipologia e bairro forem coletados,
+            esta avaliação poderá ser atualizada para o enquadramento pleno do Método Comparativo
+            Direto de Dados de Mercado.
+          </div>
+        </SectionCard>
+      )}
+
+      {/* ── 03b. IMÓVEIS REFERENCIAIS (com comparáveis) ───────────── */}
       {comparables.length > 0 && (
         <SectionCard>
           <SectionHeader number="03" title="Tabela de Imóveis Referenciais Homogeneizados" />
@@ -557,6 +688,39 @@ export default function Report() {
                 </div>
               )
             })}
+          </div>
+        </SectionCard>
+      )}
+
+      {/* ── 07. DOCUMENTAÇÃO FOTOGRÁFICA ────────────────────────── */}
+      {valuation.photos && valuation.photos.length > 0 && (
+        <SectionCard>
+          <SectionHeader number="07" title="Documentação Fotográfica" />
+          <div style={{ padding: '10px 20px', borderBottom: '1px solid #E8E0CF', fontSize: 12, color: '#64748B' }}>
+            Registro fotográfico do imóvel organizado por cômodo, conforme levantamento em vistoria.
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {groupPhotosByRoom(valuation.photos!).map(([room, photos], gi) => (
+              <div key={gi} style={{ padding: '14px 20px', borderBottom: gi < groupPhotosByRoom(valuation.photos!).length - 1 ? '1px solid #E8E0CF' : undefined }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+                  {room}
+                  <span style={{ color: '#94A3B8', fontWeight: 400, marginLeft: 8, textTransform: 'none' }}>
+                    {photos.length} foto{photos.length !== 1 ? 's' : ''}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {photos.map((p, i) => (
+                    <a key={p.id} href={p.photo_url} target="_blank" rel="noreferrer" title="Abrir foto">
+                      <img
+                        src={displayPhotoUrl(p)}
+                        alt={`${room} ${i + 1}`}
+                        style={{ width: 110, height: 82, objectFit: 'cover', borderRadius: 6, border: '1px solid #E8E0CF' }}
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </SectionCard>
       )}
