@@ -95,8 +95,8 @@ function displayPhotoUrl(photo: ValuationPhoto): string {
 }
 
 // ─── Photo thumbnail with natural aspect ratio ────────────────────────────────
-// Fixed width, height computed from the image's intrinsic dimensions so the
-// photo is never cropped (cover) or stretched.
+// Fixed width on desktop; flexible on small screens so the photo never
+// overflows the viewport. Height follows the intrinsic aspect ratio.
 
 const PHOTO_WIDTH = 200
 
@@ -110,11 +110,12 @@ function PhotoThumb({ src, alt }: { src: string; alt: string }) {
       onLoad={(e) => {
         const img = e.currentTarget
         if (img.naturalWidth > 0) {
-          setHeight(Math.round((PHOTO_WIDTH * img.naturalHeight) / img.naturalWidth))
+          const w = Math.min(PHOTO_WIDTH, img.naturalWidth)
+          setHeight(Math.round((w * img.naturalHeight) / img.naturalWidth))
         }
       }}
       style={{
-        width: PHOTO_WIDTH,
+        width: 'min(200px, calc(100vw - 72px))',
         height: height ?? 200,
         objectFit: height ? undefined : 'contain',
         background: '#F7F4EE',
@@ -729,7 +730,7 @@ export default function Report() {
               </span>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#E8E0CF]">
             {valuation.neighborhood_pois.pois.map((cat, i) => {
               const count = cat.places.length
               const scorePct = Math.round(cat.score * 100)
@@ -737,11 +738,8 @@ export default function Report() {
               return (
                 <div
                   key={i}
-                  style={{
-                    padding: '14px 16px',
-                    borderRight: (i + 1) % 4 !== 0 ? '1px solid #E8E0CF' : undefined,
-                    borderBottom: i < valuation.neighborhood_pois!.pois.length - 4 ? '1px solid #E8E0CF' : undefined,
-                  }}
+                  className="bg-white"
+                  style={{ padding: '14px 16px' }}
                 >
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#334155', marginBottom: 6 }}>{cat.label}</div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: count > 0 ? PRIMARY : '#CBD5E1', fontFamily: "'DM Mono', monospace", marginBottom: 4 }}>

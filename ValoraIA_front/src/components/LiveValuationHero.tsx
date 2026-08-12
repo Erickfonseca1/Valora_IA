@@ -30,14 +30,13 @@ export default function LiveValuationHero({ record, mode, onSeeReport }: Props) 
       data-testid="live-hero"
       style={{
         display: 'grid',
-        gridTemplateColumns: hasMap ? 'minmax(260px, 1fr) minmax(280px, 1.2fr)' : '1fr',
-        gap: 0,
+        gridTemplateColumns: '1fr',
         border: '1px solid #E2E8F0',
         borderRadius: 16,
         overflow: 'hidden',
         background: '#fff',
       }}
-      className="live-hero"
+      className="live-hero md:grid-cols-[minmax(260px,1fr)_minmax(280px,1.2fr)]"
     >
       {/* Coluna esquerda: valor + gauge */}
       <div style={{ padding: '28px 28px', display: 'flex', flexDirection: 'column', gap: 18, background: '#FEFCF5' }}>
@@ -90,9 +89,9 @@ export default function LiveValuationHero({ record, mode, onSeeReport }: Props) 
         )}
       </div>
 
-      {/* Coluna direita: mapa */}
+      {/* Coluna direita: mapa (abaixo do valor em mobile) */}
       {hasMap && (
-        <div style={{ minHeight: 320, borderLeft: '1px solid #E8E0CF' }} data-report-map>
+        <div style={{ minHeight: 320, borderLeft: '1px solid #E8E0CF' }} className="md:border-t-0 border-t" data-report-map>
           <ComparablesMap
             subject={{ lat: record.lat, lng: record.lng }}
             comparables={record.comparables ?? []}
