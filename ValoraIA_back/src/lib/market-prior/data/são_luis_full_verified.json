@@ -1,0 +1,251 @@
+{
+  "cidade": "São Luís",
+  "uf": "MA",
+  "data_referencia": "2025-2026",
+  "metodologia": "Coleta Técnica e Mapeamento por Micro-regiões (Dados Verificados)",
+  "bairros": [
+    {
+      "nome": "Ponta d'Areia",
+      "precos_medios_m2": {
+        "apartamento": 17760,
+        "casa": 11840,
+        "terreno": 9866,
+        "comercial": 18746
+      }
+    },
+    {
+      "nome": "Península",
+      "precos_medios_m2": {
+        "apartamento": 17834,
+        "casa": 11889,
+        "terreno": 9908,
+        "comercial": 18825
+      }
+    },
+    {
+      "nome": "Renascença",
+      "precos_medios_m2": {
+        "apartamento": 13137,
+        "casa": 10106,
+        "terreno": 8084,
+        "comercial": 15159
+      }
+    },
+    {
+      "nome": "Ponta do Farol",
+      "precos_medios_m2": {
+        "apartamento": 13057,
+        "casa": 10044,
+        "terreno": 8035,
+        "comercial": 15066
+      }
+    },
+    {
+      "nome": "Calhau",
+      "precos_medios_m2": {
+        "apartamento": 10208,
+        "casa": 8676,
+        "terreno": 6124,
+        "comercial": 12249
+      }
+    },
+    {
+      "nome": "Olho d'Água",
+      "precos_medios_m2": {
+        "apartamento": 10070,
+        "casa": 8560,
+        "terreno": 6042,
+        "comercial": 12084
+      }
+    },
+    {
+      "nome": "Cohama",
+      "precos_medios_m2": {
+        "apartamento": 7101,
+        "casa": 6087,
+        "terreno": 3550,
+        "comercial": 9130
+      }
+    },
+    {
+      "nome": "Cohafuma",
+      "precos_medios_m2": {
+        "apartamento": 7194,
+        "casa": 6166,
+        "terreno": 3597,
+        "comercial": 9249
+      }
+    },
+    {
+      "nome": "Turu",
+      "precos_medios_m2": {
+        "apartamento": 4410,
+        "casa": 3430,
+        "terreno": 1470,
+        "comercial": 5390
+      }
+    },
+    {
+      "nome": "Angelim",
+      "precos_medios_m2": {
+        "apartamento": 4627,
+        "casa": 3599,
+        "terreno": 1542,
+        "comercial": 5655
+      }
+    },
+    {
+      "nome": "Cohab",
+      "precos_medios_m2": {
+        "apartamento": 4698,
+        "casa": 3654,
+        "terreno": 1566,
+        "comercial": 5742
+      }
+    },
+    {
+      "nome": "Cohatrac",
+      "precos_medios_m2": {
+        "apartamento": 4674,
+        "casa": 3635,
+        "terreno": 1558,
+        "comercial": 5713
+      }
+    },
+    {
+      "nome": "Anil",
+      "precos_medios_m2": {
+        "apartamento": 7115,
+        "casa": 6098,
+        "terreno": 3557,
+        "comercial": 9148
+      }
+    },
+    {
+      "nome": "Bequimão",
+      "precos_medios_m2": {
+        "apartamento": 7312,
+        "casa": 6268,
+        "terreno": 3656,
+        "comercial": 9402
+      }
+    },
+    {
+      "nome": "Ipase",
+      "precos_medios_m2": {
+        "apartamento": 6999,
+        "casa": 5999,
+        "terreno": 3499,
+        "comercial": 8999
+      }
+    },
+    {
+      "nome": "Maranhão Novo",
+      "precos_medios_m2": {
+        "apartamento": 7126,
+        "casa": 6108,
+        "terreno": 3563,
+        "comercial": 9163
+      }
+    },
+    {
+      "nome": "Jaracaty",
+      "precos_medios_m2": {
+        "apartamento": 13594,
+        "casa": 10457,
+        "terreno": 8365,
+        "comercial": 15685
+      }
+    },
+    {
+      "nome": "São Francisco",
+      "precos_medios_m2": {
+        "apartamento": 13286,
+        "casa": 10220,
+        "terreno": 8176,
+        "comercial": 15330
+      }
+    },
+    {
+      "nome": "Centro",
+      "precos_medios_m2": {
+        "apartamento": 7058,
+        "casa": 6049,
+        "terreno": 3529,
+        "comercial": 9074
+      }
+    },
+    {
+      "nome": "Madre Deus",
+      "precos_medios_m2": {
+        "apartamento": 4434,
+        "casa": 3449,
+        "terreno": 1478,
+        "comercial": 5419
+      }
+    },
+    {
+      "nome": "Cidade Operária",
+      "precos_medios_m2": {
+        "apartamento": 3091,
+        "casa": 2576,
+        "terreno": 824,
+        "comercial": 3606
+      }
+    },
+    {
+      "nome": "Itaqui-Bacanga",
+      "precos_medios_m2": {
+        "apartamento": 2947,
+        "casa": 2456,
+        "terreno": 786,
+        "comercial": 3438
+      }
+    },
+    {
+      "nome": "Anjo da Guarda",
+      "precos_medios_m2": {
+        "apartamento": 2969,
+        "casa": 2474,
+        "terreno": 791,
+        "comercial": 3464
+      }
+    },
+    {
+      "nome": "Vila Embratel",
+      "precos_medios_m2": {
+        "apartamento": 2987,
+        "casa": 2489,
+        "terreno": 796,
+        "comercial": 3485
+      }
+    },
+    {
+      "nome": "Coroadinho",
+      "precos_medios_m2": {
+        "apartamento": 3131,
+        "casa": 2609,
+        "terreno": 835,
+        "comercial": 3653
+      }
+    },
+    {
+      "nome": "Araçagi",
+      "precos_medios_m2": {
+        "apartamento": 13161,
+        "casa": 10124,
+        "terreno": 8099,
+        "comercial": 15186
+      }
+    },
+    {
+      "nome": "Sol e Mar",
+      "precos_medios_m2": {
+        "apartamento": 4393,
+        "casa": 3417,
+        "terreno": 1464,
+        "comercial": 5370
+      }
+    }
+  ]
+}

@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAdminClient } from "@/lib/db/supabase";
 import { runValuation } from "@/lib/math/valuation-engine";
+import { ensureLocalComparables } from "@/lib/apify/on-demand";
 import { runInvolutive } from "@/lib/math/involutive-engine";
-import { geocodeAddress } from "@/lib/geocoding/google-maps";
+import { geocodeAddress, reverseGeocode } from "@/lib/geocoding/google-maps";
 import type {
   ApiResponse,
   ValuationRecord,
@@ -34,7 +35,14 @@ const ValuationCreateSchema = z.object({
     scope: z.enum(["interno", "condo", "proximo"]),
   })).optional(),
   in_gated_community: z.boolean().optional(),
+  photos: z.array(z.object({
+    room: z.string().min(1).max(60),
+    url: z.string().min(1).max(2048),
+  })).max(30).optional(),
 });
+
+// On-demand scraping can wait up to ~3 min for a bairro run (Vercel: Pro+).
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<ValuationRecord>>> {
   let body: unknown;
@@ -57,7 +65,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     bedrooms, bathrooms, parking_spaces,
     lat: bodyLat, lng: bodyLng,
     construction_age, conservation_state, terrain_slope, street_level, is_corner,
-    amenities, in_gated_community,
+    amenities, in_gated_community, photos,
   } = parsed.data;
 
   // ── Geocode ───────────────────────────────────────────────────────────────
@@ -65,6 +73,21 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
 
   if (bodyLat !== undefined && bodyLng !== undefined) {
     geo = { lat: bodyLat, lng: bodyLng, neighborhood: null, city: null };
+    // Resolve neighborhood/city for the market prior even when coordinates
+    // were sent directly (frontend map picker).
+    try {
+      const reversed = await reverseGeocode(bodyLat, bodyLng);
+      if (reversed) {
+        geo = {
+          lat: bodyLat,
+          lng: bodyLng,
+          neighborhood: reversed.neighborhood,
+          city: reversed.city,
+        };
+      }
+    } catch {
+      // Market prior lookup is best-effort; engine still works without it.
+    }
   } else {
     geo = await geocodeAddress(address);
     if (!geo) {
@@ -78,6 +101,29 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
   // ── Zoning stub (no public BR zoning API — urban default) ────────────────
   const zoning_params: ZoningParams = { IAb: 1.0, IAmax: 2.0, TO: 0.5 };
 
+  // ── On-demand comparables (scraping inteligente) ─────────────────────────
+  // If the local DB lacks same-typology comps near the target, trigger a
+  // synchronous VivaReal scrape scoped to the bairro+typology. Best-effort:
+  // never blocks the valuation — errors just log and the engine proceeds
+  // with whatever exists (market prior anchors weak samples).
+  let onDemandResult: { before: unknown; after: unknown; collected: number; errors: string[] } | null = null;
+  try {
+    onDemandResult = await ensureLocalComparables({
+      lat: geo.lat,
+      lng: geo.lng,
+      neighborhood: geo.neighborhood,
+      city: geo.city ?? "João Pessoa",
+      propertyType: property_type,
+    });
+    if (onDemandResult.collected > 0) {
+      console.log(
+        `[valuations] on-demand collected ${onDemandResult.collected} ${property_type} in ${geo.neighborhood ?? "city"}`
+      );
+    }
+  } catch (err) {
+    console.error("[valuations] on-demand trigger failed:", err);
+  }
+
   // ── Valuation engine ──────────────────────────────────────────────────────
   let engineResult;
   try {
@@ -89,6 +135,9 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       target_bathrooms: bathrooms ?? null,
       target_parking: parking_spaces ?? null,
       target_property_type: property_type,
+      neighborhood: geo.neighborhood,
+      city: geo.city,
+      address,
       is_corner,
       terrain_slope,
       street_level,
@@ -151,6 +200,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       comparables: frontend_comparables,
       neighborhood_pois,
       homogenization_factors,
+      market_reference: engineResult.market_reference,
       amenities: amenities ?? [],
       in_gated_community: in_gated_community ?? false,
     })
@@ -163,6 +213,31 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       { success: false, error: "Failed to persist valuation", details: error?.message },
       { status: 500 }
     );
+  }
+
+  // ── Persist photos per room (best-effort; doesn't fail the valuation) ──────
+  let persistedPhotos: import("@/types").ValuationPhoto[] = [];
+  if (photos && photos.length > 0) {
+    const { data: photoRows, error: photoError } = await db
+      .from("valuation_photos")
+      .insert(photos.map((p) => ({
+        valuation_id: row.id,
+        room: p.room,
+        photo_url: p.url,
+      })))
+      .select("id, room, photo_url, ai_analysis, created_at");
+
+    if (photoError) {
+      console.error("[valuations] photos insert error:", photoError.message);
+    } else {
+      persistedPhotos = (photoRows ?? []).map((r) => ({
+        id: r.id,
+        room: r.room ?? null,
+        photo_url: r.photo_url,
+        ai_analysis: (r.ai_analysis as Record<string, unknown> | null) ?? null,
+        created_at: r.created_at,
+      }));
+    }
   }
 
   const result: ValuationRecord = {
@@ -190,6 +265,8 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     comparables: frontend_comparables,
     neighborhood_pois,
     homogenization_factors,
+    market_reference: engineResult.market_reference,
+    photos: persistedPhotos,
     amenities: amenities ?? [],
     in_gated_community: in_gated_community ?? false,
     created_at: row.created_at,

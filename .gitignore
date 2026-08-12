@@ -11,3 +11,6 @@ next-env.d.ts
 *.log
 .vercel
 coverage/
+
+# root package-lock órfão (não há package.json na raiz)
+/package-lock.json

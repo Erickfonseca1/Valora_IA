@@ -1,0 +1,629 @@
+{
+  "cidade": "Recife",
+  "uf": "PE",
+  "data_referencia": "2025-2026",
+  "metodologia": "Coleta Técnica e Mapeamento por Micro-regiões (Dados Verificados)",
+  "bairros": [
+    {
+      "nome": "Boa Viagem",
+      "precos_medios_m2": {
+        "apartamento": 14464,
+        "casa": 11364,
+        "terreno": 9298,
+        "comercial": 15497
+      }
+    },
+    {
+      "nome": "Jaqueira",
+      "precos_medios_m2": {
+        "apartamento": 13904,
+        "casa": 10924,
+        "terreno": 8938,
+        "comercial": 14897
+      }
+    },
+    {
+      "nome": "Parnamirim",
+      "precos_medios_m2": {
+        "apartamento": 14600,
+        "casa": 11471,
+        "terreno": 9385,
+        "comercial": 15642
+      }
+    },
+    {
+      "nome": "Casa Forte",
+      "precos_medios_m2": {
+        "apartamento": 11480,
+        "casa": 9392,
+        "terreno": 7305,
+        "comercial": 13567
+      }
+    },
+    {
+      "nome": "Graças",
+      "precos_medios_m2": {
+        "apartamento": 10596,
+        "casa": 8670,
+        "terreno": 6743,
+        "comercial": 12523
+      }
+    },
+    {
+      "nome": "Espinheiro",
+      "precos_medios_m2": {
+        "apartamento": 11271,
+        "casa": 9221,
+        "terreno": 7172,
+        "comercial": 13320
+      }
+    },
+    {
+      "nome": "Madalena",
+      "precos_medios_m2": {
+        "apartamento": 8660,
+        "casa": 7698,
+        "terreno": 5292,
+        "comercial": 10585
+      }
+    },
+    {
+      "nome": "Rosarinho",
+      "precos_medios_m2": {
+        "apartamento": 9024,
+        "casa": 8021,
+        "terreno": 5515,
+        "comercial": 11030
+      }
+    },
+    {
+      "nome": "Tamarineira",
+      "precos_medios_m2": {
+        "apartamento": 8918,
+        "casa": 7927,
+        "terreno": 5449,
+        "comercial": 10899
+      }
+    },
+    {
+      "nome": "Aflitos",
+      "precos_medios_m2": {
+        "apartamento": 11446,
+        "casa": 9365,
+        "terreno": 7284,
+        "comercial": 13528
+      }
+    },
+    {
+      "nome": "Derby",
+      "precos_medios_m2": {
+        "apartamento": 11489,
+        "casa": 9400,
+        "terreno": 7311,
+        "comercial": 13578
+      }
+    },
+    {
+      "nome": "Torre",
+      "precos_medios_m2": {
+        "apartamento": 9030,
+        "casa": 8027,
+        "terreno": 5518,
+        "comercial": 11037
+      }
+    },
+    {
+      "nome": "Imbiribeira",
+      "precos_medios_m2": {
+        "apartamento": 7298,
+        "casa": 6256,
+        "terreno": 4170,
+        "comercial": 9384
+      }
+    },
+    {
+      "nome": "Cordeiro",
+      "precos_medios_m2": {
+        "apartamento": 6927,
+        "casa": 5937,
+        "terreno": 3958,
+        "comercial": 8906
+      }
+    },
+    {
+      "nome": "Iputinga",
+      "precos_medios_m2": {
+        "apartamento": 6685,
+        "casa": 5730,
+        "terreno": 3820,
+        "comercial": 8596
+      }
+    },
+    {
+      "nome": "Várzea",
+      "precos_medios_m2": {
+        "apartamento": 7240,
+        "casa": 6206,
+        "terreno": 4137,
+        "comercial": 9309
+      }
+    },
+    {
+      "nome": "Caxangá",
+      "precos_medios_m2": {
+        "apartamento": 6789,
+        "casa": 5819,
+        "terreno": 3879,
+        "comercial": 8728
+      }
+    },
+    {
+      "nome": "Afogados",
+      "precos_medios_m2": {
+        "apartamento": 5475,
+        "casa": 4479,
+        "terreno": 2488,
+        "comercial": 6968
+      }
+    },
+    {
+      "nome": "Areias",
+      "precos_medios_m2": {
+        "apartamento": 5334,
+        "casa": 4364,
+        "terreno": 2424,
+        "comercial": 6789
+      }
+    },
+    {
+      "nome": "Estância",
+      "precos_medios_m2": {
+        "apartamento": 5467,
+        "casa": 4473,
+        "terreno": 2485,
+        "comercial": 6959
+      }
+    },
+    {
+      "nome": "Ipsep",
+      "precos_medios_m2": {
+        "apartamento": 5318,
+        "casa": 4351,
+        "terreno": 2417,
+        "comercial": 6768
+      }
+    },
+    {
+      "nome": "Ibura",
+      "precos_medios_m2": {
+        "apartamento": 3837,
+        "casa": 2878,
+        "terreno": 1151,
+        "comercial": 4797
+      }
+    },
+    {
+      "nome": "Cohab",
+      "precos_medios_m2": {
+        "apartamento": 4009,
+        "casa": 3006,
+        "terreno": 1202,
+        "comercial": 5011
+      }
+    },
+    {
+      "nome": "Jordão",
+      "precos_medios_m2": {
+        "apartamento": 4110,
+        "casa": 3083,
+        "terreno": 1233,
+        "comercial": 5138
+      }
+    },
+    {
+      "nome": "Casa Amarela",
+      "precos_medios_m2": {
+        "apartamento": 7028,
+        "casa": 6024,
+        "terreno": 4016,
+        "comercial": 9036
+      }
+    },
+    {
+      "nome": "Morro da Conceição",
+      "precos_medios_m2": {
+        "apartamento": 2864,
+        "casa": 1909,
+        "terreno": 572,
+        "comercial": 2864
+      }
+    },
+    {
+      "nome": "Alto José do Pinho",
+      "precos_medios_m2": {
+        "apartamento": 3089,
+        "casa": 2059,
+        "terreno": 617,
+        "comercial": 3089
+      }
+    },
+    {
+      "nome": "Vasco da Gama",
+      "precos_medios_m2": {
+        "apartamento": 2946,
+        "casa": 1964,
+        "terreno": 589,
+        "comercial": 2946
+      }
+    },
+    {
+      "nome": "Nova Descoberta",
+      "precos_medios_m2": {
+        "apartamento": 3007,
+        "casa": 2004,
+        "terreno": 601,
+        "comercial": 3007
+      }
+    },
+    {
+      "nome": "Dois Unidos",
+      "precos_medios_m2": {
+        "apartamento": 2944,
+        "casa": 1962,
+        "terreno": 588,
+        "comercial": 2944
+      }
+    },
+    {
+      "nome": "Beberibe",
+      "precos_medios_m2": {
+        "apartamento": 4060,
+        "casa": 3045,
+        "terreno": 1218,
+        "comercial": 5075
+      }
+    },
+    {
+      "nome": "Água Fria",
+      "precos_medios_m2": {
+        "apartamento": 4114,
+        "casa": 3086,
+        "terreno": 1234,
+        "comercial": 5143
+      }
+    },
+    {
+      "nome": "Arruda",
+      "precos_medios_m2": {
+        "apartamento": 5617,
+        "casa": 4595,
+        "terreno": 2553,
+        "comercial": 7148
+      }
+    },
+    {
+      "nome": "Campina do Barreto",
+      "precos_medios_m2": {
+        "apartamento": 3904,
+        "casa": 2928,
+        "terreno": 1171,
+        "comercial": 4881
+      }
+    },
+    {
+      "nome": "Cajueiro",
+      "precos_medios_m2": {
+        "apartamento": 4196,
+        "casa": 3147,
+        "terreno": 1258,
+        "comercial": 5245
+      }
+    },
+    {
+      "nome": "Fundão",
+      "precos_medios_m2": {
+        "apartamento": 4040,
+        "casa": 3030,
+        "terreno": 1212,
+        "comercial": 5051
+      }
+    },
+    {
+      "nome": "Peixinhos",
+      "precos_medios_m2": {
+        "apartamento": 2903,
+        "casa": 1935,
+        "terreno": 580,
+        "comercial": 2903
+      }
+    },
+    {
+      "nome": "Santo Amaro",
+      "precos_medios_m2": {
+        "apartamento": 6819,
+        "casa": 5845,
+        "terreno": 3896,
+        "comercial": 8767
+      }
+    },
+    {
+      "nome": "Bairro do Recife",
+      "precos_medios_m2": {
+        "apartamento": 10932,
+        "casa": 8945,
+        "terreno": 6957,
+        "comercial": 12920
+      }
+    },
+    {
+      "nome": "Santo Antônio",
+      "precos_medios_m2": {
+        "apartamento": 7183,
+        "casa": 6157,
+        "terreno": 4104,
+        "comercial": 9235
+      }
+    },
+    {
+      "nome": "São José",
+      "precos_medios_m2": {
+        "apartamento": 7028,
+        "casa": 6024,
+        "terreno": 4016,
+        "comercial": 9036
+      }
+    },
+    {
+      "nome": "Boa Vista",
+      "precos_medios_m2": {
+        "apartamento": 6691,
+        "casa": 5735,
+        "terreno": 3823,
+        "comercial": 8603
+      }
+    },
+    {
+      "nome": "Coelhos",
+      "precos_medios_m2": {
+        "apartamento": 3887,
+        "casa": 2915,
+        "terreno": 1166,
+        "comercial": 4858
+      }
+    },
+    {
+      "nome": "Paissandu",
+      "precos_medios_m2": {
+        "apartamento": 10795,
+        "casa": 8832,
+        "terreno": 6870,
+        "comercial": 12758
+      }
+    },
+    {
+      "nome": "Ilha do Leite",
+      "precos_medios_m2": {
+        "apartamento": 11168,
+        "casa": 9137,
+        "terreno": 7107,
+        "comercial": 13199
+      }
+    },
+    {
+      "nome": "Cabanga",
+      "precos_medios_m2": {
+        "apartamento": 5534,
+        "casa": 4528,
+        "terreno": 2515,
+        "comercial": 7043
+      }
+    },
+    {
+      "nome": "Pina",
+      "precos_medios_m2": {
+        "apartamento": 11133,
+        "casa": 9109,
+        "terreno": 7084,
+        "comercial": 13157
+      }
+    },
+    {
+      "nome": "Setúbal",
+      "precos_medios_m2": {
+        "apartamento": 11287,
+        "casa": 9235,
+        "terreno": 7183,
+        "comercial": 13339
+      }
+    },
+    {
+      "nome": "Curado",
+      "precos_medios_m2": {
+        "apartamento": 3818,
+        "casa": 2863,
+        "terreno": 1145,
+        "comercial": 4772
+      }
+    },
+    {
+      "nome": "San Martin",
+      "precos_medios_m2": {
+        "apartamento": 5268,
+        "casa": 4310,
+        "terreno": 2394,
+        "comercial": 6705
+      }
+    },
+    {
+      "nome": "Bongi",
+      "precos_medios_m2": {
+        "apartamento": 5366,
+        "casa": 4390,
+        "terreno": 2439,
+        "comercial": 6829
+      }
+    },
+    {
+      "nome": "Prado",
+      "precos_medios_m2": {
+        "apartamento": 5302,
+        "casa": 4338,
+        "terreno": 2410,
+        "comercial": 6748
+      }
+    },
+    {
+      "nome": "Zumbi",
+      "precos_medios_m2": {
+        "apartamento": 5707,
+        "casa": 4669,
+        "terreno": 2594,
+        "comercial": 7264
+      }
+    },
+    {
+      "nome": "Engenho do Meio",
+      "precos_medios_m2": {
+        "apartamento": 6960,
+        "casa": 5965,
+        "terreno": 3977,
+        "comercial": 8948
+      }
+    },
+    {
+      "nome": "Cidade Universitária",
+      "precos_medios_m2": {
+        "apartamento": 6828,
+        "casa": 5852,
+        "terreno": 3901,
+        "comercial": 8779
+      }
+    },
+    {
+      "nome": "Várzea",
+      "precos_medios_m2": {
+        "apartamento": 6876,
+        "casa": 5894,
+        "terreno": 3929,
+        "comercial": 8841
+      }
+    },
+    {
+      "nome": "Apipucos",
+      "precos_medios_m2": {
+        "apartamento": 10507,
+        "casa": 8596,
+        "terreno": 6686,
+        "comercial": 12417
+      }
+    },
+    {
+      "nome": "Poço da Panela",
+      "precos_medios_m2": {
+        "apartamento": 10542,
+        "casa": 8625,
+        "terreno": 6708,
+        "comercial": 12458
+      }
+    },
+    {
+      "nome": "Santana",
+      "precos_medios_m2": {
+        "apartamento": 10696,
+        "casa": 8751,
+        "terreno": 6806,
+        "comercial": 12640
+      }
+    },
+    {
+      "nome": "Monteiro",
+      "precos_medios_m2": {
+        "apartamento": 11047,
+        "casa": 9038,
+        "terreno": 7030,
+        "comercial": 13056
+      }
+    },
+    {
+      "nome": "Dois Irmãos",
+      "precos_medios_m2": {
+        "apartamento": 7004,
+        "casa": 6003,
+        "terreno": 4002,
+        "comercial": 9005
+      }
+    },
+    {
+      "nome": "Sítio dos Pintos",
+      "precos_medios_m2": {
+        "apartamento": 3866,
+        "casa": 2899,
+        "terreno": 1159,
+        "comercial": 4832
+      }
+    },
+    {
+      "nome": "Guabiraba",
+      "precos_medios_m2": {
+        "apartamento": 3100,
+        "casa": 2066,
+        "terreno": 620,
+        "comercial": 3100
+      }
+    },
+    {
+      "nome": "Pau Ferro",
+      "precos_medios_m2": {
+        "apartamento": 2949,
+        "casa": 1966,
+        "terreno": 589,
+        "comercial": 2949
+      }
+    },
+    {
+      "nome": "Brejo da Guabiraba",
+      "precos_medios_m2": {
+        "apartamento": 2850,
+        "casa": 1900,
+        "terreno": 570,
+        "comercial": 2850
+      }
+    },
+    {
+      "nome": "Passarinho",
+      "precos_medios_m2": {
+        "apartamento": 3079,
+        "casa": 2053,
+        "terreno": 615,
+        "comercial": 3079
+      }
+    },
+    {
+      "nome": "Macaxeira",
+      "precos_medios_m2": {
+        "apartamento": 4186,
+        "casa": 3139,
+        "terreno": 1255,
+        "comercial": 5232
+      }
+    },
+    {
+      "nome": "Buriti",
+      "precos_medios_m2": {
+        "apartamento": 2868,
+        "casa": 1912,
+        "terreno": 573,
+        "comercial": 2868
+      }
+    },
+    {
+      "nome": "Córrego do Jenipapo",
+      "precos_medios_m2": {
+        "apartamento": 3129,
+        "casa": 2086,
+        "terreno": 625,
+        "comercial": 3129
+      }
+    }
+  ]
+}

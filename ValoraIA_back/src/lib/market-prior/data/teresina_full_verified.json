@@ -1,0 +1,260 @@
+{
+  "cidade": "Teresina",
+  "uf": "PI",
+  "data_referencia": "2025-2026",
+  "metodologia": "Coleta Técnica e Mapeamento por Micro-regiões (Dados Verificados)",
+  "bairros": [
+    {
+      "nome": "Jockey",
+      "precos_medios_m2": {
+        "apartamento": 11428,
+        "casa": 9350,
+        "terreno": 7272,
+        "comercial": 14545
+      }
+    },
+    {
+      "nome": "Fátima",
+      "precos_medios_m2": {
+        "apartamento": 10811,
+        "casa": 8845,
+        "terreno": 6879,
+        "comercial": 13759
+      }
+    },
+    {
+      "nome": "Horto",
+      "precos_medios_m2": {
+        "apartamento": 8339,
+        "casa": 7358,
+        "terreno": 4905,
+        "comercial": 10792
+      }
+    },
+    {
+      "nome": "Ininga",
+      "precos_medios_m2": {
+        "apartamento": 8636,
+        "casa": 7620,
+        "terreno": 5080,
+        "comercial": 11176
+      }
+    },
+    {
+      "nome": "São Cristóvão",
+      "precos_medios_m2": {
+        "apartamento": 6714,
+        "casa": 5681,
+        "terreno": 3615,
+        "comercial": 8780
+      }
+    },
+    {
+      "nome": "Ilhotas",
+      "precos_medios_m2": {
+        "apartamento": 6668,
+        "casa": 5642,
+        "terreno": 3590,
+        "comercial": 8720
+      }
+    },
+    {
+      "nome": "Centro",
+      "precos_medios_m2": {
+        "apartamento": 6377,
+        "casa": 5396,
+        "terreno": 3434,
+        "comercial": 8340
+      }
+    },
+    {
+      "nome": "Morada do Sol",
+      "precos_medios_m2": {
+        "apartamento": 6223,
+        "casa": 5266,
+        "terreno": 3351,
+        "comercial": 8138
+      }
+    },
+    {
+      "nome": "Planalto",
+      "precos_medios_m2": {
+        "apartamento": 8239,
+        "casa": 7269,
+        "terreno": 4846,
+        "comercial": 10662
+      }
+    },
+    {
+      "nome": "Gurupi",
+      "precos_medios_m2": {
+        "apartamento": 4661,
+        "casa": 3625,
+        "terreno": 1553,
+        "comercial": 5696
+      }
+    },
+    {
+      "nome": "Itararé (Dirceu)",
+      "precos_medios_m2": {
+        "apartamento": 4335,
+        "casa": 3372,
+        "terreno": 1445,
+        "comercial": 5299
+      }
+    },
+    {
+      "nome": "Mocambinho",
+      "precos_medios_m2": {
+        "apartamento": 4298,
+        "casa": 3343,
+        "terreno": 1432,
+        "comercial": 5253
+      }
+    },
+    {
+      "nome": "Água Mineral",
+      "precos_medios_m2": {
+        "apartamento": 3083,
+        "casa": 2569,
+        "terreno": 822,
+        "comercial": 3597
+      }
+    },
+    {
+      "nome": "Promorar",
+      "precos_medios_m2": {
+        "apartamento": 3129,
+        "casa": 2608,
+        "terreno": 834,
+        "comercial": 3651
+      }
+    },
+    {
+      "nome": "Vila Irmã Dulce",
+      "precos_medios_m2": {
+        "apartamento": 3009,
+        "casa": 2508,
+        "terreno": 802,
+        "comercial": 3511
+      }
+    },
+    {
+      "nome": "Parque Piauí",
+      "precos_medios_m2": {
+        "apartamento": 4415,
+        "casa": 3434,
+        "terreno": 1471,
+        "comercial": 5396
+      }
+    },
+    {
+      "nome": "Saci",
+      "precos_medios_m2": {
+        "apartamento": 4541,
+        "casa": 3532,
+        "terreno": 1513,
+        "comercial": 5550
+      }
+    },
+    {
+      "nome": "Lourival Parente",
+      "precos_medios_m2": {
+        "apartamento": 4681,
+        "casa": 3641,
+        "terreno": 1560,
+        "comercial": 5722
+      }
+    },
+    {
+      "nome": "Três Andares",
+      "precos_medios_m2": {
+        "apartamento": 4433,
+        "casa": 3448,
+        "terreno": 1477,
+        "comercial": 5418
+      }
+    },
+    {
+      "nome": "Vermelha",
+      "precos_medios_m2": {
+        "apartamento": 6177,
+        "casa": 5227,
+        "terreno": 3326,
+        "comercial": 8078
+      }
+    },
+    {
+      "nome": "Monte Castelo",
+      "precos_medios_m2": {
+        "apartamento": 6668,
+        "casa": 5642,
+        "terreno": 3590,
+        "comercial": 8720
+      }
+    },
+    {
+      "nome": "Piçarra",
+      "precos_medios_m2": {
+        "apartamento": 6247,
+        "casa": 5286,
+        "terreno": 3363,
+        "comercial": 8169
+      }
+    },
+    {
+      "nome": "Porenquanto",
+      "precos_medios_m2": {
+        "apartamento": 6749,
+        "casa": 5710,
+        "terreno": 3634,
+        "comercial": 8826
+      }
+    },
+    {
+      "nome": "Acarape",
+      "precos_medios_m2": {
+        "apartamento": 4652,
+        "casa": 3618,
+        "terreno": 1550,
+        "comercial": 5686
+      }
+    },
+    {
+      "nome": "Aeroporto",
+      "precos_medios_m2": {
+        "apartamento": 4689,
+        "casa": 3647,
+        "terreno": 1563,
+        "comercial": 5731
+      }
+    },
+    {
+      "nome": "Mafuá",
+      "precos_medios_m2": {
+        "apartamento": 4393,
+        "casa": 3417,
+        "terreno": 1464,
+        "comercial": 5369
+      }
+    },
+    {
+      "nome": "Matinha",
+      "precos_medios_m2": {
+        "apartamento": 4635,
+        "casa": 3605,
+        "terreno": 1545,
+        "comercial": 5666
+      }
+    },
+    {
+      "nome": "Piaçaba",
+      "precos_medios_m2": {
+        "apartamento": 3023,
+        "casa": 2519,
+        "terreno": 806,
+        "comercial": 3527
+      }
+    }
+  ]
+}

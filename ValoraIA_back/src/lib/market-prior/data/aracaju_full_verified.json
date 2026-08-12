@@ -1,0 +1,260 @@
+{
+  "cidade": "Aracaju",
+  "uf": "SE",
+  "data_referencia": "2025-2026",
+  "metodologia": "Coleta Técnica e Mapeamento por Micro-regiões (Dados Verificados)",
+  "bairros": [
+    {
+      "nome": "13 de Julho",
+      "precos_medios_m2": {
+        "apartamento": 9605,
+        "casa": 7684,
+        "terreno": 5763,
+        "comercial": 10565
+      }
+    },
+    {
+      "nome": "Jardins",
+      "precos_medios_m2": {
+        "apartamento": 10274,
+        "casa": 8219,
+        "terreno": 6164,
+        "comercial": 11301
+      }
+    },
+    {
+      "nome": "Atalaia",
+      "precos_medios_m2": {
+        "apartamento": 7857,
+        "casa": 6384,
+        "terreno": 4420,
+        "comercial": 8840
+      }
+    },
+    {
+      "nome": "Garcia",
+      "precos_medios_m2": {
+        "apartamento": 8045,
+        "casa": 6536,
+        "terreno": 4525,
+        "comercial": 9051
+      }
+    },
+    {
+      "nome": "Grageru",
+      "precos_medios_m2": {
+        "apartamento": 6231,
+        "casa": 5192,
+        "terreno": 3115,
+        "comercial": 7789
+      }
+    },
+    {
+      "nome": "Salgado Filho",
+      "precos_medios_m2": {
+        "apartamento": 6093,
+        "casa": 5077,
+        "terreno": 3046,
+        "comercial": 7616
+      }
+    },
+    {
+      "nome": "Luzia",
+      "precos_medios_m2": {
+        "apartamento": 6257,
+        "casa": 5214,
+        "terreno": 3128,
+        "comercial": 7821
+      }
+    },
+    {
+      "nome": "Farolândia",
+      "precos_medios_m2": {
+        "apartamento": 4297,
+        "casa": 3342,
+        "terreno": 1432,
+        "comercial": 5252
+      }
+    },
+    {
+      "nome": "Jabotiana",
+      "precos_medios_m2": {
+        "apartamento": 4653,
+        "casa": 3619,
+        "terreno": 1551,
+        "comercial": 5687
+      }
+    },
+    {
+      "nome": "Inácio Barbosa",
+      "precos_medios_m2": {
+        "apartamento": 4302,
+        "casa": 3346,
+        "terreno": 1434,
+        "comercial": 5258
+      }
+    },
+    {
+      "nome": "Ponto Novo",
+      "precos_medios_m2": {
+        "apartamento": 4324,
+        "casa": 3363,
+        "terreno": 1441,
+        "comercial": 5285
+      }
+    },
+    {
+      "nome": "Suíssa",
+      "precos_medios_m2": {
+        "apartamento": 5714,
+        "casa": 4761,
+        "terreno": 2857,
+        "comercial": 7142
+      }
+    },
+    {
+      "nome": "Centro",
+      "precos_medios_m2": {
+        "apartamento": 6080,
+        "casa": 5066,
+        "terreno": 3040,
+        "comercial": 7600
+      }
+    },
+    {
+      "nome": "Getúlio Vargas",
+      "precos_medios_m2": {
+        "apartamento": 4613,
+        "casa": 3588,
+        "terreno": 1537,
+        "comercial": 5638
+      }
+    },
+    {
+      "nome": "Cirurgia",
+      "precos_medios_m2": {
+        "apartamento": 4279,
+        "casa": 3328,
+        "terreno": 1426,
+        "comercial": 5230
+      }
+    },
+    {
+      "nome": "Siqueira Campos",
+      "precos_medios_m2": {
+        "apartamento": 4439,
+        "casa": 3452,
+        "terreno": 1479,
+        "comercial": 5426
+      }
+    },
+    {
+      "nome": "Bugio",
+      "precos_medios_m2": {
+        "apartamento": 2922,
+        "casa": 2435,
+        "terreno": 779,
+        "comercial": 3409
+      }
+    },
+    {
+      "nome": "Santa Maria",
+      "precos_medios_m2": {
+        "apartamento": 3038,
+        "casa": 2531,
+        "terreno": 810,
+        "comercial": 3544
+      }
+    },
+    {
+      "nome": "Cidade Nova",
+      "precos_medios_m2": {
+        "apartamento": 2982,
+        "casa": 2485,
+        "terreno": 795,
+        "comercial": 3479
+      }
+    },
+    {
+      "nome": "Santos Dumont",
+      "precos_medios_m2": {
+        "apartamento": 3062,
+        "casa": 2551,
+        "terreno": 816,
+        "comercial": 3572
+      }
+    },
+    {
+      "nome": "Coroa do Meio",
+      "precos_medios_m2": {
+        "apartamento": 7769,
+        "casa": 6312,
+        "terreno": 4370,
+        "comercial": 8740
+      }
+    },
+    {
+      "nome": "Aeroporto",
+      "precos_medios_m2": {
+        "apartamento": 4631,
+        "casa": 3602,
+        "terreno": 1543,
+        "comercial": 5661
+      }
+    },
+    {
+      "nome": "Aruana",
+      "precos_medios_m2": {
+        "apartamento": 8071,
+        "casa": 6557,
+        "terreno": 4540,
+        "comercial": 9080
+      }
+    },
+    {
+      "nome": "Zona de Expansão",
+      "precos_medios_m2": {
+        "apartamento": 8382,
+        "casa": 6810,
+        "terreno": 4715,
+        "comercial": 9430
+      }
+    },
+    {
+      "nome": "Industrial",
+      "precos_medios_m2": {
+        "apartamento": 4483,
+        "casa": 3487,
+        "terreno": 1494,
+        "comercial": 5479
+      }
+    },
+    {
+      "nome": "Santo Antônio",
+      "precos_medios_m2": {
+        "apartamento": 4614,
+        "casa": 3588,
+        "terreno": 1538,
+        "comercial": 5639
+      }
+    },
+    {
+      "nome": "Palestina",
+      "precos_medios_m2": {
+        "apartamento": 2869,
+        "casa": 2391,
+        "terreno": 765,
+        "comercial": 3347
+      }
+    },
+    {
+      "nome": "18 do Forte",
+      "precos_medios_m2": {
+        "apartamento": 3004,
+        "casa": 2503,
+        "terreno": 801,
+        "comercial": 3504
+      }
+    }
+  ]
+}

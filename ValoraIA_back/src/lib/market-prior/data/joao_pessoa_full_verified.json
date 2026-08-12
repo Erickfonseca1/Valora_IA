@@ -1,0 +1,638 @@
+{
+  "cidade": "João Pessoa",
+  "uf": "PB",
+  "data_referencia": "2025-2026",
+  "metodologia": "Coleta Técnica de Mercado (Dados Verificados)",
+  "bairros": [
+    {
+      "nome": "Cabo Branco",
+      "precos_medios_m2": {
+        "apartamento": 13000,
+        "casa": 8000,
+        "terreno": 5000,
+        "comercial": 12000
+      }
+    },
+    {
+      "nome": "Tambaú",
+      "precos_medios_m2": {
+        "apartamento": 11500,
+        "casa": 7750,
+        "terreno": 6000,
+        "comercial": 13000
+      }
+    },
+    {
+      "nome": "Jardim Oceania",
+      "precos_medios_m2": {
+        "apartamento": 10500,
+        "casa": 7000,
+        "terreno": 4250,
+        "comercial": 10000
+      }
+    },
+    {
+      "nome": "Manaíra",
+      "precos_medios_m2": {
+        "apartamento": 8500,
+        "casa": 6500,
+        "terreno": 3750,
+        "comercial": 9500
+      }
+    },
+    {
+      "nome": "Bessa",
+      "precos_medios_m2": {
+        "apartamento": 8000,
+        "casa": 6000,
+        "terreno": 3250,
+        "comercial": 8000
+      }
+    },
+    {
+      "nome": "Aeroclube",
+      "precos_medios_m2": {
+        "apartamento": 7750,
+        "casa": 6250,
+        "terreno": 3000,
+        "comercial": 7750
+      }
+    },
+    {
+      "nome": "Altiplano",
+      "precos_medios_m2": {
+        "apartamento": 9750,
+        "casa": 9000,
+        "terreno": 3250,
+        "comercial": 11500
+      }
+    },
+    {
+      "nome": "Miramar",
+      "precos_medios_m2": {
+        "apartamento": 7500,
+        "casa": 5750,
+        "terreno": 2500,
+        "comercial": 8000
+      }
+    },
+    {
+      "nome": "Brisamar",
+      "precos_medios_m2": {
+        "apartamento": 8000,
+        "casa": 6250,
+        "terreno": 3000,
+        "comercial": 7750
+      }
+    },
+    {
+      "nome": "Torre",
+      "precos_medios_m2": {
+        "apartamento": 6000,
+        "casa": 4750,
+        "terreno": 2000,
+        "comercial": 7250
+      }
+    },
+    {
+      "nome": "Estados",
+      "precos_medios_m2": {
+        "apartamento": 6500,
+        "casa": 4500,
+        "terreno": 2000,
+        "comercial": 7000
+      }
+    },
+    {
+      "nome": "Expedicionários",
+      "precos_medios_m2": {
+        "apartamento": 5750,
+        "casa": 4500,
+        "terreno": 1850,
+        "comercial": 6250
+      }
+    },
+    {
+      "nome": "Pedro Gondim",
+      "precos_medios_m2": {
+        "apartamento": 6250,
+        "casa": 5000,
+        "terreno": 2150,
+        "comercial": 6750
+      }
+    },
+    {
+      "nome": "Jardim Luna",
+      "precos_medios_m2": {
+        "apartamento": 8000,
+        "casa": 6250,
+        "terreno": 3000,
+        "comercial": 7750
+      }
+    },
+    {
+      "nome": "João Agripino",
+      "precos_medios_m2": {
+        "apartamento": 7250,
+        "casa": 5750,
+        "terreno": 2500,
+        "comercial": 6750
+      }
+    },
+    {
+      "nome": "Tambauzinho",
+      "precos_medios_m2": {
+        "apartamento": 7250,
+        "casa": 5750,
+        "terreno": 2500,
+        "comercial": 8000
+      }
+    },
+    {
+      "nome": "Bancários",
+      "precos_medios_m2": {
+        "apartamento": 4750,
+        "casa": 4150,
+        "terreno": 1400,
+        "comercial": 6000
+      }
+    },
+    {
+      "nome": "Jd Cidade Univ",
+      "precos_medios_m2": {
+        "apartamento": 4500,
+        "casa": 4000,
+        "terreno": 1250,
+        "comercial": 5250
+      }
+    },
+    {
+      "nome": "Mangabeira",
+      "precos_medios_m2": {
+        "apartamento": 3750,
+        "casa": 3400,
+        "terreno": 900,
+        "comercial": 5250
+      }
+    },
+    {
+      "nome": "Geisel",
+      "precos_medios_m2": {
+        "apartamento": 3850,
+        "casa": 3600,
+        "terreno": 1000,
+        "comercial": 5000
+      }
+    },
+    {
+      "nome": "Valentina",
+      "precos_medios_m2": {
+        "apartamento": 3300,
+        "casa": 3000,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "José Américo",
+      "precos_medios_m2": {
+        "apartamento": 3600,
+        "casa": 3300,
+        "terreno": 850,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Água Fria",
+      "precos_medios_m2": {
+        "apartamento": 4150,
+        "casa": 3850,
+        "terreno": 1100,
+        "comercial": 4750
+      }
+    },
+    {
+      "nome": "Cristo",
+      "precos_medios_m2": {
+        "apartamento": 3750,
+        "casa": 3400,
+        "terreno": 950,
+        "comercial": 5000
+      }
+    },
+    {
+      "nome": "Rangel",
+      "precos_medios_m2": {
+        "apartamento": 3300,
+        "casa": 3000,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Cruz das Armas",
+      "precos_medios_m2": {
+        "apartamento": 3400,
+        "casa": 3150,
+        "terreno": 850,
+        "comercial": 5000
+      }
+    },
+    {
+      "nome": "Distrito Industrial",
+      "precos_medios_m2": {
+        "apartamento": 2500,
+        "casa": 2500,
+        "terreno": 450,
+        "comercial": 3250
+      }
+    },
+    {
+      "nome": "Bairro das Indústrias",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2500,
+        "terreno": 450,
+        "comercial": 3250
+      }
+    },
+    {
+      "nome": "Gramame",
+      "precos_medios_m2": {
+        "apartamento": 3300,
+        "casa": 3000,
+        "terreno": 600,
+        "comercial": 3750
+      }
+    },
+    {
+      "nome": "Grotão",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2700,
+        "terreno": 500,
+        "comercial": 3750
+      }
+    },
+    {
+      "nome": "Cuiá",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Mussumagro",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2700,
+        "terreno": 500,
+        "comercial": 3750
+      }
+    },
+    {
+      "nome": "Muçumagro",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2700,
+        "terreno": 500,
+        "comercial": 3750
+      }
+    },
+    {
+      "nome": "Paratibe",
+      "precos_medios_m2": {
+        "apartamento": 3300,
+        "casa": 3000,
+        "terreno": 600,
+        "comercial": 3750
+      }
+    },
+    {
+      "nome": "Portal do Sol",
+      "precos_medios_m2": {
+        "apartamento": 5750,
+        "casa": 5250,
+        "terreno": 1700,
+        "comercial": 6000
+      }
+    },
+    {
+      "nome": "Quadramares",
+      "precos_medios_m2": {
+        "apartamento": 8000,
+        "casa": 7000,
+        "terreno": 2750,
+        "comercial": 8000
+      }
+    },
+    {
+      "nome": "Penha",
+      "precos_medios_m2": {
+        "apartamento": 7000,
+        "casa": 6000,
+        "terreno": 2250,
+        "comercial": 7000
+      }
+    },
+    {
+      "nome": "Seixas",
+      "precos_medios_m2": {
+        "apartamento": 9000,
+        "casa": 8000,
+        "terreno": 4000,
+        "comercial": 9000
+      }
+    },
+    {
+      "nome": "Jaguaribe",
+      "precos_medios_m2": {
+        "apartamento": 4150,
+        "casa": 3850,
+        "terreno": 1150,
+        "comercial": 5500
+      }
+    },
+    {
+      "nome": "Centro",
+      "precos_medios_m2": {
+        "apartamento": 3750,
+        "casa": 3400,
+        "terreno": 1500,
+        "comercial": 5750
+      }
+    },
+    {
+      "nome": "Róger",
+      "precos_medios_m2": {
+        "apartamento": 3600,
+        "casa": 3300,
+        "terreno": 900,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Varadouro",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2700,
+        "terreno": 750,
+        "comercial": 4000
+      }
+    },
+    {
+      "nome": "Ilha do Bispo",
+      "precos_medios_m2": {
+        "apartamento": 2700,
+        "casa": 2500,
+        "terreno": 500,
+        "comercial": 3250
+      }
+    },
+    {
+      "nome": "Alto do Mateus",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2700,
+        "terreno": 600,
+        "comercial": 3750
+      }
+    },
+    {
+      "nome": "Oitizeiro",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2700,
+        "terreno": 600,
+        "comercial": 3750
+      }
+    },
+    {
+      "nome": "Jd Planalto",
+      "precos_medios_m2": {
+        "apartamento": 3300,
+        "casa": 3000,
+        "terreno": 700,
+        "comercial": 3750
+      }
+    },
+    {
+      "nome": "Jd Veneza",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2700,
+        "terreno": 500,
+        "comercial": 3250
+      }
+    },
+    {
+      "nome": "Bairro dos Novais",
+      "precos_medios_m2": {
+        "apartamento": 2700,
+        "casa": 2500,
+        "terreno": 500,
+        "comercial": 3250
+      }
+    },
+    {
+      "nome": "Mandacaru",
+      "precos_medios_m2": {
+        "apartamento": 3300,
+        "casa": 3000,
+        "terreno": 600,
+        "comercial": 3750
+      }
+    },
+    {
+      "nome": "Padre Zé",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2700,
+        "terreno": 500,
+        "comercial": 3250
+      }
+    },
+    {
+      "nome": "Treze de Maio",
+      "precos_medios_m2": {
+        "apartamento": 5250,
+        "casa": 4500,
+        "terreno": 1600,
+        "comercial": 6000
+      }
+    },
+    {
+      "nome": "Bairro dos Ipês",
+      "precos_medios_m2": {
+        "apartamento": 5750,
+        "casa": 4750,
+        "terreno": 2000,
+        "comercial": 7000
+      }
+    },
+    {
+      "nome": "Alto do Céu",
+      "precos_medios_m2": {
+        "apartamento": 3300,
+        "casa": 3000,
+        "terreno": 600,
+        "comercial": 3750
+      }
+    },
+    {
+      "nome": "Tambiá",
+      "precos_medios_m2": {
+        "apartamento": 4750,
+        "casa": 4000,
+        "terreno": 1400,
+        "comercial": 5500
+      }
+    },
+    {
+      "nome": "Castelo Branco",
+      "precos_medios_m2": {
+        "apartamento": 5250,
+        "casa": 4500,
+        "terreno": 1600,
+        "comercial": 6000
+      }
+    },
+    {
+      "nome": "Anatólia",
+      "precos_medios_m2": {
+        "apartamento": 4750,
+        "casa": 4150,
+        "terreno": 1400,
+        "comercial": 6000
+      }
+    },
+    {
+      "nome": "Cidade dos Colibris",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Costa e Silva",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Ernani Sátiro",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Esplanada",
+      "precos_medios_m2": {
+        "apartamento": 3700,
+        "casa": 3500,
+        "terreno": 800,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Jd São Paulo",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "João Paulo II",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Planalto Boa Esperança",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Varjão",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2700,
+        "terreno": 500,
+        "comercial": 3250
+      }
+    },
+    {
+      "nome": "Bela Vista",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Itabeira",
+      "precos_medios_m2": {
+        "apartamento": 3000,
+        "casa": 2700,
+        "terreno": 500,
+        "comercial": 3250
+      }
+    },
+    {
+      "nome": "Funcionários I",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Funcionários II",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Funcionários III",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    },
+    {
+      "nome": "Funcionários IV",
+      "precos_medios_m2": {
+        "apartamento": 3500,
+        "casa": 3300,
+        "terreno": 700,
+        "comercial": 4250
+      }
+    }
+  ]
+}

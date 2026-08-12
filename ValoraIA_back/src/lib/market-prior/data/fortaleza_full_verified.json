@@ -1,0 +1,1079 @@
+{
+  "cidade": "Fortaleza",
+  "uf": "CE",
+  "data_referencia": "2025-2026",
+  "metodologia": "Coleta Técnica e Mapeamento por Micro-regiões (Dados Verificados)",
+  "bairros": [
+    {
+      "nome": "Meireles",
+      "precos_medios_m2": {
+        "apartamento": 22718,
+        "casa": 13424,
+        "terreno": 10326,
+        "comercial": 20653
+      }
+    },
+    {
+      "nome": "Mucuripe",
+      "precos_medios_m2": {
+        "apartamento": 21287,
+        "casa": 12578,
+        "terreno": 9676,
+        "comercial": 19352
+      }
+    },
+    {
+      "nome": "Aldeota",
+      "precos_medios_m2": {
+        "apartamento": 14580,
+        "casa": 9720,
+        "terreno": 7290,
+        "comercial": 13608
+      }
+    },
+    {
+      "nome": "Cocó",
+      "precos_medios_m2": {
+        "apartamento": 11075,
+        "casa": 9061,
+        "terreno": 6041,
+        "comercial": 12082
+      }
+    },
+    {
+      "nome": "Guararapes",
+      "precos_medios_m2": {
+        "apartamento": 11261,
+        "casa": 9213,
+        "terreno": 6142,
+        "comercial": 12285
+      }
+    },
+    {
+      "nome": "Dionísio Torres",
+      "precos_medios_m2": {
+        "apartamento": 7771,
+        "casa": 6800,
+        "terreno": 4371,
+        "comercial": 9714
+      }
+    },
+    {
+      "nome": "Papicu",
+      "precos_medios_m2": {
+        "apartamento": 7629,
+        "casa": 6675,
+        "terreno": 4291,
+        "comercial": 9536
+      }
+    },
+    {
+      "nome": "Cidade dos Funcionários",
+      "precos_medios_m2": {
+        "apartamento": 8126,
+        "casa": 7110,
+        "terreno": 4571,
+        "comercial": 10157
+      }
+    },
+    {
+      "nome": "Cambeba",
+      "precos_medios_m2": {
+        "apartamento": 5855,
+        "casa": 4879,
+        "terreno": 2439,
+        "comercial": 6831
+      }
+    },
+    {
+      "nome": "Parangaba",
+      "precos_medios_m2": {
+        "apartamento": 6061,
+        "casa": 5051,
+        "terreno": 2525,
+        "comercial": 7071
+      }
+    },
+    {
+      "nome": "Maraponga",
+      "precos_medios_m2": {
+        "apartamento": 5987,
+        "casa": 4989,
+        "terreno": 2494,
+        "comercial": 6984
+      }
+    },
+    {
+      "nome": "Messejana",
+      "precos_medios_m2": {
+        "apartamento": 4573,
+        "casa": 3557,
+        "terreno": 1524,
+        "comercial": 5081
+      }
+    },
+    {
+      "nome": "Passaré",
+      "precos_medios_m2": {
+        "apartamento": 4723,
+        "casa": 3674,
+        "terreno": 1574,
+        "comercial": 5248
+      }
+    },
+    {
+      "nome": "Lagoa Redonda",
+      "precos_medios_m2": {
+        "apartamento": 4456,
+        "casa": 3465,
+        "terreno": 1485,
+        "comercial": 4951
+      }
+    },
+    {
+      "nome": "Centro",
+      "precos_medios_m2": {
+        "apartamento": 8353,
+        "casa": 7309,
+        "terreno": 4698,
+        "comercial": 10441
+      }
+    },
+    {
+      "nome": "Farias Brito",
+      "precos_medios_m2": {
+        "apartamento": 5941,
+        "casa": 4951,
+        "terreno": 2475,
+        "comercial": 6932
+      }
+    },
+    {
+      "nome": "Benfica",
+      "precos_medios_m2": {
+        "apartamento": 7640,
+        "casa": 6685,
+        "terreno": 4297,
+        "comercial": 9550
+      }
+    },
+    {
+      "nome": "Joaquim Távora",
+      "precos_medios_m2": {
+        "apartamento": 7824,
+        "casa": 6846,
+        "terreno": 4401,
+        "comercial": 9781
+      }
+    },
+    {
+      "nome": "São João do Tauape",
+      "precos_medios_m2": {
+        "apartamento": 7728,
+        "casa": 6762,
+        "terreno": 4347,
+        "comercial": 9660
+      }
+    },
+    {
+      "nome": "Varjota",
+      "precos_medios_m2": {
+        "apartamento": 14358,
+        "casa": 9572,
+        "terreno": 7179,
+        "comercial": 13401
+      }
+    },
+    {
+      "nome": "De Lourdes",
+      "precos_medios_m2": {
+        "apartamento": 14905,
+        "casa": 9936,
+        "terreno": 7452,
+        "comercial": 13911
+      }
+    },
+    {
+      "nome": "Praia de Iracema",
+      "precos_medios_m2": {
+        "apartamento": 15484,
+        "casa": 10322,
+        "terreno": 7742,
+        "comercial": 14451
+      }
+    },
+    {
+      "nome": "Engenheiro Luciano Cavalcante",
+      "precos_medios_m2": {
+        "apartamento": 11115,
+        "casa": 9094,
+        "terreno": 6062,
+        "comercial": 12125
+      }
+    },
+    {
+      "nome": "Edson Queiroz",
+      "precos_medios_m2": {
+        "apartamento": 11436,
+        "casa": 9356,
+        "terreno": 6237,
+        "comercial": 12475
+      }
+    },
+    {
+      "nome": "Sabiaguaba",
+      "precos_medios_m2": {
+        "apartamento": 6094,
+        "casa": 5078,
+        "terreno": 2539,
+        "comercial": 7109
+      }
+    },
+    {
+      "nome": "Prefeito José Walter",
+      "precos_medios_m2": {
+        "apartamento": 4613,
+        "casa": 3588,
+        "terreno": 1537,
+        "comercial": 5125
+      }
+    },
+    {
+      "nome": "Mondubim",
+      "precos_medios_m2": {
+        "apartamento": 4429,
+        "casa": 3444,
+        "terreno": 1476,
+        "comercial": 4921
+      }
+    },
+    {
+      "nome": "Conjunto Ceará I",
+      "precos_medios_m2": {
+        "apartamento": 3467,
+        "casa": 2476,
+        "terreno": 792,
+        "comercial": 3467
+      }
+    },
+    {
+      "nome": "Conjunto Ceará II",
+      "precos_medios_m2": {
+        "apartamento": 3471,
+        "casa": 2479,
+        "terreno": 793,
+        "comercial": 3471
+      }
+    },
+    {
+      "nome": "Bom Jardim",
+      "precos_medios_m2": {
+        "apartamento": 3489,
+        "casa": 2492,
+        "terreno": 797,
+        "comercial": 3489
+      }
+    },
+    {
+      "nome": "Granja Lisboa",
+      "precos_medios_m2": {
+        "apartamento": 3459,
+        "casa": 2470,
+        "terreno": 790,
+        "comercial": 3459
+      }
+    },
+    {
+      "nome": "Canindezinho",
+      "precos_medios_m2": {
+        "apartamento": 3349,
+        "casa": 2392,
+        "terreno": 765,
+        "comercial": 3349
+      }
+    },
+    {
+      "nome": "Vila Velha",
+      "precos_medios_m2": {
+        "apartamento": 3469,
+        "casa": 2478,
+        "terreno": 793,
+        "comercial": 3469
+      }
+    },
+    {
+      "nome": "Barra do Ceará",
+      "precos_medios_m2": {
+        "apartamento": 3673,
+        "casa": 2623,
+        "terreno": 839,
+        "comercial": 3673
+      }
+    },
+    {
+      "nome": "Pirambu",
+      "precos_medios_m2": {
+        "apartamento": 3517,
+        "casa": 2512,
+        "terreno": 804,
+        "comercial": 3517
+      }
+    },
+    {
+      "nome": "Álvaro Weyne",
+      "precos_medios_m2": {
+        "apartamento": 6180,
+        "casa": 5150,
+        "terreno": 2575,
+        "comercial": 7210
+      }
+    },
+    {
+      "nome": "Antônio Bezerra",
+      "precos_medios_m2": {
+        "apartamento": 6040,
+        "casa": 5033,
+        "terreno": 2516,
+        "comercial": 7047
+      }
+    },
+    {
+      "nome": "Quintino Cunha",
+      "precos_medios_m2": {
+        "apartamento": 4648,
+        "casa": 3615,
+        "terreno": 1549,
+        "comercial": 5164
+      }
+    },
+    {
+      "nome": "Pici",
+      "precos_medios_m2": {
+        "apartamento": 4336,
+        "casa": 3372,
+        "terreno": 1445,
+        "comercial": 4818
+      }
+    },
+    {
+      "nome": "Bela Vista",
+      "precos_medios_m2": {
+        "apartamento": 4409,
+        "casa": 3429,
+        "terreno": 1469,
+        "comercial": 4898
+      }
+    },
+    {
+      "nome": "Pan Americano",
+      "precos_medios_m2": {
+        "apartamento": 4318,
+        "casa": 3358,
+        "terreno": 1439,
+        "comercial": 4798
+      }
+    },
+    {
+      "nome": "Demócrito Rocha",
+      "precos_medios_m2": {
+        "apartamento": 4521,
+        "casa": 3516,
+        "terreno": 1507,
+        "comercial": 5023
+      }
+    },
+    {
+      "nome": "Montese",
+      "precos_medios_m2": {
+        "apartamento": 5880,
+        "casa": 4900,
+        "terreno": 2450,
+        "comercial": 6860
+      }
+    },
+    {
+      "nome": "Parreão",
+      "precos_medios_m2": {
+        "apartamento": 5969,
+        "casa": 4974,
+        "terreno": 2487,
+        "comercial": 6964
+      }
+    },
+    {
+      "nome": "Vila União",
+      "precos_medios_m2": {
+        "apartamento": 6270,
+        "casa": 5225,
+        "terreno": 2612,
+        "comercial": 7315
+      }
+    },
+    {
+      "nome": "Aeroporto",
+      "precos_medios_m2": {
+        "apartamento": 6145,
+        "casa": 5120,
+        "terreno": 2560,
+        "comercial": 7169
+      }
+    },
+    {
+      "nome": "Serrinha",
+      "precos_medios_m2": {
+        "apartamento": 4622,
+        "casa": 3595,
+        "terreno": 1540,
+        "comercial": 5136
+      }
+    },
+    {
+      "nome": "Itaperi",
+      "precos_medios_m2": {
+        "apartamento": 4543,
+        "casa": 3533,
+        "terreno": 1514,
+        "comercial": 5048
+      }
+    },
+    {
+      "nome": "Dendê",
+      "precos_medios_m2": {
+        "apartamento": 4597,
+        "casa": 3575,
+        "terreno": 1532,
+        "comercial": 5107
+      }
+    },
+    {
+      "nome": "Parque Dois Irmãos",
+      "precos_medios_m2": {
+        "apartamento": 4677,
+        "casa": 3637,
+        "terreno": 1559,
+        "comercial": 5196
+      }
+    },
+    {
+      "nome": "Passaré",
+      "precos_medios_m2": {
+        "apartamento": 4513,
+        "casa": 3510,
+        "terreno": 1504,
+        "comercial": 5015
+      }
+    },
+    {
+      "nome": "Castelão",
+      "precos_medios_m2": {
+        "apartamento": 4431,
+        "casa": 3446,
+        "terreno": 1477,
+        "comercial": 4923
+      }
+    },
+    {
+      "nome": "Cajazeiras",
+      "precos_medios_m2": {
+        "apartamento": 4665,
+        "casa": 3629,
+        "terreno": 1555,
+        "comercial": 5184
+      }
+    },
+    {
+      "nome": "Barroso",
+      "precos_medios_m2": {
+        "apartamento": 4611,
+        "casa": 3586,
+        "terreno": 1537,
+        "comercial": 5123
+      }
+    },
+    {
+      "nome": "Jangurussu",
+      "precos_medios_m2": {
+        "apartamento": 3376,
+        "casa": 2411,
+        "terreno": 771,
+        "comercial": 3376
+      }
+    },
+    {
+      "nome": "Conjunto Palmeiras",
+      "precos_medios_m2": {
+        "apartamento": 3421,
+        "casa": 2444,
+        "terreno": 782,
+        "comercial": 3421
+      }
+    },
+    {
+      "nome": "Ancuri",
+      "precos_medios_m2": {
+        "apartamento": 3542,
+        "casa": 2530,
+        "terreno": 809,
+        "comercial": 3542
+      }
+    },
+    {
+      "nome": "Pedras",
+      "precos_medios_m2": {
+        "apartamento": 3470,
+        "casa": 2478,
+        "terreno": 793,
+        "comercial": 3470
+      }
+    },
+    {
+      "nome": "Paupina",
+      "precos_medios_m2": {
+        "apartamento": 3618,
+        "casa": 2584,
+        "terreno": 826,
+        "comercial": 3618
+      }
+    },
+    {
+      "nome": "São Bento",
+      "precos_medios_m2": {
+        "apartamento": 4579,
+        "casa": 3561,
+        "terreno": 1526,
+        "comercial": 5088
+      }
+    },
+    {
+      "nome": "Coaçu",
+      "precos_medios_m2": {
+        "apartamento": 4589,
+        "casa": 3569,
+        "terreno": 1529,
+        "comercial": 5099
+      }
+    },
+    {
+      "nome": "Guajeru",
+      "precos_medios_m2": {
+        "apartamento": 4721,
+        "casa": 3672,
+        "terreno": 1573,
+        "comercial": 5246
+      }
+    },
+    {
+      "nome": "Curió",
+      "precos_medios_m2": {
+        "apartamento": 4453,
+        "casa": 3463,
+        "terreno": 1484,
+        "comercial": 4947
+      }
+    },
+    {
+      "nome": "Lagoa Sapiranga (Coité)",
+      "precos_medios_m2": {
+        "apartamento": 5994,
+        "casa": 4995,
+        "terreno": 2497,
+        "comercial": 6993
+      }
+    },
+    {
+      "nome": "Alagadiço Novo",
+      "precos_medios_m2": {
+        "apartamento": 6059,
+        "casa": 5049,
+        "terreno": 2524,
+        "comercial": 7069
+      }
+    },
+    {
+      "nome": "José de Alencar",
+      "precos_medios_m2": {
+        "apartamento": 6178,
+        "casa": 5148,
+        "terreno": 2574,
+        "comercial": 7208
+      }
+    },
+    {
+      "nome": "Curcurana",
+      "precos_medios_m2": {
+        "apartamento": 3525,
+        "casa": 2518,
+        "terreno": 805,
+        "comercial": 3525
+      }
+    },
+    {
+      "nome": "Parque Manibura",
+      "precos_medios_m2": {
+        "apartamento": 5964,
+        "casa": 4970,
+        "terreno": 2485,
+        "comercial": 6958
+      }
+    },
+    {
+      "nome": "Parque Iracema",
+      "precos_medios_m2": {
+        "apartamento": 6184,
+        "casa": 5153,
+        "terreno": 2576,
+        "comercial": 7214
+      }
+    },
+    {
+      "nome": "Jardim das Oliveiras",
+      "precos_medios_m2": {
+        "apartamento": 4410,
+        "casa": 3430,
+        "terreno": 1470,
+        "comercial": 4900
+      }
+    },
+    {
+      "nome": "Tancredo Neves",
+      "precos_medios_m2": {
+        "apartamento": 4368,
+        "casa": 3397,
+        "terreno": 1456,
+        "comercial": 4854
+      }
+    },
+    {
+      "nome": "Aerolândia",
+      "precos_medios_m2": {
+        "apartamento": 4297,
+        "casa": 3342,
+        "terreno": 1432,
+        "comercial": 4775
+      }
+    },
+    {
+      "nome": "Alto da Balança",
+      "precos_medios_m2": {
+        "apartamento": 4674,
+        "casa": 3635,
+        "terreno": 1558,
+        "comercial": 5194
+      }
+    },
+    {
+      "nome": "Salinas",
+      "precos_medios_m2": {
+        "apartamento": 4592,
+        "casa": 3571,
+        "terreno": 1530,
+        "comercial": 5102
+      }
+    },
+    {
+      "nome": "Luciano Cavalcante",
+      "precos_medios_m2": {
+        "apartamento": 11113,
+        "casa": 9092,
+        "terreno": 6061,
+        "comercial": 12123
+      }
+    },
+    {
+      "nome": "Manuel Dias Branco",
+      "precos_medios_m2": {
+        "apartamento": 15523,
+        "casa": 10348,
+        "terreno": 7761,
+        "comercial": 14488
+      }
+    },
+    {
+      "nome": "Praia do Futuro I",
+      "precos_medios_m2": {
+        "apartamento": 7888,
+        "casa": 6902,
+        "terreno": 4437,
+        "comercial": 9860
+      }
+    },
+    {
+      "nome": "Praia do Futuro II",
+      "precos_medios_m2": {
+        "apartamento": 8177,
+        "casa": 7155,
+        "terreno": 4600,
+        "comercial": 10222
+      }
+    },
+    {
+      "nome": "Cais do Porto",
+      "precos_medios_m2": {
+        "apartamento": 4675,
+        "casa": 3636,
+        "terreno": 1558,
+        "comercial": 5194
+      }
+    },
+    {
+      "nome": "Vicente Pinzón",
+      "precos_medios_m2": {
+        "apartamento": 4379,
+        "casa": 3406,
+        "terreno": 1459,
+        "comercial": 4865
+      }
+    },
+    {
+      "nome": "Bairro Ellery",
+      "precos_medios_m2": {
+        "apartamento": 6278,
+        "casa": 5231,
+        "terreno": 2615,
+        "comercial": 7324
+      }
+    },
+    {
+      "nome": "Monte Castelo",
+      "precos_medios_m2": {
+        "apartamento": 6055,
+        "casa": 5046,
+        "terreno": 2523,
+        "comercial": 7065
+      }
+    },
+    {
+      "nome": "Carlito Pamplona",
+      "precos_medios_m2": {
+        "apartamento": 4309,
+        "casa": 3351,
+        "terreno": 1436,
+        "comercial": 4787
+      }
+    },
+    {
+      "nome": "Jacarecanga",
+      "precos_medios_m2": {
+        "apartamento": 4570,
+        "casa": 3554,
+        "terreno": 1523,
+        "comercial": 5078
+      }
+    },
+    {
+      "nome": "Moura Brasil",
+      "precos_medios_m2": {
+        "apartamento": 4589,
+        "casa": 3569,
+        "terreno": 1529,
+        "comercial": 5099
+      }
+    },
+    {
+      "nome": "Parque Araxá",
+      "precos_medios_m2": {
+        "apartamento": 6230,
+        "casa": 5192,
+        "terreno": 2596,
+        "comercial": 7268
+      }
+    },
+    {
+      "nome": "Rodolfo Teófilo",
+      "precos_medios_m2": {
+        "apartamento": 6217,
+        "casa": 5180,
+        "terreno": 2590,
+        "comercial": 7253
+      }
+    },
+    {
+      "nome": "Amadeu Furtado",
+      "precos_medios_m2": {
+        "apartamento": 6209,
+        "casa": 5174,
+        "terreno": 2587,
+        "comercial": 7244
+      }
+    },
+    {
+      "nome": "Parquelândia",
+      "precos_medios_m2": {
+        "apartamento": 8124,
+        "casa": 7109,
+        "terreno": 4570,
+        "comercial": 10155
+      }
+    },
+    {
+      "nome": "Presidente Kennedy",
+      "precos_medios_m2": {
+        "apartamento": 6038,
+        "casa": 5032,
+        "terreno": 2516,
+        "comercial": 7044
+      }
+    },
+    {
+      "nome": "Alvaro Weyne",
+      "precos_medios_m2": {
+        "apartamento": 5988,
+        "casa": 4990,
+        "terreno": 2495,
+        "comercial": 6986
+      }
+    },
+    {
+      "nome": "Floresta",
+      "precos_medios_m2": {
+        "apartamento": 4704,
+        "casa": 3659,
+        "terreno": 1568,
+        "comercial": 5227
+      }
+    },
+    {
+      "nome": "Jardim Guanabara",
+      "precos_medios_m2": {
+        "apartamento": 4393,
+        "casa": 3417,
+        "terreno": 1464,
+        "comercial": 4881
+      }
+    },
+    {
+      "nome": "Vila Ellery",
+      "precos_medios_m2": {
+        "apartamento": 4361,
+        "casa": 3392,
+        "terreno": 1453,
+        "comercial": 4845
+      }
+    },
+    {
+      "nome": "São Gerardo",
+      "precos_medios_m2": {
+        "apartamento": 8143,
+        "casa": 7125,
+        "terreno": 4580,
+        "comercial": 10179
+      }
+    },
+    {
+      "nome": "Farias Brito",
+      "precos_medios_m2": {
+        "apartamento": 5946,
+        "casa": 4955,
+        "terreno": 2477,
+        "comercial": 6937
+      }
+    },
+    {
+      "nome": "Parque Rio Branco",
+      "precos_medios_m2": {
+        "apartamento": 5933,
+        "casa": 4944,
+        "terreno": 2472,
+        "comercial": 6922
+      }
+    },
+    {
+      "nome": "Tauape",
+      "precos_medios_m2": {
+        "apartamento": 8293,
+        "casa": 7256,
+        "terreno": 4664,
+        "comercial": 10366
+      }
+    },
+    {
+      "nome": "Dionísio Torres",
+      "precos_medios_m2": {
+        "apartamento": 8148,
+        "casa": 7129,
+        "terreno": 4583,
+        "comercial": 10185
+      }
+    },
+    {
+      "nome": "Fátima",
+      "precos_medios_m2": {
+        "apartamento": 11249,
+        "casa": 9203,
+        "terreno": 6135,
+        "comercial": 12271
+      }
+    },
+    {
+      "nome": "Bairro de Fátima",
+      "precos_medios_m2": {
+        "apartamento": 10627,
+        "casa": 8695,
+        "terreno": 5797,
+        "comercial": 11594
+      }
+    },
+    {
+      "nome": "Gentilândia",
+      "precos_medios_m2": {
+        "apartamento": 8379,
+        "casa": 7331,
+        "terreno": 4713,
+        "comercial": 10473
+      }
+    },
+    {
+      "nome": "Parreão",
+      "precos_medios_m2": {
+        "apartamento": 5992,
+        "casa": 4993,
+        "terreno": 2496,
+        "comercial": 6991
+      }
+    },
+    {
+      "nome": "Vila União",
+      "precos_medios_m2": {
+        "apartamento": 5986,
+        "casa": 4988,
+        "terreno": 2494,
+        "comercial": 6984
+      }
+    },
+    {
+      "nome": "Bom Futuro",
+      "precos_medios_m2": {
+        "apartamento": 4386,
+        "casa": 3411,
+        "terreno": 1462,
+        "comercial": 4874
+      }
+    },
+    {
+      "nome": "Damas",
+      "precos_medios_m2": {
+        "apartamento": 4490,
+        "casa": 3492,
+        "terreno": 1496,
+        "comercial": 4989
+      }
+    },
+    {
+      "nome": "Jardim América",
+      "precos_medios_m2": {
+        "apartamento": 4669,
+        "casa": 3631,
+        "terreno": 1556,
+        "comercial": 5188
+      }
+    },
+    {
+      "nome": "Couto Fernandes",
+      "precos_medios_m2": {
+        "apartamento": 4277,
+        "casa": 3326,
+        "terreno": 1425,
+        "comercial": 4752
+      }
+    },
+    {
+      "nome": "Itaoca",
+      "precos_medios_m2": {
+        "apartamento": 4641,
+        "casa": 3610,
+        "terreno": 1547,
+        "comercial": 5157
+      }
+    },
+    {
+      "nome": "Serrinha",
+      "precos_medios_m2": {
+        "apartamento": 4488,
+        "casa": 3490,
+        "terreno": 1496,
+        "comercial": 4986
+      }
+    },
+    {
+      "nome": "Itaperi",
+      "precos_medios_m2": {
+        "apartamento": 4502,
+        "casa": 3502,
+        "terreno": 1500,
+        "comercial": 5003
+      }
+    },
+    {
+      "nome": "Parque Dois Irmãos",
+      "precos_medios_m2": {
+        "apartamento": 4656,
+        "casa": 3621,
+        "terreno": 1552,
+        "comercial": 5173
+      }
+    },
+    {
+      "nome": "Passaré",
+      "precos_medios_m2": {
+        "apartamento": 4295,
+        "casa": 3340,
+        "terreno": 1431,
+        "comercial": 4772
+      }
+    },
+    {
+      "nome": "Castelão",
+      "precos_medios_m2": {
+        "apartamento": 4605,
+        "casa": 3581,
+        "terreno": 1535,
+        "comercial": 5116
+      }
+    },
+    {
+      "nome": "Mata Galinha",
+      "precos_medios_m2": {
+        "apartamento": 4635,
+        "casa": 3605,
+        "terreno": 1545,
+        "comercial": 5150
+      }
+    },
+    {
+      "nome": "Dias Macedo",
+      "precos_medios_m2": {
+        "apartamento": 4693,
+        "casa": 3650,
+        "terreno": 1564,
+        "comercial": 5214
+      }
+    },
+    {
+      "nome": "Boa Vista",
+      "precos_medios_m2": {
+        "apartamento": 4352,
+        "casa": 3385,
+        "terreno": 1450,
+        "comercial": 4836
+      }
+    },
+    {
+      "nome": "Parque Mata Galinha",
+      "precos_medios_m2": {
+        "apartamento": 4605,
+        "casa": 3582,
+        "terreno": 1535,
+        "comercial": 5117
+      }
+    },
+    {
+      "nome": "Cajazeiras",
+      "precos_medios_m2": {
+        "apartamento": 4398,
+        "casa": 3421,
+        "terreno": 1466,
+        "comercial": 4887
+      }
+    }
+  ]
+}

@@ -1,5 +1,6 @@
 import { getAdminClient } from "@/lib/db/supabase";
 import { fetchNearbyPlaces } from "@/lib/geocoding/nearby-places";
+import { getMarketPrior, type MarketPriorMatch } from "@/lib/market-prior";
 import type {
   ComparableListing,
   FrontendComparable,
@@ -191,13 +192,16 @@ async function fetchCandidates(
   return (data as ListingRow[]) ?? [];
 }
 
-// Progressive fallback: relax bedroom filter → relax area tolerance → no area filter
+// Progressive fallback: relax bedroom filter → relax area tolerance → no area filter.
+// Typology-first: same-typology comps are strongly preferred; other typologies
+// are only pulled in as a last resort (with their homogenization factor).
 async function fetchCandidatesWithFallback(
   lat: number,
   lng: number,
   radiusM: number,
   targetArea: number,
-  targetBedrooms: number | null | undefined
+  targetBedrooms: number | null | undefined,
+  targetPropertyType: string | null | undefined
 ): Promise<ListingRow[]> {
   const attempts: Array<{ areaTolerance: number; ignoreBedrooms: boolean }> = [
     { areaTolerance: 0.20, ignoreBedrooms: false },
@@ -207,6 +211,19 @@ async function fetchCandidatesWithFallback(
     { areaTolerance: 1.00, ignoreBedrooms: true }, // no area filter (±100% = all sizes)
   ];
 
+  const targetType = targetPropertyType ?? "apartment";
+
+  // Phase 1: same-typology sample — accept any relaxed area/bedrooms filter
+  for (const attempt of attempts) {
+    const rows = await fetchCandidates(
+      lat, lng, radiusM, targetArea, targetBedrooms,
+      attempt.areaTolerance, attempt.ignoreBedrooms
+    );
+    const sameType = rows.filter((r) => (r.property_type ?? "apartment") === targetType);
+    if (sameType.length >= MIN_SAMPLES) return sameType;
+  }
+
+  // Phase 2: mixed typologies — only when same-typology comps are insufficient
   for (const attempt of attempts) {
     const rows = await fetchCandidates(
       lat, lng, radiusM, targetArea, targetBedrooms,
@@ -247,7 +264,7 @@ async function fetchIDWCandidates(
 ): Promise<{ candidates: WeightedCandidate[]; radiusUsed: number; typologyFactorUsed: number }> {
   // Fetch at max radius with progressive fallback relaxation
   const maxRadius = IDW_RADII_M[IDW_RADII_M.length - 1];
-  const rows = await fetchCandidatesWithFallback(lat, lng, maxRadius, targetArea, targetBedrooms);
+  const rows = await fetchCandidatesWithFallback(lat, lng, maxRadius, targetArea, targetBedrooms, targetPropertyType);
 
   if (rows.length === 0) {
     return { candidates: [], radiusUsed: maxRadius, typologyFactorUsed: 1.0 };
@@ -368,6 +385,61 @@ function computeConfidenceScore(
   return Number(clamp(raw * 100, 40, 99).toFixed(1));
 }
 
+// ─── Market Prior Blend (dados verificados por bairro) ────────────────────────
+//
+// The spatial search collects comps within 5km regardless of typology or
+// neighborhood. When the sample is weak (few same-typology comps, or comps
+// mostly from OTHER neighborhoods), the ensemble estimate drifts.
+//
+// We compute a sample quality score in [0,1]:
+//   - same-typology ratio (weight 0.5): comps matching the target type
+//   - same-neighborhood ratio (weight 0.3): comps inside the target's bairro
+//   - distance closeness (weight 0.2): proximity of the whole sample
+//
+// final = α·ensemble + (1-α)·verified_prior, α = quality.
+// A strong local sample → engine dominates. A weak one → the verified
+// neighborhood R$/m² anchors the estimate so houses don't collapse to
+// apartment prices from neighboring bairros.
+
+function normalizeBairro(s: string | null | undefined): string {
+  return (s ?? "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+function computeSampleQuality(
+  candidates: WeightedCandidate[],
+  targetType: string,
+  targetNeighborhood: string | null | undefined
+): number {
+  if (candidates.length === 0) return 0;
+
+  const targetBairro = normalizeBairro(targetNeighborhood);
+
+  const sameType = candidates.filter(
+    (c) => (c.row.property_type ?? "apartment") === targetType
+  ).length / candidates.length;
+
+  const sameBairro = targetBairro
+    ? candidates.filter((c) => normalizeBairro(c.row.neighborhood) === targetBairro).length /
+      candidates.length
+    : 0;
+
+  const avgDist = mean(candidates.map((c) => c.row.distance_m));
+  const closeness = clamp(1 - avgDist / 5000, 0, 1);
+
+  const quality = sameType * 0.5 + sameBairro * 0.3 + closeness * 0.2;
+  return clamp(quality, 0, 1);
+}
+
+function blendWithPrior(
+  enginePpm2: number,
+  prior: MarketPriorMatch,
+  quality: number
+): { blendedPpm2: number; blendWeight: number } {
+  const alpha = clamp(quality, 0.25, 1.0);
+  const blendedPpm2 = alpha * enginePpm2 + (1 - alpha) * prior.price_per_m2;
+  return { blendedPpm2, blendWeight: Number((1 - alpha).toFixed(3)) };
+}
+
 // ─── Frontend Comparables ─────────────────────────────────────────────────────
 
 export function toFrontendComparables(
@@ -451,6 +523,14 @@ export function buildHomogenizationFactors(p: {
 
 export interface ExtendedValuationResult extends ValuationResult {
   confidence_score: number;
+  market_reference: {
+    neighborhood: string;
+    raw_price_per_m2: number;
+    price_per_m2: number;
+    match_score: number;
+    blend_weight: number;
+    sample_quality: number;
+  } | null;
   price_factors: PriceFactor[];
   frontend_comparables: FrontendComparable[];
   method_estimates: MethodEstimate[];
@@ -482,8 +562,83 @@ export async function runValuation(
     lat, lng, target_area, target_bedrooms, targetPropertyType
   );
 
+  const priorType = targetPropertyType ?? "apartment";
+  const marketPrior = req.city || req.neighborhood
+    ? getMarketPrior(req.city, req.neighborhood, priorType, req.address)
+    : null;
+
+  // ── Prior-only mode: no comparables at all, but verified per-bairro data ──
+  // Used when the on-demand scraper is unavailable (no credit) or found
+  // nothing. The verified R$/m² anchors the value; confidence reflects the
+  // specialist curation: 50–65% scaling with neighborhood match quality
+  // (exact bairro match → higher trust in the reference).
   if (candidates.length < MIN_SAMPLES) {
-    throw new Error("Insufficient comparable listings found. Try a broader search area.");
+    if (!marketPrior) {
+      throw new Error("Insufficient comparable listings found. Try a broader search area.");
+    }
+
+    const cornerFactor = req.is_corner ? CORNER_FACTOR : 1.0;
+    const slopeFactor  = SLOPE_FACTORS[req.terrain_slope ?? 'plano'] ?? 1.0;
+    const levelFactor  = LEVEL_FACTORS[req.street_level ?? 'no_nivel'] ?? 1.0;
+    const physicalFactor = cornerFactor * slopeFactor * levelFactor;
+
+    const priorPpm2 = marketPrior.price_per_m2;
+    const estimate = priorPpm2 * target_area * physicalFactor;
+    const ciSpread = estimate * 0.20; // ±20% band on prior-only
+    const priorConfidence = Math.round(50 + 15 * marketPrior.match_score);
+
+    return {
+      estimated_value: Number(estimate.toFixed(2)),
+      price_per_m2_mean: priorPpm2,
+      price_per_m2_median: priorPpm2,
+      confidence_interval: {
+        lower: Number(Math.max(0, estimate - ciSpread).toFixed(2)),
+        upper: Number((estimate + ciSpread).toFixed(2)),
+        confidence_level: CONFIDENCE_LEVEL,
+      },
+      sample_size: 0,
+      radius_used_m: radiusUsed,
+      offer_factor_applied: OFFER_FACTOR,
+      comparables: [],
+      confidence_score: priorConfidence,
+      market_reference: {
+        neighborhood: marketPrior.matched_neighborhood,
+        raw_price_per_m2: marketPrior.raw_price_per_m2,
+        price_per_m2: marketPrior.price_per_m2,
+        match_score: marketPrior.match_score,
+        blend_weight: 1,
+        sample_quality: 0,
+      },
+      price_factors: [
+        { label: "Mercado Local", score: 0.4 },
+        { label: "Consistência", score: 0.5 },
+        { label: "Volume de Dados", score: 0.4 },
+        { label: "Perfil da Região", score: 0.5 },
+        { label: "Comodidades", score: 0.5 },
+        { label: "Cobertura", score: 0.4 },
+        { label: "Vizinhança", score: 0.5 },
+      ],
+      frontend_comparables: [],
+      method_estimates: [],
+      primary_method: "ensemble",
+      typology_factor: 1,
+      neighborhood_pois: null,
+      price_per_m2_homogenized: Number((priorPpm2 * physicalFactor).toFixed(2)),
+      amenity_breakdown: [],
+      amenity_factors: { internal: 1, condo: 1, proximo: 1 },
+      homogenization_factors: buildHomogenizationFactors({
+        ensemblePpm2: priorPpm2,
+        offerFactor: OFFER_FACTOR,
+        typologyFactor: 1,
+        cornerFactor,
+        slopeFactor,
+        levelFactor,
+        internalFactor: 1,
+        condoFactor: 1,
+        proximoFactor: 1,
+        areaM2: target_area,
+      }),
+    };
   }
 
   // ── IDW weighted mean and std dev ─────────────────────────────────────────
@@ -564,6 +719,22 @@ export async function runValuation(
   const finalCiLowerBrl = Math.max(0, ensemble.ci_lower_ppm2 * target_area);
   const finalCiUpperBrl = ensemble.ci_upper_ppm2 * target_area;
 
+  // ── Verified market prior (per-bairro R$/m²) ─────────────────────────────
+  // Anchors the estimate when the comp sample is weak (wrong typology or
+  // mostly neighboring bairros). Best-effort: no dataset → pure engine.
+  let blendWeight = 0;
+  let sampleQuality = 1;
+  let blendedFinalPpm2 = finalPpm2;
+
+  if (marketPrior) {
+    sampleQuality = computeSampleQuality(candidates, priorType, req.neighborhood);
+    const blended = blendWithPrior(finalPpm2, marketPrior, sampleQuality);
+    blendedFinalPpm2 = blended.blendedPpm2;
+    blendWeight = blended.blendWeight;
+  }
+
+  const effectivePpm2 = blendedFinalPpm2;
+
   // ── Fetch neighborhood (needed for proximoFactor before combinedFactor) ────
   let neighborhood: NeighborhoodData | null = null;
   try {
@@ -586,10 +757,10 @@ export async function runValuation(
     proximoFactor,
   });
 
-  const adjustedEstimatedValue = Number((finalEstimatedValue * combinedFactor).toFixed(2));
+  const adjustedEstimatedValue = Number((effectivePpm2 * target_area * combinedFactor).toFixed(2));
   const adjustedCiLower = Number((Math.max(0, finalCiLowerBrl) * combinedFactor).toFixed(2));
   const adjustedCiUpper = Number((finalCiUpperBrl * combinedFactor).toFixed(2));
-  const pricePerM2Homogenized = Number((finalPpm2 * combinedFactor).toFixed(2));
+  const pricePerM2Homogenized = Number((effectivePpm2 * combinedFactor).toFixed(2));
 
   const confidenceScore = computeConfidenceScore(nEff, finalCiLowerBrl, finalCiUpperBrl, finalEstimatedValue);
   const priceFactors = computePriceFactors(
@@ -613,6 +784,16 @@ export async function runValuation(
     offer_factor_applied: OFFER_FACTOR,
     comparables,
     confidence_score: confidenceScore,
+    market_reference: marketPrior
+      ? {
+          neighborhood: marketPrior.matched_neighborhood,
+          raw_price_per_m2: marketPrior.raw_price_per_m2,
+          price_per_m2: marketPrior.price_per_m2,
+          match_score: marketPrior.match_score,
+          blend_weight: blendWeight,
+          sample_quality: Number(sampleQuality.toFixed(3)),
+        }
+      : null,
     price_factors: priceFactors,
     frontend_comparables: frontendComparables,
     method_estimates: ensemble.method_estimates,

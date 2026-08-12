@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/db/supabase";
+import convertHeic from "heic-convert";
 import type { ApiResponse } from "@/types";
 
 export async function POST(
@@ -21,10 +22,11 @@ export async function POST(
     );
   }
 
-  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/jpg'];
+  const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'image/jpg'];
 
   for (const file of files) {
-    if (!ALLOWED_TYPES.includes(file.type)) {
+    const isHeic = /\.(heic|heif)$/i.test(file.name) || ['image/heic', 'image/heif'].includes(file.type);
+    if (!ALLOWED_TYPES.includes(file.type) && !isHeic) {
       return NextResponse.json(
         { success: false, error: `File type '${file.type}' not allowed. Use JPEG, PNG, or WebP.` },
         { status: 422 }
@@ -36,13 +38,33 @@ export async function POST(
   const urls: string[] = [];
 
   for (const file of files) {
-    const ext = file.name.split(".").pop() ?? "jpg";
+    const isHeic = /\.(heic|heif)$/i.test(file.name) || ['image/heic', 'image/heif'].includes(file.type);
+    let ext = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
+    let contentType = file.type || "image/jpeg";
+    let buffer: Buffer<ArrayBufferLike> = Buffer.from(await file.arrayBuffer());
+
+    // HEIC is accepted from iPhones, but browsers and react-pdf do not render
+    // it reliably. Normalize it once at upload time so every consumer gets a
+    // standard JPEG URL.
+    if (isHeic) {
+      try {
+        buffer = Buffer.from(await convertHeic({ buffer, format: "JPEG", quality: 0.88 }));
+        ext = "jpg";
+        contentType = "image/jpeg";
+      } catch (error) {
+        console.error("[upload-photos] HEIC conversion failed:", error);
+        return NextResponse.json(
+          { success: false, error: "Could not convert HEIC image. Send JPEG, PNG, or WebP." },
+          { status: 422 }
+        );
+      }
+    }
+
     const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-    const buffer = Buffer.from(await file.arrayBuffer());
 
     const { error } = await db.storage
       .from("property-photos")
-      .upload(path, buffer, { contentType: file.type, upsert: false });
+      .upload(path, buffer, { contentType, upsert: false });
 
     if (error) {
       return NextResponse.json(

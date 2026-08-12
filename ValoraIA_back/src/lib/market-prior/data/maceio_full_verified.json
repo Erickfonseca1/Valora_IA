@@ -1,0 +1,359 @@
+{
+  "cidade": "Maceió",
+  "uf": "AL",
+  "data_referencia": "2025-2026",
+  "metodologia": "Coleta Técnica e Mapeamento por Micro-regiões (Dados Verificados)",
+  "bairros": [
+    {
+      "nome": "Pajuçara",
+      "precos_medios_m2": {
+        "apartamento": 13710,
+        "casa": 9793,
+        "terreno": 7834,
+        "comercial": 13710
+      }
+    },
+    {
+      "nome": "Ponta Verde",
+      "precos_medios_m2": {
+        "apartamento": 13987,
+        "casa": 9991,
+        "terreno": 7993,
+        "comercial": 13987
+      }
+    },
+    {
+      "nome": "Jatiúca",
+      "precos_medios_m2": {
+        "apartamento": 11179,
+        "casa": 9146,
+        "terreno": 6605,
+        "comercial": 12195
+      }
+    },
+    {
+      "nome": "Stella Maris",
+      "precos_medios_m2": {
+        "apartamento": 11254,
+        "casa": 9208,
+        "terreno": 6650,
+        "comercial": 12278
+      }
+    },
+    {
+      "nome": "Cruz das Almas",
+      "precos_medios_m2": {
+        "apartamento": 9323,
+        "casa": 8287,
+        "terreno": 5179,
+        "comercial": 10359
+      }
+    },
+    {
+      "nome": "Mangabeiras",
+      "precos_medios_m2": {
+        "apartamento": 8789,
+        "casa": 7812,
+        "terreno": 4882,
+        "comercial": 9765
+      }
+    },
+    {
+      "nome": "Farol",
+      "precos_medios_m2": {
+        "apartamento": 6461,
+        "casa": 5467,
+        "terreno": 2982,
+        "comercial": 7952
+      }
+    },
+    {
+      "nome": "Gruta de Lourdes",
+      "precos_medios_m2": {
+        "apartamento": 6449,
+        "casa": 5457,
+        "terreno": 2976,
+        "comercial": 7938
+      }
+    },
+    {
+      "nome": "Pinheiro",
+      "precos_medios_m2": {
+        "apartamento": 6393,
+        "casa": 5409,
+        "terreno": 2950,
+        "comercial": 7868
+      }
+    },
+    {
+      "nome": "Serraria",
+      "precos_medios_m2": {
+        "apartamento": 5026,
+        "casa": 4523,
+        "terreno": 2010,
+        "comercial": 6534
+      }
+    },
+    {
+      "nome": "Antares",
+      "precos_medios_m2": {
+        "apartamento": 5176,
+        "casa": 4659,
+        "terreno": 2070,
+        "comercial": 6729
+      }
+    },
+    {
+      "nome": "Barro Duro",
+      "precos_medios_m2": {
+        "apartamento": 4851,
+        "casa": 4365,
+        "terreno": 1940,
+        "comercial": 6306
+      }
+    },
+    {
+      "nome": "Benedito Bentes",
+      "precos_medios_m2": {
+        "apartamento": 3338,
+        "casa": 2861,
+        "terreno": 953,
+        "comercial": 4292
+      }
+    },
+    {
+      "nome": "Eustáquio Gomes",
+      "precos_medios_m2": {
+        "apartamento": 3366,
+        "casa": 2885,
+        "terreno": 961,
+        "comercial": 4328
+      }
+    },
+    {
+      "nome": "Centro",
+      "precos_medios_m2": {
+        "apartamento": 6702,
+        "casa": 5671,
+        "terreno": 3093,
+        "comercial": 8249
+      }
+    },
+    {
+      "nome": "Jaraguá",
+      "precos_medios_m2": {
+        "apartamento": 11258,
+        "casa": 9211,
+        "terreno": 6652,
+        "comercial": 12281
+      }
+    },
+    {
+      "nome": "Poço",
+      "precos_medios_m2": {
+        "apartamento": 6790,
+        "casa": 5746,
+        "terreno": 3134,
+        "comercial": 8358
+      }
+    },
+    {
+      "nome": "Prado",
+      "precos_medios_m2": {
+        "apartamento": 6527,
+        "casa": 5523,
+        "terreno": 3012,
+        "comercial": 8034
+      }
+    },
+    {
+      "nome": "Ponta Grossa",
+      "precos_medios_m2": {
+        "apartamento": 5073,
+        "casa": 4566,
+        "terreno": 2029,
+        "comercial": 6596
+      }
+    },
+    {
+      "nome": "Vergel do Lago",
+      "precos_medios_m2": {
+        "apartamento": 3626,
+        "casa": 3108,
+        "terreno": 1036,
+        "comercial": 4662
+      }
+    },
+    {
+      "nome": "Trapiche da Barra",
+      "precos_medios_m2": {
+        "apartamento": 6523,
+        "casa": 5519,
+        "terreno": 3010,
+        "comercial": 8028
+      }
+    },
+    {
+      "nome": "Pontal da Barra",
+      "precos_medios_m2": {
+        "apartamento": 10763,
+        "casa": 8806,
+        "terreno": 6360,
+        "comercial": 11741
+      }
+    },
+    {
+      "nome": "Jacintinho",
+      "precos_medios_m2": {
+        "apartamento": 3533,
+        "casa": 3028,
+        "terreno": 1009,
+        "comercial": 4543
+      }
+    },
+    {
+      "nome": "Feitosa",
+      "precos_medios_m2": {
+        "apartamento": 4795,
+        "casa": 4315,
+        "terreno": 1918,
+        "comercial": 6233
+      }
+    },
+    {
+      "nome": "Ipioca",
+      "precos_medios_m2": {
+        "apartamento": 9008,
+        "casa": 8007,
+        "terreno": 5004,
+        "comercial": 10009
+      }
+    },
+    {
+      "nome": "Guaxuma",
+      "precos_medios_m2": {
+        "apartamento": 10536,
+        "casa": 8621,
+        "terreno": 6226,
+        "comercial": 11494
+      }
+    },
+    {
+      "nome": "Garça Torta",
+      "precos_medios_m2": {
+        "apartamento": 10531,
+        "casa": 8616,
+        "terreno": 6223,
+        "comercial": 11488
+      }
+    },
+    {
+      "nome": "Riacho Doce",
+      "precos_medios_m2": {
+        "apartamento": 9356,
+        "casa": 8316,
+        "terreno": 5197,
+        "comercial": 10395
+      }
+    },
+    {
+      "nome": "Jacarecica",
+      "precos_medios_m2": {
+        "apartamento": 10970,
+        "casa": 8975,
+        "terreno": 6482,
+        "comercial": 11967
+      }
+    },
+    {
+      "nome": "São Jorge",
+      "precos_medios_m2": {
+        "apartamento": 3542,
+        "casa": 3036,
+        "terreno": 1012,
+        "comercial": 4555
+      }
+    },
+    {
+      "nome": "Tabuleiro do Martins",
+      "precos_medios_m2": {
+        "apartamento": 3359,
+        "casa": 2879,
+        "terreno": 959,
+        "comercial": 4318
+      }
+    },
+    {
+      "nome": "Santa Lúcia",
+      "precos_medios_m2": {
+        "apartamento": 3621,
+        "casa": 3103,
+        "terreno": 1034,
+        "comercial": 4655
+      }
+    },
+    {
+      "nome": "Clima Bom",
+      "precos_medios_m2": {
+        "apartamento": 3464,
+        "casa": 2969,
+        "terreno": 989,
+        "comercial": 4454
+      }
+    },
+    {
+      "nome": "Fernão Velho",
+      "precos_medios_m2": {
+        "apartamento": 3423,
+        "casa": 2934,
+        "terreno": 978,
+        "comercial": 4401
+      }
+    },
+    {
+      "nome": "Rio Novo",
+      "precos_medios_m2": {
+        "apartamento": 3355,
+        "casa": 2876,
+        "terreno": 958,
+        "comercial": 4314
+      }
+    },
+    {
+      "nome": "Bebedouro",
+      "precos_medios_m2": {
+        "apartamento": 3447,
+        "casa": 2954,
+        "terreno": 984,
+        "comercial": 4432
+      }
+    },
+    {
+      "nome": "Mutange",
+      "precos_medios_m2": {
+        "apartamento": 3603,
+        "casa": 3088,
+        "terreno": 1029,
+        "comercial": 4632
+      }
+    },
+    {
+      "nome": "Bom Parto",
+      "precos_medios_m2": {
+        "apartamento": 3572,
+        "casa": 3061,
+        "terreno": 1020,
+        "comercial": 4592
+      }
+    },
+    {
+      "nome": "Levada",
+      "precos_medios_m2": {
+        "apartamento": 3458,
+        "casa": 2964,
+        "terreno": 988,
+        "comercial": 4446
+      }
+    }
+  ]
+}

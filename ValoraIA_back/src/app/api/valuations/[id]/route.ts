@@ -47,10 +47,40 @@ export async function GET(
     comparables: data.comparables ?? null,
     neighborhood_pois: data.neighborhood_pois ?? null,
     homogenization_factors: data.homogenization_factors ?? null,
+    market_reference: data.market_reference ?? null,
     amenities: data.amenities ?? [],
     in_gated_community: data.in_gated_community ?? false,
+    photos: await fetchValuationPhotos(id),
     created_at: data.created_at,
   };
 
   return NextResponse.json({ success: true, data: record });
+}
+
+// ─── Photos per room (valuation_photos table) ────────────────────────────────
+
+async function fetchValuationPhotos(
+  valuationId: string
+): Promise<import("@/types").ValuationPhoto[]> {
+  const db = getAdminClient();
+  const { data, error } = await db
+    .from("valuation_photos")
+    .select("id, room, photo_url, ai_analysis, created_at")
+    .eq("valuation_id", valuationId)
+    .order("created_at", { ascending: true });
+
+  if (error || !data) return [];
+  return (data as Array<{
+    id: string;
+    room: string | null;
+    photo_url: string;
+    ai_analysis: unknown;
+    created_at: string;
+  }>).map((r) => ({
+    id: r.id,
+    room: r.room ?? null,
+    photo_url: r.photo_url,
+    ai_analysis: (r.ai_analysis as Record<string, unknown> | null) ?? null,
+    created_at: r.created_at,
+  }));
 }

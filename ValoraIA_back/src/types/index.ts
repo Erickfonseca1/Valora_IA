@@ -35,17 +35,29 @@ export type StreetLevel = "no_nivel" | "abaixo_nivel" | "acima_nivel";
 export interface Listing {
   id: string;
   source_url: string;
+  source: string | null;
   price: number;
   usable_area: number;
+  total_area: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
+  suites: number | null;
   parking_spaces: number | null;
   property_type: PropertyType;
   coordinates: GeoPoint;
   neighborhood: string | null;
   city: string;
+  address: string | null;
+  state: string | null;
+  condo_fee: number | null;
+  iptu: number | null;
   construction_age: number | null;
   conservation_state: ConservationState;
+  floor: number | null;
+  total_floors: number | null;
+  is_condo: boolean;
+  is_new_launch: boolean;
+  listing_created_at: string | null;
   last_seen: string;
   created_at: string;
 }
@@ -54,18 +66,32 @@ export interface Listing {
 
 export interface IngestPayload {
   source_url: string;
+  source?: string;
+  ad_id?: string;
   price: string | number;
   usable_area: string | number;
+  total_area?: string | number;
   bedrooms?: string | number | null;
   bathrooms?: string | number | null;
+  suites?: string | number | null;
   parking_spaces?: string | number | null;
+  condo_fee?: string | number;
+  iptu?: string | number;
   property_type: PropertyType;
   lat: string | number;
   lng: string | number;
   neighborhood?: string | null;
   city: string;
+  address?: string | null;
+  state?: string | null;
   construction_age?: number | null;
   conservation_state?: ConservationState;
+  floor?: number | null;
+  total_floors?: number | null;
+  is_condo?: boolean;
+  is_new_launch?: boolean;
+  listing_created_at?: string;
+  images?: string[];
 }
 
 export interface IngestResult {
@@ -84,6 +110,11 @@ export interface ValuationRequest {
   target_bathrooms?: number | null;
   target_parking?: number | null;
   target_property_type?: PropertyType | null;
+  /** neighborhood/city from geocoding — used for verified market prior */
+  neighborhood?: string | null;
+  city?: string | null;
+  /** raw address text — fallback for bairro detection when geocoding misses it */
+  address?: string | null;
 }
 
 export interface ComparableListing {
@@ -230,10 +261,19 @@ export interface ValuationRecord {
   comparables: FrontendComparable[] | null;
   neighborhood_pois: NeighborhoodData | null;
   homogenization_factors: HomogenizationFactors | null;
+  market_reference: {
+    neighborhood: string;
+    raw_price_per_m2: number;
+    price_per_m2: number;
+    match_score: number;
+    blend_weight: number;
+    sample_quality: number;
+  } | null;
+  photos?: ValuationPhoto[];
   created_at: string;
 }
 
-export interface ValuationCreateRequest {
+export interface CreateValuationRequest {
   address: string;
   property_type: PropertyType;
   area_m2: number;
@@ -247,6 +287,16 @@ export interface ValuationCreateRequest {
   is_corner?: boolean;
   amenities?: AmenitySelectionDTO[];
   in_gated_community?: boolean;
+  /** photos per room — uploaded to Storage first, then attached to the record */
+  photos?: { room: string; url: string }[];
+}
+
+export interface ValuationPhoto {
+  id: string;
+  room: string | null;
+  photo_url: string;
+  ai_analysis: Record<string, unknown> | null;
+  created_at: string;
 }
 
 // ─── Photo Analysis (valuation_photos table + AI) ─────────────────────────────
