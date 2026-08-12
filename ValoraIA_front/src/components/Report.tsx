@@ -7,6 +7,7 @@ import ValueWaterfall from './ValueWaterfall'
 import LiveValuationHero from './LiveValuationHero'
 import { pdf } from '@react-pdf/renderer'
 import LaudoPDF from './LaudoPDF'
+import { toPng } from 'html-to-image'
 
 const PRIMARY = '#111827'
 const ACCENT = '#C9A227'
@@ -91,6 +92,56 @@ function displayPhotoUrl(photo: ValuationPhoto): string {
   return /\.(heic|heif)(?:\?|$)/i.test(photo.photo_url)
     ? `${API_BASE}/api/valuation-photos/${encodeURIComponent(photo.id)}/image`
     : photo.photo_url
+}
+
+// ─── Photo thumbnail with natural aspect ratio ────────────────────────────────
+// Fixed width, height computed from the image's intrinsic dimensions so the
+// photo is never cropped (cover) or stretched.
+
+const PHOTO_WIDTH = 200
+
+function PhotoThumb({ src, alt }: { src: string; alt: string }) {
+  const [height, setHeight] = useState<number | null>(null)
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onLoad={(e) => {
+        const img = e.currentTarget
+        if (img.naturalWidth > 0) {
+          setHeight(Math.round((PHOTO_WIDTH * img.naturalHeight) / img.naturalWidth))
+        }
+      }}
+      style={{
+        width: PHOTO_WIDTH,
+        height: height ?? 200,
+        objectFit: height ? undefined : 'contain',
+        background: '#F7F4EE',
+        borderRadius: 6,
+        border: '1px solid #E8E0CF',
+      }}
+    />
+  )
+}
+
+async function waitForMapTiles(mapEl: HTMLElement): Promise<void> {
+  const tiles = Array.from(mapEl.querySelectorAll('img.leaflet-tile')) as HTMLImageElement[]
+  if (tiles.length === 0) {
+    await new Promise((resolve) => setTimeout(resolve, 800))
+    return
+  }
+
+  await Promise.race([
+    Promise.all(tiles.map((tile) => tile.complete
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => {
+          tile.addEventListener('load', () => resolve(), { once: true })
+          tile.addEventListener('error', () => resolve(), { once: true })
+        })
+    )),
+    new Promise((resolve) => setTimeout(resolve, 2500)),
+  ])
 }
 
 // ─── Photos per room (grouped, rooms in submission order) ─────────────────────
@@ -210,7 +261,24 @@ export default function Report() {
     if (!valuation) return
     setPdfLoading(true)
     try {
-      const blob = await pdf(<LaudoPDF valuation={valuation} />).toBlob()
+      // Capture the live Leaflet map (same visual as the web report) and
+      // embed it in the PDF as an image.
+      let mapImage: string | null = null
+      const mapEl = document.querySelector('[data-report-map] .leaflet-container') as HTMLElement | null
+      if (mapEl) {
+        try {
+          await waitForMapTiles(mapEl)
+          mapImage = await toPng(mapEl, {
+            pixelRatio: 2,
+            backgroundColor: '#fff',
+            cacheBust: true,
+          })
+        } catch (e) {
+          console.error('[report] map capture failed:', e)
+        }
+      }
+
+      const blob = await pdf(<LaudoPDF valuation={valuation} mapImage={mapImage} />).toBlob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -708,14 +776,10 @@ export default function Report() {
                     {photos.length} foto{photos.length !== 1 ? 's' : ''}
                   </span>
                 </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                   {photos.map((p, i) => (
                     <a key={p.id} href={p.photo_url} target="_blank" rel="noreferrer" title="Abrir foto">
-                      <img
-                        src={displayPhotoUrl(p)}
-                        alt={`${room} ${i + 1}`}
-                        style={{ width: 110, height: 82, objectFit: 'cover', borderRadius: 6, border: '1px solid #E8E0CF' }}
-                      />
+                      <PhotoThumb src={displayPhotoUrl(p)} alt={`${room} ${i + 1}`} />
                     </a>
                   ))}
                 </div>

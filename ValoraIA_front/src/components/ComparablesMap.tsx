@@ -50,6 +50,7 @@ export default function ComparablesMap({ subject, comparables, pois, animate = t
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        crossOrigin="anonymous"
       />
       <FitBounds points={points} />
 

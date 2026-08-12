@@ -92,7 +92,7 @@ export default function LiveValuationHero({ record, mode, onSeeReport }: Props) 
 
       {/* Coluna direita: mapa */}
       {hasMap && (
-        <div style={{ minHeight: 320, borderLeft: '1px solid #E8E0CF' }}>
+        <div style={{ minHeight: 320, borderLeft: '1px solid #E8E0CF' }} data-report-map>
           <ComparablesMap
             subject={{ lat: record.lat, lng: record.lng }}
             comparables={record.comparables ?? []}

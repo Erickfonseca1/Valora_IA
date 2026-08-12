@@ -99,7 +99,7 @@ function FichaRow({ label, value }: { label: string; value: string }) {
   )
 }
 
-export default function LaudoPDF({ valuation: v }: { valuation: ValuationRecord }) {
+export default function LaudoPDF({ valuation: v, mapImage }: { valuation: ValuationRecord; mapImage?: string | null }) {
   const laudoId = `PTAM-${v.id.slice(-6).toUpperCase()}`
   const laudoDate = new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
   const propertyLabel = PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type
@@ -127,6 +127,34 @@ export default function LaudoPDF({ valuation: v }: { valuation: ValuationRecord 
           <Text style={s.headerMeta}>{laudoId} · {laudoDate}</Text>
           <Text style={s.headerMeta}>Imóvel: {v.address}</Text>
         </View>
+
+        {/* Localização — primeiro elemento pós-cabeçalho para preservar a
+            leitura espacial do laudo e evitar uma quebra logo após o mapa. */}
+        {v.lat != null && v.lng != null && (
+          <View wrap={false}>
+            <Text style={s.sectionTitle}>01a · LOCALIZAÇÃO E ENTORNO</Text>
+            <View style={[s.card, { padding: 8 }]}>
+              <Image
+                src={mapImage ?? buildStaticMapUrl(v)}
+                style={{ width: '100%', borderRadius: 3 }}
+              />
+              <View style={{ flexDirection: 'row', marginTop: 6, gap: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#111827' }} />
+                  <Text style={{ fontSize: 7, color: MUTED }}>Imóvel avaliado</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#C9A227' }} />
+                  <Text style={{ fontSize: 7, color: MUTED }}>Imóveis comparáveis</Text>
+                </View>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#F59E0B' }} />
+                  <Text style={{ fontSize: 7, color: MUTED }}>Pontos de valorização (POIs)</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Ficha técnica */}
         <Text style={s.sectionTitle}>01 · FICHA TÉCNICA</Text>
@@ -182,32 +210,6 @@ export default function LaudoPDF({ valuation: v }: { valuation: ValuationRecord 
             <Text style={{ fontSize: 8, color: MUTED }}>Confiança {(v.confidence_score ?? 0).toFixed(0)}%</Text>
           </View>
         </View>
-
-        {/* Localização — mapa estático + comparáveis */}
-        {v.lat != null && v.lng != null && (
-          <>
-            <Text style={s.sectionTitle}>02a · LOCALIZAÇÃO E ENTORNO</Text>
-            <View style={[s.card, { padding: 8 }]}>
-              <Image
-                src={buildStaticMapUrl(v)}
-                style={{ width: '100%', height: 220, borderRadius: 3 }}
-              />
-              <View style={{ flexDirection: 'row', marginTop: 6, gap: 12 }}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#EF4444' }} />
-                  <Text style={{ fontSize: 7, color: MUTED }}>Imóvel avaliado</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#22C55E' }} />
-                  <Text style={{ fontSize: 7, color: MUTED }}>Imóveis comparáveis</Text>
-                </View>
-                <Text style={{ fontSize: 7, color: MUTED, marginLeft: 'auto' }}>
-                  Fonte: mapas abertos (OSM/Google)
-                </Text>
-              </View>
-            </View>
-          </>
-        )}
 
         {/* Fundamentação referencial (prior-only) */}
         {isPriorOnly && v.market_reference && (
@@ -381,9 +383,9 @@ export default function LaudoPDF({ valuation: v }: { valuation: ValuationRecord 
                 <Text style={{ fontSize: 8, fontFamily: 'Helvetica-Bold', color: '#475569', marginBottom: 6 }}>
                   {room} <Text style={{ color: MUTED, fontFamily: 'Helvetica' }}>({photos.length} foto{photos.length !== 1 ? 's' : ''})</Text>
                 </Text>
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                   {photos.map((p) => (
-                    <Image key={p.id} src={displayPhotoUrl(p)} style={{ width: 90, height: 66, borderRadius: 3 }} />
+                    <Image key={p.id} src={displayPhotoUrl(p)} style={{ width: 140, borderRadius: 3 }} />
                   ))}
                 </View>
               </View>
