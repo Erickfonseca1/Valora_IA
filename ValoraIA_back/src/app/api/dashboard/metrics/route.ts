@@ -2,6 +2,32 @@ import { NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/db/supabase";
 import type { ApiResponse, DashboardMetrics, MarketTemperature } from "@/types";
 
+const BRASILIA_TZ = "America/Sao_Paulo";
+
+function brasiliaDateKey(date: Date): string {
+  return date.toLocaleDateString("en-CA", { timeZone: BRASILIA_TZ });
+}
+
+function brasiliaParts(date: Date): { year: number; month: number; day: number } {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: BRASILIA_TZ,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(date);
+  return {
+    year: Number(parts.find((part) => part.type === "year")?.value),
+    month: Number(parts.find((part) => part.type === "month")?.value),
+    day: Number(parts.find((part) => part.type === "day")?.value),
+  };
+}
+
+function brasiliaMidnightUtc(year: number, month: number, day: number): Date {
+  // Brasília is UTC-03:00. Keeping the boundary explicit prevents UTC from
+  // changing the local calendar day in dashboard filters.
+  return new Date(Date.UTC(year, month - 1, day, 3));
+}
+
 export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>> {
   const db = getAdminClient();
 
@@ -29,9 +55,10 @@ export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>
   }
 
   const now = new Date();
-  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-  const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const localNow = brasiliaParts(now);
+  const startOfThisMonth = brasiliaMidnightUtc(localNow.year, localNow.month, 1).toISOString();
+  const startOfPrevMonth = brasiliaMidnightUtc(localNow.year, localNow.month - 1, 1).toISOString();
+  const endOfPrevMonth = startOfThisMonth;
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -102,13 +129,15 @@ export async function GET(): Promise<NextResponse<ApiResponse<DashboardMetrics>>
   // Valuations per day (last 30 days) — daily activity series
   const countsByDay: Record<string, number> = {};
   for (const row of dailyData ?? []) {
-    const key = row.created_at.slice(0, 10);
+    const key = brasiliaDateKey(new Date(row.created_at));
     countsByDay[key] = (countsByDay[key] ?? 0) + 1;
   }
 
   const valuations_per_day: { date: string; count: number }[] = [];
   for (let i = 29; i >= 0; i--) {
-    const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const currentLocalDate = new Date(Date.UTC(localNow.year, localNow.month - 1, localNow.day));
+    currentLocalDate.setUTCDate(currentLocalDate.getUTCDate() - i);
+    const d = currentLocalDate.toISOString().slice(0, 10);
     valuations_per_day.push({ date: d, count: countsByDay[d] ?? 0 });
   }
 

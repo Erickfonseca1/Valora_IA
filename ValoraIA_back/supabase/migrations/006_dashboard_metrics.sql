@@ -12,6 +12,7 @@ LANGUAGE sql
 STABLE
 SECURITY DEFINER
 SET search_path = public
+SET timezone = 'America/Sao_Paulo'
 AS $$
   SELECT jsonb_build_object(
     'valuations_this_month', COALESCE((
