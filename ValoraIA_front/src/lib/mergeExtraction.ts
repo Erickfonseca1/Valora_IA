@@ -59,7 +59,13 @@ export function mergeExtraction(
   if (fields.property_type?.value != null)
     trySet('propertyType', fields.property_type.value, 'audio')
   if (fields.area_m2?.value != null)
-    trySet('area', String(fields.area_m2.value) as ValuationForm['area'], 'audio')
+    {
+      const area = String(fields.area_m2.value)
+      trySet('area', area, 'audio')
+      trySet('area_construida', area, 'audio')
+    }
+  if (fields.area_terreno_m2?.value != null)
+    trySet('area_terreno', String(fields.area_terreno_m2.value), 'audio')
   if (fields.bedrooms?.value != null)
     trySet('bedrooms', String(fields.bedrooms.value) as ValuationForm['bedrooms'], 'audio')
   if (fields.bathrooms?.value != null)

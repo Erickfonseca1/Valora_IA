@@ -26,6 +26,7 @@ CREATE TABLE listings (
   price           NUMERIC(15,2) NOT NULL,
   usable_area     NUMERIC(10,2) NOT NULL,
   total_area      NUMERIC(10,2),                   -- área total (vs privada)
+  land_area       NUMERIC(10,2),                   -- área do lote, quando explicitamente identificada
   bedrooms        SMALLINT,
   bathrooms       SMALLINT,
   suites          SMALLINT,
@@ -67,6 +68,8 @@ CREATE TABLE valuations (
   lat                         FLOAT8,
   lng                         FLOAT8,
   property_type               property_type_enum NOT NULL,
+  area_construida_m2          NUMERIC(10,2),
+  area_terreno_m2              NUMERIC(10,2),
   area_m2                     NUMERIC(10,2) NOT NULL,
   
   -- INPUTS TÉCNICOS V2

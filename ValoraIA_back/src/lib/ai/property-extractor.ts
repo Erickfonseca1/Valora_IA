@@ -23,6 +23,7 @@ Regras:
 - street_level valores válidos: no_nivel, abaixo_nivel, acima_nivel.
 - amenities: identifique apenas itens desta lista (use o id exato): ${CATALOG_ITEMS}.
 - gaps: liste as chaves dos campos obrigatórios ausentes. Campos obrigatórios: address, property_type, area_m2.
+- diferencie area_m2 (área construída) de area_terreno_m2 (área do lote). Nunca use uma como a outra.
 - summary: 1-2 frases naturais em português descrevendo o imóvel conforme o corretor relatou.`;
 
 // responseSchema garante saída estruturada sem markdown
@@ -50,6 +51,14 @@ const RESPONSE_SCHEMA = {
           },
         },
         area_m2: {
+          type: "OBJECT",
+          nullable: true,
+          properties: {
+            value: { type: "NUMBER", nullable: true },
+            confidence: { type: "NUMBER" },
+          },
+        },
+        area_terreno_m2: {
           type: "OBJECT",
           nullable: true,
           properties: {

@@ -74,6 +74,8 @@ export default function ValuationFlow() {
     address: '',
     propertyType: 'apartment',
     area: '',
+    area_construida: '',
+    area_terreno: '',
     bedrooms: '',
     bathrooms: '',
     parking_spaces: '',
@@ -97,6 +99,9 @@ export default function ValuationFlow() {
   const [fieldSource, setFieldSource] = useState<FormFieldSource>({})
   const [extractionResult, setExtractionResult] = useState<ExtractionResult | null>(null)
   const [revealRecord, setRevealRecord] = useState<ValuationRecord | null>(null)
+
+  const constructedArea = form.area_construida || form.area
+  const terrainArea = form.area_terreno || ''
 
   const set = <K extends keyof ValuationForm>(k: K, v: ValuationForm[K]) =>
     setForm(f => ({ ...f, [k]: v }))
@@ -191,7 +196,9 @@ export default function ValuationFlow() {
       const result = await createValuation({
         address: form.address,
         property_type: form.propertyType,
-        area_m2: parseFloat(form.area),
+        area_construida_m2: parseFloat(constructedArea),
+        area_terreno_m2: terrainArea ? parseFloat(terrainArea) : undefined,
+        area_m2: parseFloat(constructedArea),
         bedrooms: form.bedrooms ? parseInt(form.bedrooms) : undefined,
         bathrooms: form.bathrooms ? parseInt(form.bathrooms) : undefined,
         parking_spaces: form.parking_spaces ? parseInt(form.parking_spaces) : undefined,
@@ -235,7 +242,10 @@ export default function ValuationFlow() {
   const canAdvance = step === 0
     ? true  // IntakeStep controla seu próprio avanço
     : step === 1
-    ? form.address.trim().length > 0 && form.area.trim().length > 0 && parseFloat(form.area) > 0
+    ? form.address.trim().length > 0 &&
+      constructedArea.trim().length > 0 &&
+      parseFloat(constructedArea) > 0 &&
+      (form.propertyType !== 'house' || (terrainArea.trim().length > 0 && parseFloat(terrainArea) > 0))
     : true
 
   const handleContinue = () => {
@@ -259,7 +269,7 @@ export default function ValuationFlow() {
         <LiveValuationHero
           record={revealRecord}
           mode="reveal"
-          onSeeReport={() => navigate(`/resultado/${revealRecord.id}`)}
+          onSeeReport={() => navigate(`/app/resultado/${revealRecord.id}`)}
         />
       </div>
     )
@@ -379,15 +389,28 @@ export default function ValuationFlow() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1.5">Área (m²)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Área construída (m²)</label>
               <input
                 className={inputClass}
                 type="number"
                 placeholder="ex. 98"
-                value={form.area}
-                onChange={e => set('area', e.target.value)}
+                value={constructedArea}
+                onChange={e => setForm(f => ({ ...f, area: e.target.value, area_construida: e.target.value }))}
               />
             </div>
+            {(form.propertyType === 'house' || form.propertyType === 'land') && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">Área do terreno (m²)</label>
+                <input
+                  className={inputClass}
+                  type="number"
+                  placeholder="ex. 250"
+                  value={terrainArea}
+                  onChange={e => set('area_terreno', e.target.value)}
+                />
+                <p className="text-xs text-slate-400 mt-1">Informe a área do lote, não a área construída.</p>
+              </div>
+            )}
 
             {/* Rooms — apartment and house only */}
             {(form.propertyType === 'apartment' || form.propertyType === 'house') && (
@@ -737,7 +760,7 @@ export default function ValuationFlow() {
               {[
                 { label: 'Endereço', value: form.address },
                 { label: 'Tipo', value: PROPERTY_TYPES.find(t => t.value === form.propertyType)?.label ?? form.propertyType },
-                { label: 'Área', value: form.area + 'm²' },
+                { label: 'Área construída', value: form.area_construida + 'm²' },
                 ...(form.bedrooms ? [{ label: 'Quartos', value: form.bedrooms }] : []),
                 ...(form.bathrooms ? [{ label: 'Banheiros', value: form.bathrooms }] : []),
                 ...(form.parking_spaces ? [{ label: 'Vagas', value: form.parking_spaces }] : []),

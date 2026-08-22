@@ -11,6 +11,7 @@ export interface ExtractionResult {
     address?: ExtractedField<string>;
     property_type?: ExtractedField<PropertyType>;
     area_m2?: ExtractedField<number>;
+    area_terreno_m2?: ExtractedField<number>;
     bedrooms?: ExtractedField<number>;
     bathrooms?: ExtractedField<number>;
     parking_spaces?: ExtractedField<number>;

@@ -39,6 +39,7 @@ export interface Listing {
   price: number;
   usable_area: number;
   total_area: number | null;
+  land_area: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
   suites: number | null;
@@ -71,6 +72,7 @@ export interface IngestPayload {
   price: string | number;
   usable_area: string | number;
   total_area?: string | number;
+  land_area?: string | number;
   bedrooms?: string | number | null;
   bathrooms?: string | number | null;
   suites?: string | number | null;
@@ -106,6 +108,8 @@ export interface ValuationRequest {
   lat: number;
   lng: number;
   target_area: number;
+  target_construction_area?: number;
+  target_land_area?: number | null;
   target_bedrooms?: number | null;
   target_bathrooms?: number | null;
   target_parking?: number | null;
@@ -139,6 +143,16 @@ export interface ConfidenceInterval {
   confidence_level: number;
 }
 
+export interface ConfidenceDiagnostics {
+  sample_size: number;
+  displayed_sample_size: number;
+  effective_sample_size: number;
+  same_typology_count: number;
+  same_neighborhood_count: number;
+  confidence_interval_width_pct: number;
+  reasons: string[];
+}
+
 export interface ValuationResult {
   estimated_value: number;
   price_per_m2_mean: number;
@@ -157,6 +171,7 @@ export interface ListingRow {
   source_url: string;
   price: number;
   usable_area: number;
+  land_area: number | null;
   bedrooms: number | null;
   bathrooms: number | null;
   parking_spaces: number | null;
@@ -235,6 +250,8 @@ export interface ValuationRecord {
   lat: number | null;
   lng: number | null;
   property_type: PropertyType;
+  area_construida_m2: number;
+  area_terreno_m2: number | null;
   area_m2: number;
   bedrooms: number | null;
   bathrooms: number | null;
@@ -249,6 +266,7 @@ export interface ValuationRecord {
   static_market_value_brl: number | null;
   price_per_m2_homogenized: number | null;
   confidence_score: number | null;
+    confidence_diagnostics: ConfidenceDiagnostics | null;
   // Results — involutive method
   residual_land_value_brl: number | null;
   max_buildable_area_m2: number | null;

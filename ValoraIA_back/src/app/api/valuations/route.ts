@@ -14,7 +14,9 @@ import type {
 const ValuationCreateSchema = z.object({
   address: z.string().min(5).max(500),
   property_type: z.enum(["apartment", "house", "commercial", "land"]),
-  area_m2: z.number().positive(),
+  area_m2: z.number().positive().optional(),
+  area_construida_m2: z.number().positive().optional(),
+  area_terreno_m2: z.number().positive().optional(),
   bedrooms: z.number().int().min(0).max(20).optional(),
   bathrooms: z.number().int().min(0).max(20).optional(),
   parking_spaces: z.number().int().min(0).max(20).optional(),
@@ -61,12 +63,24 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
   }
 
   const {
-    address, property_type, area_m2,
+    address, property_type,
+    area_m2: legacyArea,
+    area_construida_m2: requestedConstructionArea,
+    area_terreno_m2,
     bedrooms, bathrooms, parking_spaces,
     lat: bodyLat, lng: bodyLng,
     construction_age, conservation_state, terrain_slope, street_level, is_corner,
     amenities, in_gated_community, photos,
   } = parsed.data;
+
+  const area_construida_m2 = requestedConstructionArea ?? legacyArea;
+  if (!area_construida_m2) {
+    return NextResponse.json({ success: false, error: "area_construida_m2 is required" }, { status: 422 });
+  }
+  if (property_type === "house" && !area_terreno_m2) {
+    return NextResponse.json({ success: false, error: "area_terreno_m2 is required for houses" }, { status: 422 });
+  }
+  const effectiveLandArea = area_terreno_m2 ?? (property_type === "land" ? area_construida_m2 : null);
 
   // ── Geocode ───────────────────────────────────────────────────────────────
   let geo: { lat: number; lng: number; neighborhood: string | null; city: string | null } | null = null;
@@ -130,7 +144,9 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     engineResult = await runValuation({
       lat: geo.lat,
       lng: geo.lng,
-      target_area: area_m2,
+      target_area: area_construida_m2,
+      target_construction_area: area_construida_m2,
+      target_land_area: effectiveLandArea,
       target_bedrooms: bedrooms ?? null,
       target_bathrooms: bathrooms ?? null,
       target_parking: parking_spaces ?? null,
@@ -160,13 +176,14 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     frontend_comparables,
     neighborhood_pois,
     homogenization_factors,
+    confidence_diagnostics,
   } = engineResult;
 
   // ── Involutive (land only) ────────────────────────────────────────────────
   let involutiveResult = null;
   if (property_type === "land") {
     involutiveResult = runInvolutive({
-      area_terreno: area_m2,
+      area_terreno: effectiveLandArea!,
       zoning_params,
       VGV_estimado_m2: engineResult.price_per_m2_mean,
     });
@@ -181,7 +198,9 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       lat: geo.lat,
       lng: geo.lng,
       property_type,
-      area_m2,
+      area_construida_m2,
+      area_terreno_m2: effectiveLandArea,
+      area_m2: area_construida_m2,
       bedrooms: bedrooms ?? null,
       bathrooms: bathrooms ?? null,
       parking_spaces: parking_spaces ?? null,
@@ -200,6 +219,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       comparables: frontend_comparables,
       neighborhood_pois,
       homogenization_factors,
+      confidence_diagnostics,
       market_reference: engineResult.market_reference,
       amenities: amenities ?? [],
       in_gated_community: in_gated_community ?? false,
@@ -246,7 +266,9 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     lat: geo.lat,
     lng: geo.lng,
     property_type,
-    area_m2,
+    area_construida_m2,
+    area_terreno_m2: effectiveLandArea,
+    area_m2: area_construida_m2,
     bedrooms: bedrooms ?? null,
     bathrooms: bathrooms ?? null,
     parking_spaces: parking_spaces ?? null,
@@ -265,6 +287,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     comparables: frontend_comparables,
     neighborhood_pois,
     homogenization_factors,
+    confidence_diagnostics,
     market_reference: engineResult.market_reference,
     photos: persistedPhotos,
     amenities: amenities ?? [],

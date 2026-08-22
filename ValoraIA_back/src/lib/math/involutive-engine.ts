@@ -1,7 +1,7 @@
 import type { ViabilityScenario, ZoningParams } from "@/types";
 
 export interface InvolutiveInput {
-  area_terreno: number;      // m² — from valuations.area_m2
+  area_terreno: number;      // m² — from valuations.area_terreno_m2
   zoning_params: ZoningParams; // from valuations.zoning_params JSONB
   VGV_estimado_m2: number;   // price/m² from comparative engine
 }

@@ -39,6 +39,7 @@ export const IngestSchema = z.object({
   price: coercePositiveNumber("price"),
   usable_area: coercePositiveNumber("usable_area"),
   total_area: coercePositiveNumber("total_area").optional(),
+  land_area: coercePositiveNumber("land_area").optional(),
 
   bedrooms: coerceNonNegativeInt("bedrooms"),
   bathrooms: coerceNonNegativeInt("bathrooms"),

@@ -306,11 +306,12 @@ const spec = {
             "application/json": {
               schema: {
                 type: "object",
-                required: ["address", "property_type", "area_m2"],
+                required: ["address", "property_type", "area_construida_m2"],
                 properties: {
                   address: { type: "string", example: "Rua Augusta, 1200, São Paulo, SP" },
                   property_type: { type: "string", enum: ["apartment", "house", "commercial", "land"] },
-                  area_m2: { type: "number", example: 98 },
+                  area_construida_m2: { type: "number", example: 98, description: "Área da edificação em m²" },
+                  area_terreno_m2: { type: "number", example: 250, description: "Área do lote em m²; obrigatória para casas" },
                   bedrooms: { type: "integer", nullable: true, example: 3 },
                   bathrooms: { type: "integer", nullable: true, example: 2 },
                   parking_spots: { type: "integer", nullable: true, example: 1 },
@@ -393,7 +394,8 @@ const spec = {
                         confidence_score: 94,
                         created_at: "2026-04-29T12:00:00Z",
                         bedrooms: 3,
-                        area_m2: 98,
+                        area_construida_m2: 98,
+                        area_terreno_m2: 250,
                       },
                     ],
                   },

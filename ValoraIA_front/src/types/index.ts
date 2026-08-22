@@ -123,6 +123,8 @@ export interface ValuationRecord {
   lat: number | null
   lng: number | null
   property_type: PropertyType
+  area_construida_m2?: number
+  area_terreno_m2?: number | null
   area_m2: number
   bedrooms: number | null
   bathrooms: number | null
@@ -137,6 +139,15 @@ export interface ValuationRecord {
   static_market_value_brl: number | null
   price_per_m2_homogenized: number | null
   confidence_score: number | null
+    confidence_diagnostics?: {
+      sample_size: number
+      displayed_sample_size: number
+      effective_sample_size: number
+      same_typology_count: number
+      same_neighborhood_count: number
+      confidence_interval_width_pct: number
+      reasons: string[]
+    } | null
   // Results — involutive method
   residual_land_value_brl: number | null
   max_buildable_area_m2: number | null
@@ -197,6 +208,8 @@ export interface MarketTrendResponse {
 export interface CreateValuationBody {
   address: string
   property_type: PropertyType
+  area_construida_m2?: number
+  area_terreno_m2?: number
   area_m2: number
   bedrooms?: number
   bathrooms?: number
@@ -224,7 +237,10 @@ export interface ValuationPhoto {
 export interface ValuationForm {
   address: string
   propertyType: PropertyType
+  /** Alias legado de area_construida, mantido para integrações existentes. */
   area: string
+  area_construida?: string
+  area_terreno?: string
   bedrooms: string
   bathrooms: string
   parking_spaces: string
@@ -256,6 +272,7 @@ export interface ExtractionResult {
     address?: ExtractedField<string>
     property_type?: ExtractedField<PropertyType>
     area_m2?: ExtractedField<number>
+    area_terreno_m2?: ExtractedField<number>
     bedrooms?: ExtractedField<number>
     bathrooms?: ExtractedField<number>
     parking_spaces?: ExtractedField<number>
