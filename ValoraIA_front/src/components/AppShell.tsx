@@ -10,11 +10,11 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Painel', path: '/' },
-  { icon: PlusCircle, label: 'Nova Avaliação', path: '/nova-avaliacao' },
-  { icon: FileText, label: 'Relatórios', path: '/relatorios' },
-  { icon: Briefcase, label: 'Portfólio', path: '/portfolio', disabled: true },
-  { icon: Settings, label: 'Configurações', path: '/configuracoes', disabled: true },
+  { icon: LayoutDashboard, label: 'Painel', path: '/app' },
+  { icon: PlusCircle, label: 'Nova Avaliação', path: '/app/nova-avaliacao' },
+  { icon: FileText, label: 'Relatórios', path: '/app/relatorios' },
+  { icon: Briefcase, label: 'Portfólio', path: '/app/portfolio', disabled: true },
+  { icon: Settings, label: 'Configurações', path: '/app/configuracoes', disabled: true },
 ]
 
 function AvaliaWordmark() {
@@ -70,7 +70,8 @@ export default function AppShell({ children }: AppShellProps) {
         {NAV_ITEMS.map(item => {
           const active = !item.disabled && (
             location.pathname === item.path ||
-            (item.path === '/relatorios' && location.pathname.startsWith('/relatorios'))
+            (item.path === '/app/relatorios' && location.pathname.startsWith('/app/relatorios')) ||
+            (item.path === '/app/relatorios' && location.pathname.startsWith('/app/resultado/'))
           )
           const Icon = item.icon
           return (
@@ -160,7 +161,7 @@ export default function AppShell({ children }: AppShellProps) {
           <div className="hidden md:flex flex-1" />
 
           <button
-            onClick={() => navigate('/nova-avaliacao')}
+            onClick={() => navigate('/app/nova-avaliacao')}
             className="flex items-center gap-1.5 px-3 md:px-4 py-2 rounded-lg border-none cursor-pointer text-xs md:text-sm font-semibold text-white transition-opacity hover:opacity-85 whitespace-nowrap flex-shrink-0"
             style={{ background: '#111827', fontFamily: 'inherit' }}
           >

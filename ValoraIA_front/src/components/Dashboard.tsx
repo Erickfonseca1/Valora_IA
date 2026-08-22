@@ -32,7 +32,7 @@ const fmtDate = (iso: string) => {
   const diffD = Math.floor(diffH / 24)
   if (diffD === 1) return 'Ontem'
   if (diffD < 7) return `${diffD} dias atrás`
-  return d.toLocaleDateString('pt-BR')
+  return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 }
 
 export default function Dashboard() {
@@ -208,7 +208,7 @@ export default function Dashboard() {
                 {valuations.map(v => (
                   <tr
                     key={v.id}
-                    onClick={() => navigate(`/resultado/${v.id}`)}
+                    onClick={() => navigate(`/app/resultado/${v.id}`)}
                     className="cursor-pointer transition-colors"
                     style={{ borderTop: '1px solid #E8E0CF' }}
                     onMouseEnter={e => { (e.currentTarget as HTMLTableRowElement).style.background = '#F7F4EE' }}

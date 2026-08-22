@@ -52,7 +52,7 @@ describe('AppShell', () => {
   })
 
   it('destaca o item ativo no sidebar com base na rota', () => {
-    renderWithRouter('/')
+    renderWithRouter('/app')
     const painelButton = screen.getAllByText('Painel')[0].closest('button')!
     const novaButton = screen.getAllByText('Nova Avaliação')[0].closest('button')!
 
@@ -61,15 +61,15 @@ describe('AppShell', () => {
     expect(novaButton.style.fontWeight).toBe('400')
   })
 
-  it('destaca Nova Avaliação quando na rota /nova-avaliacao', () => {
-    renderWithRouter('/nova-avaliacao')
+  it('destaca Nova Avaliação quando na rota /app/nova-avaliacao', () => {
+    renderWithRouter('/app/nova-avaliacao')
     const novaButton = screen.getAllByText('Nova Avaliação')[0].closest('button')!
     expect(novaButton.style.fontWeight).toBe('600')
     expect(novaButton.style.background).toBe('rgba(201, 162, 39, 0.12)')
   })
 
   it('destaca Relatórios quando em uma rota de resultado', () => {
-    renderWithRouter('/relatorios')
+    renderWithRouter('/app/resultado/val_123')
     const relatoriosButton = screen.getAllByText('Relatórios')[0].closest('button')!
     expect(relatoriosButton.style.background).toBe('rgba(201, 162, 39, 0.12)')
     expect(relatoriosButton.style.fontWeight).toBe('600')

@@ -116,37 +116,44 @@ describe('App', () => {
     vi.mocked(getValuation).mockResolvedValue(mockValuation)
   })
 
-  it('renderiza Dashboard na rota /', async () => {
+  it('renderiza a landing page na rota /', async () => {
     renderApp('/')
+    expect(await screen.findByText('Conheça como funciona')).toBeInTheDocument()
+  })
+
+  it('renderiza Dashboard na rota /app', async () => {
+    renderApp('/app')
     // "Painel" appears in the sidebar (2x, desktop+mobile nav) and in the Dashboard h1
     await waitFor(() => {
       expect(screen.getAllByText('Painel')).toHaveLength(3)
     })
   })
 
-  it('renderiza ValuationFlow na rota /nova-avaliacao', () => {
-    renderApp('/nova-avaliacao')
+  it('renderiza ValuationFlow na rota /app/nova-avaliacao', async () => {
+    renderApp('/app/nova-avaliacao')
+    expect(await screen.findByText('Detalhes do Imóvel')).toBeInTheDocument()
     expect(screen.getAllByText('Nova Avaliação').length).toBeGreaterThanOrEqual(2)
-    expect(screen.getByText('Detalhes do Imóvel')).toBeInTheDocument()
   })
 
-  it('renderiza Report na rota /resultado/:id', async () => {
-    renderApp('/resultado/val_abc123')
+  it('renderiza Report na rota /app/resultado/:id', async () => {
+    renderApp('/app/resultado/val_abc123')
     expect(
       await screen.findByText('Parecer Técnico de Avaliação Mercadológica'),
     ).toBeInTheDocument()
   })
 
+  it('redireciona rota de produto legada para /app', async () => {
+    renderApp('/nova-avaliacao')
+    expect(await screen.findByText('Detalhes do Imóvel')).toBeInTheDocument()
+  })
+
   it('redireciona rota desconhecida para /', async () => {
     renderApp('/rota-inexistente')
-    // "Painel" appears in sidebar (2x) + Dashboard h1 after redirect
-    await waitFor(() => {
-      expect(screen.getAllByText('Painel')).toHaveLength(3)
-    })
+    expect(await screen.findByText('Conheça como funciona')).toBeInTheDocument()
   })
 
   it('sempre renderiza o AppShell com sidebar', () => {
-    renderApp('/')
+    renderApp('/app')
     // AppShell sidebar content appears twice in jsdom (desktop + mobile drawer)
     // because CSS is not applied, both variants are visible in the DOM
     expect(screen.getAllByText('AVALIA').length).toBeGreaterThanOrEqual(1)

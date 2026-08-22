@@ -25,7 +25,7 @@ const fmtDate = (iso: string) => {
   const diffD = Math.floor(diffH / 24)
   if (diffD === 1) return 'Ontem'
   if (diffD < 7) return `${diffD} dias atrás`
-  return d.toLocaleDateString('pt-BR')
+  return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 }
 
 const PAGE_SIZE = 20
@@ -107,7 +107,7 @@ export default function Relatorios() {
                 {filtered.map(v => (
                   <div
                     key={v.id}
-                    onClick={() => navigate(`/resultado/${v.id}`)}
+                    onClick={() => navigate(`/app/resultado/${v.id}`)}
                     className="bg-white rounded-xl border border-slate-200 px-4 py-3.5 cursor-pointer active:bg-slate-50"
                   >
                     <div className="font-medium text-slate-800 text-sm truncate">{v.address}</div>
@@ -142,7 +142,7 @@ export default function Relatorios() {
                     {filtered.map((v, i) => (
                       <tr
                         key={v.id}
-                        onClick={() => navigate(`/resultado/${v.id}`)}
+                        onClick={() => navigate(`/app/resultado/${v.id}`)}
                         className="cursor-pointer transition-colors"
                         style={{ borderTop: i === 0 ? 'none' : '1px solid #F1F5F9', background: 'white' }}
                         onMouseEnter={e => (e.currentTarget.style.background = '#F8FAFC')}
