@@ -73,18 +73,19 @@ const LEVEL_LABELS: Record<string, string> = {
   abaixo_nivel: 'Abaixo do nível da rua',
 }
 
-const CONFIDENCE_LABEL = (score: number) => {
-  if (score >= 90) return 'Muito Alta'
-  if (score >= 75) return 'Alta'
-  if (score >= 60) return 'Média'
-  return 'Baixa'
-}
-
 const fmt = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 
 const fmtM2 = (v: number) =>
   v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }) + '/m²'
+
+function valueRange(value: number, confidenceScore: number | null, intervalWidthPct?: number): string {
+  const pct = confidenceScore == null ? 50 : confidenceScore <= 1 ? confidenceScore * 100 : confidenceScore
+  const width = intervalWidthPct != null && intervalWidthPct > 0
+    ? intervalWidthPct / 200
+    : 0.20 - (Math.max(0, Math.min(100, pct)) / 100) * 0.12
+  return `${fmt(value * (1 - width))} – ${fmt(value * (1 + width))}`
+}
 
 const API_BASE = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:3000' : '')
 
@@ -217,7 +218,7 @@ export default function Report() {
   const [pdfLoading, setPdfLoading] = useState(false)
 
   useEffect(() => {
-    if (!id) { navigate('/'); return }
+    if (!id) { navigate('/app'); return }
     getValuation(id)
       .then(v => setValuation(v))
       .catch(e => setError(e.message))
@@ -241,7 +242,7 @@ export default function Report() {
         <div className="text-slate-400 text-sm">Avaliação não encontrada</div>
         {error && <div className="text-xs text-red-400">{error}</div>}
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/app')}
           className="mt-2 px-4 py-2 rounded-lg text-sm font-medium text-white"
           style={{ background: PRIMARY, fontFamily: 'inherit' }}
         >
@@ -253,10 +254,9 @@ export default function Report() {
 
   const propertyLabel = PROPERTY_TYPE_LABELS[valuation.property_type] ?? valuation.property_type
   const laudoDate = new Date(valuation.created_at).toLocaleDateString('pt-BR', {
-    day: '2-digit', month: 'long', year: 'numeric',
+    day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo',
   })
   const laudoId = `PTAM-${valuation.id.slice(-6).toUpperCase()}`
-  const confidenceScore = valuation.confidence_score ?? 0
 
   const handleDownloadPdf = async () => {
     if (!valuation) return
@@ -293,12 +293,14 @@ export default function Report() {
   const comparables = valuation.comparables ?? []
   const isPriorOnly = comparables.length === 0 && !!valuation.market_reference
   const priorBairro = valuation.market_reference?.neighborhood ?? ''
+  const confidenceDiagnostics = valuation.confidence_diagnostics
 
   const fichaRows: { label: string; value: string }[] = [
     { label: 'Nº do Laudo', value: laudoId },
     { label: 'Data de Emissão', value: laudoDate },
     { label: 'Tipo de Imóvel', value: propertyLabel },
-    { label: 'Área', value: `${valuation.area_m2.toLocaleString('pt-BR')} m²` },
+    { label: 'Área construída', value: `${(valuation.area_construida_m2 ?? valuation.area_m2).toLocaleString('pt-BR')} m²` },
+    ...(valuation.area_terreno_m2 != null ? [{ label: 'Área do terreno', value: `${valuation.area_terreno_m2.toLocaleString('pt-BR')} m²` }] : []),
     ...(valuation.bedrooms != null ? [{ label: 'Quartos', value: String(valuation.bedrooms) }] : []),
     ...(valuation.bathrooms != null ? [{ label: 'Banheiros', value: String(valuation.bathrooms) }] : []),
     ...(valuation.parking_spaces != null ? [{ label: 'Vagas de Garagem', value: String(valuation.parking_spaces) }] : []),
@@ -401,23 +403,33 @@ export default function Report() {
             )}
           </div>
           <div style={{ padding: '20px 16px' }} className="sm:!p-[24px_28px]">
-            <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-              Grau de Confiança da Estimativa
+            <div style={{ fontSize: 11, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>
+              Faixa de amostra (Método Comparativo)
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8 }}>
-              <div style={{ fontSize: 34, fontWeight: 900, color: confidenceScore >= 75 ? ACCENT : '#F59E0B', fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>
-                {confidenceScore}%
+            <div style={{ fontSize: 24, color: PRIMARY, fontWeight: 800, marginTop: 5, fontFamily: "'DM Mono', monospace", lineHeight: 1.2 }}>
+              {valuation.static_market_value_brl != null
+                ? valueRange(
+                    valuation.static_market_value_brl,
+                    valuation.confidence_score,
+                    confidenceDiagnostics?.confidence_interval_width_pct,
+                  )
+                : '—'}
+            </div>
+            <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.55, marginTop: 12 }}>
+              O valor central à esquerda é o resultado do cálculo comparativo; esta faixa mostra o espaço de interpretação da amostra. Use ambos junto ao imóvel, ao mercado local e à negociação.
+            </div>
+            <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 10 }}>
+              {confidenceDiagnostics
+                ? `${confidenceDiagnostics.sample_size} comparáveis usados · ${confidenceDiagnostics.displayed_sample_size} principais exibidos · amostra efetiva ${confidenceDiagnostics.effective_sample_size}`
+                : `Baseado em ${comparables.length} imóvel${comparables.length !== 1 ? 'is' : ''} comparável${comparables.length !== 1 ? 'is' : ''}`} · Fator de oferta −10% aplicado
+            </div>
+            {confidenceDiagnostics && (
+              <div style={{ marginTop: 12, padding: '10px 12px', borderLeft: '2px solid #C9A227', background: '#FEFCF5', color: '#64748B', fontSize: 11, lineHeight: 1.55 }}>
+                <strong style={{ color: '#1F2937' }}>Contexto da amostra</strong>
+                <div style={{ marginTop: 4 }}>{confidenceDiagnostics.reasons.join(' ')}</div>
+                <div style={{ marginTop: 4 }}>Intervalo estatístico: {confidenceDiagnostics.confidence_interval_width_pct.toLocaleString('pt-BR')}% do valor estimado.</div>
               </div>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#64748B' }}>
-                {CONFIDENCE_LABEL(confidenceScore)}
-              </div>
-            </div>
-            <div style={{ height: 6, background: '#F7F4EE', borderRadius: 3 }}>
-              <div style={{ height: '100%', background: confidenceScore >= 75 ? ACCENT : '#F59E0B', borderRadius: 3, width: `${confidenceScore}%`, transition: 'width 0.6s ease' }} />
-            </div>
-            <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 8 }}>
-              Baseado em {comparables.length} imóvel{comparables.length !== 1 ? 'is' : ''} comparável{comparables.length !== 1 ? 'is' : ''} · Fator de oferta −10% aplicado
-            </div>
+            )}
           </div>
         </div>
       </SectionCard>
@@ -425,7 +437,7 @@ export default function Report() {
       {/* ── 02b. MEMÓRIA DE CÁLCULO ─────────────────────────────── */}
       {valuation.homogenization_factors && (
         <SectionCard>
-          <SectionHeader number="02b" title="Como Chegamos a Este Valor" />
+          <SectionHeader number="02b" title="Base Comparável Homogeneizada" />
           <ValueWaterfall factors={valuation.homogenization_factors} />
         </SectionCard>
       )}
@@ -433,11 +445,17 @@ export default function Report() {
       {/* ── 02c. REFERÊNCIA DE MERCADO VERIFICADA ────────────────── */}
       {valuation.market_reference && (
         <SectionCard>
-          <SectionHeader number="02c" title="Referência de Mercado Verificada" />
+          <SectionHeader number="02c" title="Âncora Local e Composição do Resultado" />
+          <div style={{ padding: '12px 20px', background: '#FEFCF5', borderBottom: '1px solid #E8D99A', fontSize: 12, color: '#64748B', lineHeight: 1.6 }}>
+            <strong style={{ color: '#1E293B' }}>Como ler esta etapa:</strong> a 02b mostra a base
+            calculada pelos comparáveis. Esta etapa mostra uma referência independente do bairro,
+            usada para ancorar o resultado quando a amostra direta é fraca ou pouco representativa.
+            Ela não é um segundo valor do imóvel.
+          </div>
           <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 6 }}>
-                R$/m² verificado · Bairro {valuation.market_reference.neighborhood}
+                Referência independente · R$/m² do bairro {valuation.market_reference.neighborhood}
               </div>
               <div style={{ fontSize: 22, fontWeight: 800, color: PRIMARY, fontFamily: "'DM Mono', monospace" }}>
                 {fmtM2(valuation.market_reference.price_per_m2)}
@@ -451,13 +469,13 @@ export default function Report() {
             </div>
             <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div>
-                <span style={{ fontSize: 11, color: '#94A3B8', marginRight: 6 }}>Peso da referência no cálculo:</span>
+                <span style={{ fontSize: 11, color: '#94A3B8', marginRight: 6 }}>Peso desta âncora no resultado:</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#334155', fontFamily: "'DM Mono', monospace" }}>
                   {Math.round(valuation.market_reference.blend_weight * 100)}%
                 </span>
               </div>
               <div>
-                <span style={{ fontSize: 11, color: '#94A3B8', marginRight: 6 }}>Qualidade da amostra:</span>
+                <span style={{ fontSize: 11, color: '#94A3B8', marginRight: 6 }}>Qualidade dos comparáveis diretos:</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#334155', fontFamily: "'DM Mono', monospace" }}>
                   {Math.round(valuation.market_reference.sample_quality * 100)}%
                 </span>
@@ -465,10 +483,9 @@ export default function Report() {
             </div>
           </div>
           <div style={{ padding: '0 20px 14px', fontSize: 11, color: '#94A3B8', lineHeight: 1.5 }}>
-            R$/m² obtido por curadoria especializada (pesquisa de especialistas com apoio de IA).
-            Amostra de comparáveis fraca ou de outra tipologia/bairro → a estimativa do
-            engine é combinada com a referência verificada do bairro, ancorando o valor ao
-            mercado local real. Quanto maior o peso, menos dependente da amostra direta.
+            Este R$/m² vem de pesquisa de mercado verificada e funciona como referência locacional.
+            O resultado final combina a base da 02b com esta âncora conforme o peso indicado acima;
+            quanto maior esse peso, maior a influência da referência do bairro sobre o resultado.
           </div>
         </SectionCard>
       )}
@@ -806,13 +823,13 @@ export default function Report() {
       {/* ── AÇÕES ───────────────────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row gap-3 sm:justify-center pb-10">
         <button
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/app')}
           style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: '1px solid #E8E0CF', background: '#fff', color: '#475569', fontFamily: 'inherit' }}
         >
           ← Voltar ao Painel
         </button>
         <button
-          onClick={() => navigate('/nova-avaliacao')}
+          onClick={() => navigate('/app/nova-avaliacao')}
           style={{ padding: '10px 20px', borderRadius: 7, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: PRIMARY, color: '#fff', fontFamily: 'inherit' }}
         >
           + Nova Avaliação

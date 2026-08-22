@@ -47,10 +47,11 @@ function makeRecord(over: Partial<ValuationRecord> = {}): ValuationRecord {
 }
 
 describe('LiveValuationHero', () => {
-  it('mostra o valor de mercado e o gauge', () => {
+  it('mostra o valor de mercado e a faixa indicativa', () => {
     render(<LiveValuationHero record={makeRecord()} mode="static" />)
     expect(screen.getByText(/R\$\s?487\.300/)).toBeInTheDocument()
-    expect(screen.getByTestId('confidence-gauge')).toHaveAttribute('data-pct', '82')
+    expect(screen.getByText(/Faixa indicativa de mercado/i)).toBeInTheDocument()
+    expect(screen.getByText(/referência técnica para orientar a decisão/i)).toBeInTheDocument()
   })
 
   it('renderiza o mapa quando há coordenadas do alvo', () => {

@@ -1,6 +1,5 @@
 import type { ValuationRecord } from '../types'
 import ValueCountUp from './ValueCountUp'
-import ConfidenceGauge from './ConfidenceGauge'
 import ComparablesMap from './ComparablesMap'
 
 const PRIMARY = '#111827'
@@ -11,7 +10,10 @@ interface Props {
   onSeeReport?: () => void
 }
 
-function valueBand(value: number, score: number | null): number {
+function valueBand(value: number, score: number | null, intervalWidthPct?: number): number {
+  if (intervalWidthPct != null && intervalWidthPct > 0) {
+    return Math.round(value * (intervalWidthPct / 200))
+  }
   const pct = score == null ? 50 : score <= 1 ? score * 100 : score
   const bandPct = 0.20 - (Math.max(0, Math.min(100, pct)) / 100) * 0.12
   return Math.round(value * bandPct)
@@ -22,8 +24,11 @@ const BRL = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL',
 export default function LiveValuationHero({ record, mode, onSeeReport }: Props) {
   const animate = mode === 'reveal'
   const value = record.static_market_value_brl ?? 0
-  const band = valueBand(value, record.confidence_score)
+  const band = valueBand(value, record.confidence_score, record.confidence_diagnostics?.confidence_interval_width_pct)
   const hasMap = record.lat != null && record.lng != null
+  const diagnostics = record.confidence_diagnostics
+  const displayedCount = diagnostics?.displayed_sample_size ?? record.comparables?.length ?? 0
+  const usedCount = diagnostics?.sample_size ?? displayedCount
 
   return (
     <div
@@ -38,7 +43,7 @@ export default function LiveValuationHero({ record, mode, onSeeReport }: Props) 
       }}
       className="live-hero md:grid-cols-[minmax(260px,1fr)_minmax(280px,1.2fr)]"
     >
-      {/* Coluna esquerda: valor + gauge */}
+      {/* Coluna esquerda: valor + faixa indicativa */}
       <div style={{ padding: '28px 28px', display: 'flex', flexDirection: 'column', gap: 18, background: '#FEFCF5' }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
@@ -49,8 +54,13 @@ export default function LiveValuationHero({ record, mode, onSeeReport }: Props) 
             animate={animate}
           />
           {record.static_market_value_brl != null && (
-            <div style={{ fontSize: 13, color: '#64748B', marginTop: 6 }}>
-              faixa estimada {BRL.format(value - band)} – {BRL.format(value + band)}
+            <div style={{ marginTop: 14, padding: '12px 14px', borderLeft: '3px solid #C9A227', background: '#FFFFFF', borderRadius: 6 }}>
+              <div style={{ fontSize: 10, color: '#94A3B8', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
+                Faixa indicativa de mercado
+              </div>
+              <div style={{ fontSize: 17, color: '#475569', fontFamily: "'DM Mono', monospace", marginTop: 4 }}>
+                {BRL.format(value - band)} – {BRL.format(value + band)}
+              </div>
             </div>
           )}
           {record.price_per_m2_homogenized != null && (
@@ -60,10 +70,12 @@ export default function LiveValuationHero({ record, mode, onSeeReport }: Props) 
           )}
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <ConfidenceGauge score={record.confidence_score} />
-          <div style={{ fontSize: 12, color: '#64748B', maxWidth: 160 }}>
-            Baseado em {record.comparables?.length ?? 0} imóvel(is) comparável(is) na vizinhança.
+        <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.55 }}>
+          {usedCount > displayedCount
+            ? `${usedCount} comparáveis usados no cálculo; ${displayedCount} principais exibidos.`
+            : `Cálculo baseado em ${usedCount} comparáve${usedCount === 1 ? 'l' : 'is'} na vizinhança.`}
+          <div style={{ marginTop: 5, color: '#92720A' }}>
+            O valor é uma referência técnica para orientar a decisão, não uma regra fixa de negociação.
           </div>
         </div>
 

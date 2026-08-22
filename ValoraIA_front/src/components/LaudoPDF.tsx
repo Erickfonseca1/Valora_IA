@@ -18,7 +18,7 @@ function groupPhotosByRoom(photos: ValuationPhoto[]): [string, ValuationPhoto[]]
 }
 
 const PRIMARY = '#111827'
-const ACCENT = '#10B981'
+const ACCENT = '#C9A227'
 const MUTED = '#94A3B8'
 
 const PROPERTY_TYPE_LABELS: Record<string, string> = {
@@ -39,11 +39,13 @@ const fmtMult = (v: number) => '× ' + v.toLocaleString('pt-BR', { minimumFracti
 
 // ─── Estimated value band (same logic as LiveValuationHero) ───────────────────
 
-function valueBandWidth(value: number, score: number | null): number | null {
+function valueRange(value: number, score: number | null, intervalWidthPct?: number): [number, number] | null {
   if (!value) return null
   const pct = score == null ? 50 : score <= 1 ? score * 100 : score
-  const bandPct = 0.20 - (Math.max(0, Math.min(100, pct)) / 100) * 0.12
-  return Math.round(value * bandPct)
+  const bandPct = intervalWidthPct != null && intervalWidthPct > 0
+    ? intervalWidthPct / 200
+    : 0.20 - (Math.max(0, Math.min(100, pct)) / 100) * 0.12
+  return [value * (1 - bandPct), value * (1 + bandPct)]
 }
 
 // ─── Static map URL (proxied by the backend so the API key never leaks) ──────
@@ -101,14 +103,18 @@ function FichaRow({ label, value }: { label: string; value: string }) {
 
 export default function LaudoPDF({ valuation: v, mapImage }: { valuation: ValuationRecord; mapImage?: string | null }) {
   const laudoId = `PTAM-${v.id.slice(-6).toUpperCase()}`
-  const laudoDate = new Date(v.created_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+  const laudoDate = new Date(v.created_at).toLocaleDateString('pt-BR', {
+    day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo',
+  })
   const propertyLabel = PROPERTY_TYPE_LABELS[v.property_type] ?? v.property_type
   const hf = v.homogenization_factors
   const isPriorOnly = (v.comparables?.length ?? 0) === 0 && !!v.market_reference
   const priorBairro = v.market_reference?.neighborhood ?? ''
-  const band = valueBandWidth(v.static_market_value_brl ?? 0, v.confidence_score)
-  const estimatedLower = (v.static_market_value_brl ?? 0) - (band ?? 0)
-  const estimatedUpper = (v.static_market_value_brl ?? 0) + (band ?? 0)
+  const range = valueRange(
+    v.static_market_value_brl ?? 0,
+    v.confidence_score,
+    v.confidence_diagnostics?.confidence_interval_width_pct,
+  )
 
   const amenitiesByScope: Record<string, string[]> = {}
   for (const a of v.amenities ?? []) {
@@ -161,7 +167,8 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
         <View style={s.card}>
           <FichaRow label="Nº do Laudo" value={laudoId} />
           <FichaRow label="Tipo de Imóvel" value={propertyLabel} />
-          <FichaRow label="Área" value={`${v.area_m2.toLocaleString('pt-BR')} m²`} />
+          <FichaRow label="Área construída" value={`${(v.area_construida_m2 ?? v.area_m2).toLocaleString('pt-BR')} m²`} />
+          {v.area_terreno_m2 != null && <FichaRow label="Área do terreno" value={`${v.area_terreno_m2.toLocaleString('pt-BR')} m²`} />}
           {v.bedrooms != null && <FichaRow label="Quartos" value={String(v.bedrooms)} />}
           {v.bathrooms != null && <FichaRow label="Banheiros" value={String(v.bathrooms)} />}
           {v.parking_spaces != null && <FichaRow label="Vagas" value={String(v.parking_spaces)} />}
@@ -190,31 +197,36 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
         {/* Valor de mercado */}
         <Text style={s.sectionTitle}>02 · VALOR DE MERCADO DETERMINADO</Text>
         <View style={[s.card, { padding: 12 }]}>
-          <Text style={{ fontSize: 7, color: MUTED, letterSpacing: 1, marginBottom: 4 }}>VALOR DE MERCADO {isPriorOnly ? '(AVALIAÇÃO REFERENCIAL)' : '(MÉTODO COMPARATIVO)'}</Text>
+          <Text style={{ fontSize: 7, color: MUTED, letterSpacing: 1, marginBottom: 4 }}>VALOR CENTRAL CALCULADO {isPriorOnly ? '(AVALIAÇÃO REFERENCIAL)' : '(MÉTODO COMPARATIVO)'}</Text>
           <Text style={s.valueBig}>{v.static_market_value_brl != null ? fmtBRL(v.static_market_value_brl) : '—'}</Text>
           {v.price_per_m2_homogenized != null && (
             <Text style={{ fontSize: 9, color: '#64748B', marginTop: 4 }}>
-              {fmtPpm2(v.price_per_m2_homogenized)} · homogeneizado · Confiança {v.confidence_score ?? 0}%
+              {fmtPpm2(v.price_per_m2_homogenized)} · homogeneizado
             </Text>
           )}
-          {valueBandWidth != null && (
-            <Text style={{ fontSize: 8, color: MUTED, marginTop: 4 }}>
-              Faixa estimada: {fmtBRL(estimatedLower)} – {fmtBRL(estimatedUpper)}
-            </Text>
-          )}
-          {/* Barra de confiança */}
-          <View style={{ marginTop: 8, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <View style={{ flex: 1, height: 6, backgroundColor: '#F1F5F9', borderRadius: 3 }}>
-              <View style={{ width: `${v.confidence_score ?? 0}%`, height: 6, backgroundColor: (v.confidence_score ?? 0) >= 75 ? ACCENT : '#F59E0B', borderRadius: 3 }} />
+          {range && (
+            <View style={{ marginTop: 9, padding: 8, borderLeft: '2 solid #C9A227', backgroundColor: '#FEFCF5' }}>
+              <Text style={{ fontSize: 7, color: '#92720A', letterSpacing: 1, marginBottom: 3 }}>FAIXA INDICATIVA DE MERCADO</Text>
+              <Text style={{ fontSize: 12, fontFamily: 'Helvetica-Bold', color: PRIMARY }}>
+                {fmtBRL(range[0])} – {fmtBRL(range[1])}
+              </Text>
             </View>
-            <Text style={{ fontSize: 8, color: MUTED }}>Confiança {(v.confidence_score ?? 0).toFixed(0)}%</Text>
-          </View>
+          )}
+          <Text style={{ fontSize: 8, color: '#64748B', lineHeight: 1.5, marginTop: 8 }}>
+            O valor central é o resultado do cálculo; a faixa mostra o espaço de interpretação da amostra.
+            Use ambos junto ao imóvel, ao mercado local e à negociação.
+          </Text>
+          {v.confidence_diagnostics && (
+            <Text style={{ fontSize: 7, color: MUTED, marginTop: 5 }}>
+              {v.confidence_diagnostics.sample_size} comparáveis usados · {v.confidence_diagnostics.displayed_sample_size} principais exibidos · amostra efetiva {v.confidence_diagnostics.effective_sample_size}
+            </Text>
+          )}
         </View>
 
         {/* Fundamentação referencial (prior-only) */}
         {isPriorOnly && v.market_reference && (
           <>
-            <Text style={s.sectionTitle}>02b · FUNDAMENTAÇÃO — REFERÊNCIA DE MERCADO</Text>
+            <Text style={s.sectionTitle}>02c · ÂNCORA LOCAL — AVALIAÇÃO REFERENCIAL</Text>
             <View style={s.card}>
               <View style={{ padding: 10 }}>
                 <Text style={{ fontSize: 8, color: '#92400E', fontFamily: 'Helvetica-Bold', marginBottom: 4 }}>
@@ -226,6 +238,10 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
                   preço médio verificado do metro quadrado para {propertyLabel}s no bairro, levantado
                   em pesquisa de mercado verificada de 2025/2026.
                 </Text>
+                <Text style={{ fontSize: 8, lineHeight: 1.5, color: '#64748B', marginTop: 6 }}>
+                  Esta é uma referência independente do bairro, usada na ausência de uma amostra direta mínima.
+                  Não representa um segundo valor do imóvel.
+                </Text>
                 <View style={{ flexDirection: 'row', marginTop: 8, borderTop: '1 solid #F1F5F9', paddingTop: 8 }}>
                   <View style={{ width: '40%' }}>
                     <Text style={s.sub}>R$/m² verificado no bairro</Text>
@@ -236,8 +252,8 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
                     <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold' }}>{v.market_reference.neighborhood}</Text>
                   </View>
                   <View style={{ width: '25%' }}>
-                    <Text style={s.sub}>Confiança</Text>
-                    <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: '#F59E0B' }}>{v.confidence_score ?? 0}%</Text>
+                    <Text style={s.sub}>Peso no resultado</Text>
+                    <Text style={{ fontSize: 9, fontFamily: 'Helvetica-Bold', color: PRIMARY }}>{Math.round(v.market_reference.blend_weight * 100)}%</Text>
                   </View>
                 </View>
                 <Text style={{ fontSize: 7, color: MUTED, lineHeight: 1.5, marginTop: 8 }}>
@@ -256,8 +272,14 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
         {/* Memória de cálculo */}
         {hf && !isPriorOnly && (
           <>
-            <Text style={s.sectionTitle}>02b · COMO CHEGAMOS A ESTE VALOR</Text>
+            <Text style={s.sectionTitle}>02b · BASE COMPARÁVEL HOMOGENEIZADA</Text>
             <View style={s.card}>
+              <View style={{ padding: '8 10', backgroundColor: '#F8FAFC' }}>
+                <Text style={{ fontSize: 8, color: '#64748B', lineHeight: 1.5 }}>
+                  Esta etapa mostra a base técnica formada pelos comparáveis e os ajustes do imóvel.
+                  Ela é um resultado intermediário, não um segundo valor final de mercado.
+                </Text>
+              </View>
               <View style={s.waterLine}>
                 <View>
                   <Text style={{ fontFamily: 'Helvetica-Bold' }}>Valor unitário de mercado (ensemble)</Text>
@@ -284,7 +306,7 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
                 <Text style={[s.mono, { color: PRIMARY }]}>{fmtPpm2(hf.ppm2_homogenized)}</Text>
               </View>
               <View style={s.waterFinal}>
-                <Text style={{ fontFamily: 'Helvetica-Bold', color: '#15803D' }}>VALOR DE MERCADO</Text>
+                <Text style={{ fontFamily: 'Helvetica-Bold', color: '#92720A' }}>RESULTADO DA BASE COMPARÁVEL</Text>
                 <Text style={[s.mono, { color: ACCENT, fontSize: 12 }]}>{fmtBRL(hf.market_value)}</Text>
               </View>
             </View>
@@ -294,10 +316,17 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
         {/* Referência de mercado verificada (blend com amostra de comparáveis) */}
         {!isPriorOnly && v.market_reference && (
           <>
-            <Text style={s.sectionTitle}>02c · REFERÊNCIA DE MERCADO VERIFICADA</Text>
+            <Text style={s.sectionTitle}>02c · ÂNCORA LOCAL E COMPOSIÇÃO DO RESULTADO</Text>
             <View style={s.card}>
+              <View style={{ padding: '8 10', backgroundColor: '#FEFCF5', borderBottom: '1 solid #E8D99A' }}>
+                <Text style={{ fontSize: 8, color: '#64748B', lineHeight: 1.5 }}>
+                  A 02b mostra a base calculada pelos comparáveis. Esta referência independente do bairro
+                  funciona como âncora local quando a amostra direta é fraca ou pouco representativa;
+                  ela não é um segundo valor do imóvel.
+                </Text>
+              </View>
               <View style={s.row}>
-                <Text style={s.rowLabel}>R$/m² verificado · Bairro {v.market_reference.neighborhood}</Text>
+                <Text style={s.rowLabel}>Referência independente · R$/m² do bairro {v.market_reference.neighborhood}</Text>
                 <Text style={[s.rowValue, { fontFamily: 'Helvetica-Bold', color: PRIMARY }]}>
                   {fmtPpm2(v.market_reference.price_per_m2)}
                   <Text style={{ color: MUTED, fontFamily: 'Helvetica', fontSize: 7 }}>
@@ -306,11 +335,11 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
                 </Text>
               </View>
               <View style={s.row}>
-                <Text style={s.rowLabel}>Peso da referência no cálculo</Text>
+                <Text style={s.rowLabel}>Peso desta âncora no resultado</Text>
                 <Text style={s.rowValue}>{Math.round(v.market_reference.blend_weight * 100)}%</Text>
               </View>
               <View style={s.row}>
-                <Text style={s.rowLabel}>Qualidade da amostra</Text>
+                <Text style={s.rowLabel}>Qualidade dos comparáveis diretos</Text>
                 <Text style={s.rowValue}>{Math.round(v.market_reference.sample_quality * 100)}%</Text>
               </View>
               <View style={[s.row, { borderBottom: 'none' }]}>

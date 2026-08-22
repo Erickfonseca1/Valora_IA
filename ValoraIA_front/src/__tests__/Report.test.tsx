@@ -134,22 +134,22 @@ describe('Report', () => {
   it('exibe a faixa de preço recomendada', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/faixa estimada/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/Faixa indicativa/i).length).toBeGreaterThanOrEqual(1)
     })
   })
 
   it('exibe o preço ideal de anúncio', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Valor de Mercado \(Método Comparativo\)/i)).toBeInTheDocument()
+      expect(screen.getByText(/Faixa de amostra \(Método Comparativo\)/i)).toBeInTheDocument()
     })
   })
 
-  it('exibe a confiança formatada', async () => {
+  it('explica como interpretar o valor calculado', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Grau de Confiança/i)).toBeInTheDocument()
-      expect(screen.getAllByText(/88%/).length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText(/Base Comparável Homogeneizada/i).length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText(/Esta etapa mostra a construção da base técnica/i)).toBeInTheDocument()
     })
   })
 
@@ -244,7 +244,7 @@ describe('Report', () => {
   it('mostra a seção de memória de cálculo quando há fatores', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getAllByText('Como Chegamos a Este Valor').length).toBeGreaterThanOrEqual(1)
+      expect(screen.getAllByText('Base dos comparáveis e ajustes do imóvel').length).toBeGreaterThanOrEqual(1)
     })
   })
 })

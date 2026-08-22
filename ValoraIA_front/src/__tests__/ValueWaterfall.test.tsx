@@ -39,7 +39,8 @@ describe('buildWaterfallRows', () => {
 describe('<ValueWaterfall>', () => {
   it('renderiza título e valor de mercado final', () => {
     render(<ValueWaterfall factors={hf} />)
-    expect(screen.getByText(/Como Chegamos a Este Valor/i)).toBeInTheDocument()
+    expect(screen.getByText(/Base dos comparáveis e ajustes do imóvel/i)).toBeInTheDocument()
+    expect(screen.getByText(/Resultado da base comparável/i)).toBeInTheDocument()
     expect(screen.getByText(/556\.500/)).toBeInTheDocument()
   })
 })
