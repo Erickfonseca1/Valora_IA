@@ -1,6 +1,7 @@
 import { getAdminClient } from "@/lib/db/supabase";
 import { fetchNearbyPlaces } from "@/lib/geocoding/nearby-places";
 import { getMarketPrior, type MarketPriorMatch } from "@/lib/market-prior";
+import type { ConfidenceDiagnostics } from "@/types"; // Added import for ConfidenceDiagnostics
 import type {
   ComparableListing,
   FrontendComparable,
@@ -17,11 +18,13 @@ import { runEnsemble, type EnsembleSample, type EnsembleTarget } from "./ensembl
 import {
   computeScopeFactors, computeProximoFactor, type AmenitySelection,
 } from "@/lib/amenities/factors";
+import { rankComparableRows } from "./comparable-ranking";
 
 // ─── NBR 14653 Constants ──────────────────────────────────────────────────────
 
 const OFFER_FACTOR = 0.90;
 const AREA_EXPONENT = 0.7;
+const LAND_AREA_EXPONENT = 0.35;
 const CONFIDENCE_LEVEL = 0.80;
 const T_80_LARGE = 1.282;
 
@@ -193,15 +196,16 @@ async function fetchCandidates(
 }
 
 // Progressive fallback: relax bedroom filter → relax area tolerance → no area filter.
-// Typology-first: same-typology comps are strongly preferred; other typologies
-// are only pulled in as a last resort (with their homogenization factor).
+// Selection balances typology and micro-location instead of treating typology as
+// an absolute priority when the same-neighborhood market is more representative.
 async function fetchCandidatesWithFallback(
   lat: number,
   lng: number,
   radiusM: number,
   targetArea: number,
   targetBedrooms: number | null | undefined,
-  targetPropertyType: string | null | undefined
+  targetPropertyType: string | null | undefined,
+  targetNeighborhood: string | null | undefined
 ): Promise<ListingRow[]> {
   const attempts: Array<{ areaTolerance: number; ignoreBedrooms: boolean }> = [
     { areaTolerance: 0.20, ignoreBedrooms: false },
@@ -211,25 +215,14 @@ async function fetchCandidatesWithFallback(
     { areaTolerance: 1.00, ignoreBedrooms: true }, // no area filter (±100% = all sizes)
   ];
 
-  const targetType = targetPropertyType ?? "apartment";
-
-  // Phase 1: same-typology sample — accept any relaxed area/bedrooms filter
   for (const attempt of attempts) {
     const rows = await fetchCandidates(
       lat, lng, radiusM, targetArea, targetBedrooms,
       attempt.areaTolerance, attempt.ignoreBedrooms
     );
-    const sameType = rows.filter((r) => (r.property_type ?? "apartment") === targetType);
-    if (sameType.length >= MIN_SAMPLES) return sameType;
-  }
-
-  // Phase 2: mixed typologies — only when same-typology comps are insufficient
-  for (const attempt of attempts) {
-    const rows = await fetchCandidates(
-      lat, lng, radiusM, targetArea, targetBedrooms,
-      attempt.areaTolerance, attempt.ignoreBedrooms
-    );
-    if (rows.length >= MIN_SAMPLES) return rows;
+    if (rows.length >= MIN_SAMPLES) {
+      return rankComparableRows(rows, targetPropertyType, targetNeighborhood);
+    }
   }
 
   return [];
@@ -253,18 +246,23 @@ interface WeightedCandidate {
   homogenizedPpm2: number;
   idwWeight: number;
   typologyFactor: number;
+  landAreaFactor: number;
 }
 
 async function fetchIDWCandidates(
   lat: number,
   lng: number,
   targetArea: number,
+  targetLandArea: number | null | undefined,
   targetBedrooms: number | null | undefined,
-  targetPropertyType: string | null | undefined
+  targetPropertyType: string | null | undefined,
+  targetNeighborhood: string | null | undefined
 ): Promise<{ candidates: WeightedCandidate[]; radiusUsed: number; typologyFactorUsed: number }> {
   // Fetch at max radius with progressive fallback relaxation
   const maxRadius = IDW_RADII_M[IDW_RADII_M.length - 1];
-  const rows = await fetchCandidatesWithFallback(lat, lng, maxRadius, targetArea, targetBedrooms, targetPropertyType);
+  const rows = await fetchCandidatesWithFallback(
+    lat, lng, maxRadius, targetArea, targetBedrooms, targetPropertyType, targetNeighborhood
+  );
 
   if (rows.length === 0) {
     return { candidates: [], radiusUsed: maxRadius, typologyFactorUsed: 1.0 };
@@ -299,10 +297,13 @@ async function fetchIDWCandidates(
     const distM = Math.max(row.distance_m, 50);
     const idwWeight = 1 / Math.pow(distM, IDW_POWER);
     const typologyFactor = allFactors[i];
+    const landAreaFactor = targetLandArea && row.land_area && row.land_area > 0
+      ? Math.pow(targetLandArea / row.land_area, LAND_AREA_EXPONENT)
+      : 1.0;
     const homogenizedPpm2 = (row.price / row.usable_area) * OFFER_FACTOR *
       Math.pow(targetArea / row.usable_area, AREA_EXPONENT) *
-      typologyFactor;
-    return { row, homogenizedPpm2, idwWeight, typologyFactor };
+      typologyFactor * landAreaFactor;
+    return { row, homogenizedPpm2, idwWeight, typologyFactor, landAreaFactor };
   });
 
   // Determine effective radius: smallest radius that contains >= MIN_SAMPLES
@@ -320,10 +321,18 @@ async function fetchIDWCandidates(
 
 // ─── Homogenization ───────────────────────────────────────────────────────────
 
-function homogenize(row: ListingRow, targetArea: number, typologyFactor = 1.0): number {
+function homogenize(
+  row: ListingRow,
+  targetArea: number,
+  typologyFactor = 1.0,
+  targetLandArea?: number | null
+): number {
+  const landAreaFactor = targetLandArea && row.land_area && row.land_area > 0
+    ? Math.pow(targetLandArea / row.land_area, LAND_AREA_EXPONENT)
+    : 1.0;
   return (row.price / row.usable_area) * OFFER_FACTOR *
     Math.pow(targetArea / row.usable_area, AREA_EXPONENT) *
-    typologyFactor;
+    typologyFactor * landAreaFactor;
 }
 
 // ─── Price Factors (radar chart) ─────────────────────────────────────────────
@@ -383,6 +392,44 @@ function computeConfidenceScore(
   const sampleScore = clamp(n / 30, 0, 1);
   const raw = ciScore * 0.6 + sampleScore * 0.4;
   return Number(clamp(raw * 100, 40, 99).toFixed(1));
+}
+
+function buildConfidenceDiagnostics(
+  candidates: WeightedCandidate[],
+  effectiveSampleSize: number,
+  ciLower: number,
+  ciUpper: number,
+  estimatedValue: number,
+  targetType: string,
+  targetNeighborhood: string | null | undefined,
+  displayedSampleSize: number
+): ConfidenceDiagnostics {
+  const sameTypologyCount = candidates.filter(
+    (candidate) => (candidate.row.property_type ?? 'apartment') === targetType
+  ).length;
+  const normalizedNeighborhood = normalizeBairro(targetNeighborhood);
+  const sameNeighborhoodCount = normalizedNeighborhood
+    ? candidates.filter((candidate) => normalizeBairro(candidate.row.neighborhood) === normalizedNeighborhood).length
+    : 0;
+  const widthPct = estimatedValue > 0 ? ((ciUpper - ciLower) / estimatedValue) * 100 : 100;
+  const reasons: string[] = [];
+
+  if (candidates.length < 8) reasons.push('Amostra pequena para sustentar uma conclusão mais firme.');
+  if (effectiveSampleSize < 5) reasons.push('Poucos comparáveis têm peso efetivo após considerar a distância.');
+  if (widthPct > 35) reasons.push('A faixa estatística é ampla em relação ao valor estimado.');
+  if (sameTypologyCount < candidates.length) reasons.push('Parte da amostra não pertence à mesma tipologia.');
+  if (normalizedNeighborhood && sameNeighborhoodCount < candidates.length) reasons.push('Parte da amostra está fora do bairro informado.');
+  if (reasons.length === 0) reasons.push('A confiança combina volume, proximidade e dispersão dos comparáveis.');
+
+  return {
+    sample_size: candidates.length,
+    displayed_sample_size: displayedSampleSize,
+    effective_sample_size: Number(effectiveSampleSize.toFixed(1)),
+    same_typology_count: sameTypologyCount,
+    same_neighborhood_count: sameNeighborhoodCount,
+    confidence_interval_width_pct: Number(widthPct.toFixed(1)),
+    reasons,
+  };
 }
 
 // ─── Market Prior Blend (dados verificados por bairro) ────────────────────────
@@ -541,6 +588,7 @@ export interface ExtendedValuationResult extends ValuationResult {
   amenity_breakdown: import("@/lib/amenities/factors").ScopeContribution[];
   amenity_factors: { internal: number; condo: number; proximo: number };
   homogenization_factors: HomogenizationFactors;
+  confidence_diagnostics: ConfidenceDiagnostics;
 }
 
 // ─── Main Engine ──────────────────────────────────────────────────────────────
@@ -554,12 +602,12 @@ export async function runValuation(
     street_level?: StreetLevel;
   }
 ): Promise<ExtendedValuationResult> {
-  const { lat, lng, target_area, target_bedrooms } = req;
+  const { lat, lng, target_area, target_land_area, target_bedrooms } = req;
   const amenities = req.amenities ?? [];
   const targetPropertyType = req.target_property_type ?? null;
 
   const { candidates, radiusUsed, typologyFactorUsed } = await fetchIDWCandidates(
-    lat, lng, target_area, target_bedrooms, targetPropertyType
+    lat, lng, target_area, target_land_area, target_bedrooms, targetPropertyType, req.neighborhood
   );
 
   const priorType = targetPropertyType ?? "apartment";
@@ -601,6 +649,15 @@ export async function runValuation(
       offer_factor_applied: OFFER_FACTOR,
       comparables: [],
       confidence_score: priorConfidence,
+      confidence_diagnostics: {
+        sample_size: 0,
+        displayed_sample_size: 0,
+        effective_sample_size: 0,
+        same_typology_count: 0,
+        same_neighborhood_count: 0,
+        confidence_interval_width_pct: 40,
+        reasons: ['Não foram encontrados comparáveis diretos; o valor foi ancorado na referência verificada do bairro.'],
+      },
       market_reference: {
         neighborhood: marketPrior.matched_neighborhood,
         raw_price_per_m2: marketPrior.raw_price_per_m2,
@@ -680,7 +737,7 @@ export async function runValuation(
       neighborhood: row.neighborhood,
       city: row.city,
       distance_m: Math.round(row.distance_m),
-      homogenized_price_per_m2: Number(homogenize(row, target_area, typologyFactorUsed).toFixed(2)),
+      homogenized_price_per_m2: Number(homogenize(row, target_area, typologyFactorUsed, target_land_area).toFixed(2)),
     }));
 
   // ── Ensemble: MCD+IDW + WLS + GBDT ───────────────────────────────────────
@@ -763,6 +820,16 @@ export async function runValuation(
   const pricePerM2Homogenized = Number((effectivePpm2 * combinedFactor).toFixed(2));
 
   const confidenceScore = computeConfidenceScore(nEff, finalCiLowerBrl, finalCiUpperBrl, finalEstimatedValue);
+  const confidenceDiagnostics = buildConfidenceDiagnostics(
+    candidates,
+    nEff,
+    adjustedCiLower,
+    adjustedCiUpper,
+    adjustedEstimatedValue,
+    priorType,
+    req.neighborhood,
+    Math.min(candidates.length, 5)
+  );
   const priceFactors = computePriceFactors(
     candidates, target_area, radiusUsed,
     scope.internalFactor * scope.condoFactor,
@@ -784,6 +851,7 @@ export async function runValuation(
     offer_factor_applied: OFFER_FACTOR,
     comparables,
     confidence_score: confidenceScore,
+    confidence_diagnostics: confidenceDiagnostics,
     market_reference: marketPrior
       ? {
           neighborhood: marketPrior.matched_neighborhood,
