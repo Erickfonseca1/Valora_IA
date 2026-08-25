@@ -1,0 +1,149 @@
+# Modelo de Negócio — ValoraIA / AVALIA
+
+> Pesquisa de mercado (web, 2026) + análise do sistema atual (código). Recomendação consolidada de modelo de precificação, estrutura de usuários e canais de venda.
+
+---
+
+## 1. Resumo executivo
+
+O mercado brasileiro de software de avaliação imobiliária (NBR 14653 / PTAM) é consolidado, fragmentado e em transição de desktop → nuvem. O segmento self-serve para corretores está na faixa R$ 49–110/mês; o segmento técnico (engenheiros avaliadores) vai de R$ 130–1.326/mês (SisDEA). O segmento imobiliárias (escolhido como primário) está em R$ 145–600/mês, ancorado por softwares de CRM como Imobisoft (R$ 199/mês).
+
+**Recomendação:** SaaS freemium em 4 camadas — Free (R$ 0), Captação Pro (R$ 149/mês), Escritório (R$ 299/mês) e Institucional (R$ 590–1.500/mês, sales-led). Venda primária por demonstração (demo WhatsApp → SECOVI/sindicatos/grupos de corretores), parceria com cursos de avaliação como motor de aquisição de massa, e PLG (trial 7 dias) como camada de baixo custo.
+
+**Posicionamento:** para imobiliárias, o produto não é vendido como "software de PTAM", mas como ferramenta de **captação e consultoria** — quem avalia com precisão conquista o proprietário. O PTAM é o documento-efeito-varinha; o hero é "avalie, imprima um laudo com a sua marca e leve a captação".
+
+**Diferencial real do sistema:** comparáveis 100% automáticos (scraping Apify/VivaReal + limpeza IQR + raio dinâmico) somado a um ensemble de três métodos (MCD+IDW, WLS, GBDT) com homogeneização NBR 14653. A análise de fotos IA já existe no código (flag `PHOTOS_ENABLED`) mas não é o carro-chefe comercial (decisão do fundador).
+
+---
+
+## 2. Benchmark de concorrentes (preços públicos, 2025–2026)
+
+| Software | Modelo | Preço | Público |
+|---|---|---|---|
+| Avalar | Assinatura | R$ 49,90/mês · R$ 269,90 sem · R$ 498,90 ano (laudos ilimitados) | Corretor PTAM |
+| Avalia Turbo | Assinatura | R$ 69,90/mês (teste grátis 7 dias) | Corretor PTAM |
+| Amostrando | Assinatura | R$ 89,90 / R$ 109,90 (Infinity Plus) | Avaliadores (eng. + corretor) |
+| Avalie Fácil | Uso 30 dias | R$ 89,90 (sem renovação automática) | Corretor PTAM |
+| SYSIMOB (SysPrice+SysVistoria) | SaaS | R$ 145 Basic · R$ 290 Advanced · R$ 576 Pro · R$ 60/usuário (15+) | Corretor → imobiliária média |
+| SisDEA | Licença/assinatura | R$ 130/mês · R$ 730 sem · R$ 1.326 ano · R$ 1.969 permanente | Engenheiro avaliador |
+| TS-Sisreg | Permanente | R$ 1.230 (login/token) · registro adicional R$ 410 | Engenheiro |
+| Aplicativo AVALIA | Anuidade | R$ 840/ano (+ licença, 1ª anuidade grátis) | Engenheiro (curso/IPOG) |
+| CastleR | Por laudo ("pague quanto usar") | 1 avaliação grátis/mês; tabela de preços por uso | Avaliador bancário |
+| PROTO (Real Price) | SaaS + rede de demanda | Assinatura + versão grátis p/ credenciados (Edital 01/2026) | Avaliadores + bancos/licitações |
+| Valora (Archicode) | SaaS enterprise, sales-led | Preço oculto ("Agendar Demo") | Engenheiros/estúdios |
+| SisRenda | Assinatura | R$ 275/mês · R$ 2.805 ano | Empreendimentos |
+| Imobisoft (CRM imobiliária) | SaaS | Desde R$ 199/mês (+ R$ 29,90/usuário extra, R$ 20/100 imóveis) | Imobiliárias |
+| Group Vistoria | SaaS | R$ 103 / 167 / 209 / 314 por mês (tiers de vistorias) | Vistorias/imobiliárias |
+
+**Tendências observadas:**
+- Convergência da faixa mass em ~R$ 70–110/mês (corretor PTAM).
+- Migração de licença permanente → assinatura.
+- IA como novo diferenciador (PROTO, Valora).
+- Nenhum concorrente público vende análise de fotos por IA no tier baixo — está codado no sistema, custo zero incremental hoje.
+- CastleR prova que *por-uso* funciona no segmento bancário (mas não no varejo).
+
+---
+
+## 3. Estrutura de usuários e mercado endereçável
+
+### Demanda direta
+
+- **Corretores de imóveis:** 650–730 mil inscritos no Cofeci (2025), ~700 mil ativos no fim de 2025, 74 mil empresas imobiliárias. Renda média R$ 3–4 mil/mês → sensibilidade a preço alta. PTAM por eles emitido custa R$ 500–2.000 (tabela CRECI-SP: R$ 882 → R$ 28.973 conforme o valor do imóvel).
+- **Avaliadores CNAI** (corretor + selo certificador via cursos homologados COFECI): núcleo do funil de compra e público dos cursos parceiros.
+- **Engenheiros/arquitetos avaliadores** (IBAPE: 25 institutos estaduais; só MG tem ~460 cadastros): honorários R$ 1.500–3.000 (residencial), R$ 7.200–16.200 referencial IBAPE (Grau I–III) → pagam caro pelo que economiza horas.
+
+### Demanda institucional
+
+- Bancos/consórcios/leilões: crédito imobiliário R$ 312 bi (2024) e R$ 376 bi projetados (2026, ABECIP) — todo crédito exige avaliação.
+- Grandes escritórios de avaliação (ex.: Dexter Engenharia: 268 mil laudos, 750 engenheiros, 1.300 cidades — B2B de alto volume).
+- Imobiliárias médias/grandes: multi-usuário, painel do gestor, white-label.
+
+### Conformidade legal (importante para a venda)
+
+- PTAM é atribuição de corretor com CRECI (Res. COFECI 1.066/2007); selo CNAl exige curso homologado. Laudo NBR 14653 pleno (judicial/bancário) é de engenheiro/arquiteto (CREA/CAU) + ART/RRT.
+- Vender a ferramenta como "apoio ao profissional habilitado" (decisão técnica permanece do avaliador), nunca como laudo automatizado.
+
+---
+
+## 4. Modelo de negócio recomendado
+
+### Formato: SaaS freemium em camadas (não cobrança por laudo como modelo principal)
+
+Cobrança por uso fica restrita a *quotas* (número de avaliações por plano) — protege margem contra usuários intensivos sem complicar a venda. O custo real por avaliação é estimado em ~R$ 1–4 (Apify + Google Maps geocoding/places + Supabase).
+
+### Tabela de planos (imobiliárias/corretoras)
+
+| Plano | Preço | Público | Incluso |
+|---|---|---|---|
+| **Free** | R$ 0 | Aquisição (leads, trial 7 dias ou 2 avaliações) | 2 avaliações/mês, laudo com marca AVALIA, dashboard/trend básico |
+| **Captação Pro** | **R$ 149/mês** (anual: R$ 1.485, −17%) | Micro imobiliária (1–3 corretores) | Quota ~30 avaliações/mês, **laudo white-label (logo da imobiliária)**, trend por bairro/cidade, todos os métodos do motor |
+| **Escritório** | **R$ 299/mês** (anual: R$ 2.980, −17%) | Imobiliária média (até 10 corretores) | Multi-usuário, painel do gestor, gestão de laudos, suporte por WhatsApp, fotos IA como bônus |
+| **Institucional** | R$ 590–1.500/mês + setup (sales-led) | 15+ corretores, SECOVI, consórcios, bancos | SSO/API, quotas sob medida, treinamento, conformidade, zoneamento/PL custom |
+| **Anual** | −17% (padrão do mercado) | Todos | Retenção e antecipação de caixa |
+
+### Racional value-based
+
+- Corretor PTAM = R$ 500–1.200 por laudo e 4–8 h de trabalho manual → R$ 149/mês se paga com 1 PTAM a cada 3 meses **apenas no tempo economizado**; no volume típico (1–3 laudos/mês), ROI é óbvio.
+- Engenheiro: 1 laudo = R$ 1.500–3.000 → faixa Escritório R$ 299 é < 2% do valor de um laudo; vender em "horas economizadas e grau de fundamentação".
+- Imobiliária média: custo ~R$ 30–50/corretor/mês; **1 captação extra/mês paga o sistema** (comissão média R$ 3k+).
+- Ancoragem de preço: Imobisoft (R$ 199 CRM completo) e SYSIMOB (R$ 145–290) — o valor deve ficar **abaixo do CRM** porque é a camada de inteligência, não a operação.
+
+---
+
+## 5. Estado do produto hoje (o que existe e o que falta)
+
+### Já implementado e funcional
+
+- Motor ensemble MCD+IDW / WLS / GBDT com homogeneização NBR 14653 (oferta 0,90; área alométrica; tipologia empírica; comodidades por escopo; esquina/declividade/nível).
+- Comparáveis automáticos via scraping Apify/VivaReal + filtro IQR + seleção dinâmica de raio (1–5 km, tolerâncias progressivas de área/quartos).
+- Ross-Heidecke (depreciação), método involutivo com 3 cenários de viabilidade (zoneamento hoje é **stub** hardcoded).
+- POIs de vizinhança (Google Places), IC 80%, score de confiança 0–100, radar de 7 fatores.
+- Dashboard de métricas + endpoint `market/trend` por cidade ("valorização por bairro" — argumento de captação).
+- Laudo PDF (render React + print) e landing pública com SEO.
+- Análise de fotos IA (upload + Gemini Vision) já codada — não é o carro-chefe.
+
+### Lacunas para monetizar (próximo trabalho de produto)
+
+1. **Autenticação + multi-usuário + organização** (hoje não há contas/paywall).
+2. **Billing** (Pix/cartão/boleto via Asaas; Stripe é alternativa) com webhook de assinatura e cancelamento.
+3. **Quotas por plano** nas rotas `/api/valuations` e dashboards.
+4. **White-label do PDF** (hoje o laudo tem a marca fixa "AVALIA" — crítico para vender a imobiliárias).
+5. **Scoping por conta/org** nos dashboards (hoje são globais) + painel do gestor com lista de avaliações por corretor.
+6. **Seções formais do PTAM** (identificação do avaliador, pressupostos/limitações, memorial de cálculo simplificado) — credibilidade do documento é argumento de compra.
+
+---
+
+## 6. Meios de venda (por ordem de prioridade)
+
+1. **Demonstração assistida (canal primário do segmento imobiliárias)** — vendas por WhatsApp/telefone com demo personalizada; ciclo típico 1–2 semanas; alvo: SECOVI, sindicatos locais, associações de imobiliárias, grupos de corretores.
+2. **Parceria com cursos de avaliação (motor de aquisição de massa)** — Laudo Master já distribui cupons do PROTO (50%/3 meses, 10%/12 meses); SysAcademy vende SYSIMOB em bundle. Alvos: IBREP (curso AVI), CMI Secovi-MG, IPOG, Laudo Master, CRECI/PROECCI-SP. Modelo: 30–60 dias grátis + comissão 15–25% pela primeira cobrança do aluno.
+3. **Self-serve PLG** — trial 7 dias (padrão do mercado), checkout Pix/cartão/boleto, onboarding de 5 min; SEO técnico (calculadoras grátis como lead magnet — modelo do Valora Archicode) e blog de mercado.
+4. **Vendas institucionais sales-led** — bancos, consórcios, escritórios credenciados: argumento de volume, API, conformidade BACEN/NBR 14653.
+5. **Credibilidade técnica** — associação ao IBAPE/eventos (COBREAP), conteúdo assinado sobre NBR 14653; necessário para o público engenheiro.
+
+**Não fazer agora:** marketplace de avaliações (rede PROTO-like) — alto custo operacional, exige tração e músculo institucional.
+
+---
+
+## 7. Roadmap de execução
+
+### Fase 1 — Fundação monetizável (~2–3 semanas)
+- Auth (Supabase) com contas + organização por imobiliária.
+- Quotas por plano (contador nas rotas de avaliação e RPC de dashboard).
+- Billing Asaas (Pix + cartão + boleto) com webhook de assinatura/cancelamento; paywall nas rotas.
+- Onboarding: trial 7 dias automático (ou 2 avaliações grátis) + checkout pela landing.
+
+### Fase 2 — Pronto para venda B2B (~1–2 semanas)
+- White-label do PDF (nome/logo da imobiliária).
+- Seções formais do PTAM (avaliador, pressupostos, memorial simplificado).
+- Painel do gestor por organização + filtros por usuário nos dashboards.
+- Página de preços com planos e FAQ (grátis até X; cancelamento a qualquer momento).
+
+### Fase 3 — Semeadura (~2 semanas, em paralelo)
+- 10–20 imobiliárias amostra (SECOVI, sindicatos, grupos de WhatsApp) com demo personalizada.
+- Fechar 2–3 parcerias de cursos de avaliação.
+- Conteúdo SEO "avaliação para captação" + dados de bairro (landing já existe).
+
+---
+
+*Fontes principais: sites públicos dos concorrentes (2025–2026), Cofeci (730k corretores, 74k imobiliárias), ABECIP (crédito imobiliário), Manual CNAI/COFECI (honorários PTAM e hora técnica), IBAPE-MG/SP (honorários de engenharia).*

@@ -119,6 +119,7 @@ describe('App', () => {
   it('renderiza a landing page na rota /', async () => {
     renderApp('/')
     expect(await screen.findByText('Conheça como funciona')).toBeInTheDocument()
+    expect(screen.getByText('O estudo substitui o PTAM?')).toBeInTheDocument()
   })
 
   it('renderiza Dashboard na rota /app', async () => {
@@ -138,7 +139,7 @@ describe('App', () => {
   it('renderiza Report na rota /app/resultado/:id', async () => {
     renderApp('/app/resultado/val_abc123')
     expect(
-      await screen.findByText('Parecer Técnico de Avaliação Mercadológica'),
+       await screen.findByText('Estudo Técnico de Avaliação — Subsídio para Elaboração de PTAM'),
     ).toBeInTheDocument()
   })
 

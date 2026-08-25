@@ -1,6 +1,8 @@
 -- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE SCHEMA IF NOT EXISTS extensions;
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+SET search_path = public, extensions;
 
 -- ─── Enum for platforms ───────────────────────────────────────────────────────
 CREATE TYPE listing_platform AS ENUM (

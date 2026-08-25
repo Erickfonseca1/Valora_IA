@@ -102,7 +102,7 @@ function FichaRow({ label, value }: { label: string; value: string }) {
 }
 
 export default function LaudoPDF({ valuation: v, mapImage }: { valuation: ValuationRecord; mapImage?: string | null }) {
-  const laudoId = `PTAM-${v.id.slice(-6).toUpperCase()}`
+  const laudoId = `ES-${v.id.slice(-6).toUpperCase()}`
   const laudoDate = new Date(v.created_at).toLocaleDateString('pt-BR', {
     day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo',
   })
@@ -127,11 +127,18 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
       <Page size="A4" style={s.page}>
         {/* Letterhead */}
         <View style={s.header}>
-          <Text style={s.headerEyebrow}>PARECER TÉCNICO DE AVALIAÇÃO MERCADOLÓGICA</Text>
+          <Text style={s.headerEyebrow}>ESTUDO TÉCNICO DE AVALIAÇÃO — SUBSÍDIO PARA ELABORAÇÃO DE PTAM</Text>
           <Text style={s.headerTitle}>AVALIA</Text>
-          <Text style={s.headerSub}>Avaliação por Inteligência Artificial · Conforme ABNT NBR 14.653</Text>
+          <Text style={s.headerSub}>Metodologia referenciada na ABNT NBR 14.653 · resultado para análise do avaliador</Text>
           <Text style={s.headerMeta}>{laudoId} · {laudoDate}</Text>
           <Text style={s.headerMeta}>Imóvel: {v.address}</Text>
+        </View>
+
+        <View style={{ padding: 8, backgroundColor: '#FFFBEB', border: '1 solid #FDE68A', borderRadius: 3, marginBottom: 10 }}>
+          <Text style={{ fontSize: 7, color: '#92400E', lineHeight: 1.5 }}>
+            Natureza deste documento: este estudo foi gerado por IA com dados de anúncios públicos. Não constitui
+            PTAM/laudo legal — o valor depende de vistoria, análise crítica e julgamento do profissional habilitado.
+          </Text>
         </View>
 
         {/* Localização — primeiro elemento pós-cabeçalho para preservar a
@@ -164,8 +171,8 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
 
         {/* Ficha técnica */}
         <Text style={s.sectionTitle}>01 · FICHA TÉCNICA</Text>
-        <View style={s.card}>
-          <FichaRow label="Nº do Laudo" value={laudoId} />
+          <View style={s.card}>
+            <FichaRow label="Nº do Estudo" value={laudoId} />
           <FichaRow label="Tipo de Imóvel" value={propertyLabel} />
           <FichaRow label="Área construída" value={`${(v.area_construida_m2 ?? v.area_m2).toLocaleString('pt-BR')} m²`} />
           {v.area_terreno_m2 != null && <FichaRow label="Área do terreno" value={`${v.area_terreno_m2.toLocaleString('pt-BR')} m²`} />}
@@ -174,7 +181,7 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
           {v.parking_spaces != null && <FichaRow label="Vagas" value={String(v.parking_spaces)} />}
           <FichaRow label="Estado de Conservação" value={CONSERVATION_LABELS[v.conservation_state] ?? v.conservation_state} />
           {v.is_corner && <FichaRow label="Situação" value="Imóvel de Esquina" />}
-          <FichaRow label="Metodologia" value="Método Comparativo Direto de Dados de Mercado — NBR 14.653" />
+            <FichaRow label="Metodologia" value="Método Comparativo Direto de Dados de Mercado — referência NBR 14.653" />
         </View>
 
         {/* Comodidades por escopo */}
@@ -195,9 +202,9 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
         )}
 
         {/* Valor de mercado */}
-        <Text style={s.sectionTitle}>02 · VALOR DE MERCADO DETERMINADO</Text>
-        <View style={[s.card, { padding: 12 }]}>
-          <Text style={{ fontSize: 7, color: MUTED, letterSpacing: 1, marginBottom: 4 }}>VALOR CENTRAL CALCULADO {isPriorOnly ? '(AVALIAÇÃO REFERENCIAL)' : '(MÉTODO COMPARATIVO)'}</Text>
+        <Text style={s.sectionTitle}>02 · VALOR DE MERCADO INDICATIVO</Text>
+        <View style={[s.card, { padding: 12 }]}> 
+          <Text style={{ fontSize: 7, color: MUTED, letterSpacing: 1, marginBottom: 4 }}>VALOR CENTRAL DE REFERÊNCIA {isPriorOnly ? '(AVALIAÇÃO REFERENCIAL)' : '(MÉTODO COMPARATIVO)'}</Text>
           <Text style={s.valueBig}>{v.static_market_value_brl != null ? fmtBRL(v.static_market_value_brl) : '—'}</Text>
           {v.price_per_m2_homogenized != null && (
             <Text style={{ fontSize: 9, color: '#64748B', marginTop: 4 }}>
@@ -221,6 +228,29 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
               {v.confidence_diagnostics.sample_size} comparáveis usados · {v.confidence_diagnostics.displayed_sample_size} principais exibidos · amostra efetiva {v.confidence_diagnostics.effective_sample_size}
             </Text>
           )}
+        </View>
+
+        <Text style={s.sectionTitle}>02a · COMO USAR ESTE ESTUDO</Text>
+        <View style={s.card}>
+          {[
+            ['01', 'Vistoria e confirmação visual', 'Confirme no imóvel as características usadas no cálculo e registre o relatório fotográfico.'],
+            ['02', 'Validação dos comparáveis', 'Revise os anúncios selecionados e descarte os que não refletem o mercado local.'],
+            ['03', 'Ajustes pelo seu julgamento', 'Aplique os fatores de homogeneização necessários com base na sua análise crítica.'],
+            ['04', 'Conclusão do PTAM', 'Estruture o parecer final com a identificação profissional aplicável e assuma a responsabilidade técnica.'],
+          ].map(([number, title, description]) => (
+            <View key={number} style={s.row}>
+              <Text style={{ width: '8%', color: ACCENT, fontFamily: 'Helvetica-Bold' }}>{number}</Text>
+              <View style={{ width: '92%' }}>
+                <Text style={{ fontFamily: 'Helvetica-Bold' }}>{title}</Text>
+                <Text style={s.sub}>{description}</Text>
+              </View>
+            </View>
+          ))}
+          <View style={{ padding: '8 10', backgroundColor: '#FEFCF5' }}>
+            <Text style={{ fontSize: 7, color: '#64748B', lineHeight: 1.5 }}>
+              Este estudo adianta a pesquisa e os cálculos; a conclusão do valor é responsabilidade do avaliador habilitado.
+            </Text>
+          </View>
         </View>
 
         {/* Fundamentação referencial (prior-only) */}
@@ -423,9 +453,9 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
         )}
 
         <Text style={s.disclaimer}>
-          Aviso Legal: Este parecer foi gerado por sistema de inteligência artificial com base em dados públicos
-          de oferta e transação imobiliária. Os valores têm caráter informativo e não substituem laudo de avaliação
-          assinado por profissional habilitado pelo IBAPE/CONFEA, conforme NBR 14.653-1.
+           Aviso Legal: Este estudo foi gerado por sistema de inteligência artificial com base em dados públicos
+           de oferta e transação imobiliária. Os valores têm caráter informativo e não substituem PTAM nem laudo técnico
+           final elaborado e assinado pelo profissional habilitado responsável, conforme a finalidade e o conselho profissional aplicáveis.
         </Text>
 
         <View style={s.footer} fixed>

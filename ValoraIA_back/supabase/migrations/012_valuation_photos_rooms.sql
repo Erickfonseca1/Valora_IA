@@ -17,6 +17,19 @@ ALTER TABLE valuation_photos ADD COLUMN IF NOT EXISTS room TEXT;
 CREATE INDEX IF NOT EXISTS idx_valuation_photos_valuation_id
   ON valuation_photos (valuation_id);
 
+-- Photos are accessed through the backend with the service-role key. They
+-- must not be readable or writable directly through the Data API.
+ALTER TABLE valuation_photos ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE valuation_photos FROM PUBLIC, anon, authenticated;
+GRANT ALL ON TABLE valuation_photos TO service_role;
+
+DROP POLICY IF EXISTS "service_role_all" ON valuation_photos;
+CREATE POLICY "service_role_all" ON valuation_photos
+  FOR ALL
+  TO service_role
+  USING (true)
+  WITH CHECK (true);
+
 -- Verificação pós-execução:
 -- SELECT column_name, data_type
 --   FROM information_schema.columns

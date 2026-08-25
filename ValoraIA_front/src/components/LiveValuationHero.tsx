@@ -47,7 +47,7 @@ export default function LiveValuationHero({ record, mode, onSeeReport }: Props) 
       <div style={{ padding: '28px 28px', display: 'flex', flexDirection: 'column', gap: 18, background: '#FEFCF5' }}>
         <div>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-            Valor de Mercado
+            Valor de Mercado — Referência Indicativa
           </div>
           <ValueCountUp
             value={value}
@@ -96,7 +96,7 @@ export default function LiveValuationHero({ record, mode, onSeeReport }: Props) 
               fontFamily: 'inherit',
             }}
           >
-            Ver laudo completo →
+             Ver estudo completo →
           </button>
         )}
       </div>

@@ -50,6 +50,7 @@ describe('LiveValuationHero', () => {
   it('mostra o valor de mercado e a faixa indicativa', () => {
     render(<LiveValuationHero record={makeRecord()} mode="static" />)
     expect(screen.getByText(/R\$\s?487\.300/)).toBeInTheDocument()
+    expect(screen.getByText(/Valor de Mercado — Referência Indicativa/i)).toBeInTheDocument()
     expect(screen.getByText(/Faixa indicativa de mercado/i)).toBeInTheDocument()
     expect(screen.getByText(/referência técnica para orientar a decisão/i)).toBeInTheDocument()
   })
@@ -67,12 +68,12 @@ describe('LiveValuationHero', () => {
   it('mode=reveal mostra CTA que chama onSeeReport', () => {
     const onSee = vi.fn()
     render(<LiveValuationHero record={makeRecord()} mode="reveal" onSeeReport={onSee} />)
-    fireEvent.click(screen.getByRole('button', { name: /laudo completo/i }))
+     fireEvent.click(screen.getByRole('button', { name: /estudo completo/i }))
     expect(onSee).toHaveBeenCalledOnce()
   })
 
   it('mode=static não mostra CTA', () => {
     render(<LiveValuationHero record={makeRecord()} mode="static" />)
-    expect(screen.queryByRole('button', { name: /laudo completo/i })).toBeNull()
+     expect(screen.queryByRole('button', { name: /estudo completo/i })).toBeNull()
   })
 })

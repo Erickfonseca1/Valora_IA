@@ -8,8 +8,10 @@ DROP TYPE IF EXISTS terrain_slope_enum CASCADE;
 DROP TYPE IF EXISTS street_level_enum CASCADE;
 
 -- 2. EXTENSÕES
-CREATE EXTENSION IF NOT EXISTS postgis;
+CREATE SCHEMA IF NOT EXISTS extensions;
+CREATE EXTENSION IF NOT EXISTS postgis WITH SCHEMA extensions;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+SET search_path = public, extensions;
 
 -- 3. ENUMS TÉCNICOS (PADRÃO ROSS-HEIDECKE E ABNT)
 CREATE TYPE property_type_enum AS ENUM ('apartment', 'house', 'commercial', 'land');
@@ -109,3 +111,22 @@ CREATE TABLE valuation_photos (
 -- 7. ÍNDICES ESPACIAIS E DE PERFORMANCE
 CREATE INDEX idx_listings_coords ON listings USING GIST (coordinates);
 CREATE INDEX idx_valuations_created_at ON valuations (created_at DESC);
+
+-- 8. RLS (all application data is accessed through the backend)
+ALTER TABLE listings ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE listings FROM PUBLIC, anon, authenticated;
+GRANT ALL ON TABLE listings TO service_role;
+CREATE POLICY "service_role_all" ON listings
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+ALTER TABLE valuations ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE valuations FROM PUBLIC, anon, authenticated;
+GRANT ALL ON TABLE valuations TO service_role;
+CREATE POLICY "service_role_all" ON valuations
+  FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+ALTER TABLE valuation_photos ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE valuation_photos FROM PUBLIC, anon, authenticated;
+GRANT ALL ON TABLE valuation_photos TO service_role;
+CREATE POLICY "service_role_all" ON valuation_photos
+  FOR ALL TO service_role USING (true) WITH CHECK (true);

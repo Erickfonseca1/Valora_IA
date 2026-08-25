@@ -127,7 +127,10 @@ describe('Report', () => {
   it('exibe o título do relatório', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Parecer Técnico de Avaliação Mercadológica/i)).toBeInTheDocument()
+      expect(screen.getByText(/Estudo Técnico de Avaliação/i)).toBeInTheDocument()
+      expect(screen.getAllByText('Nº do Estudo')).toHaveLength(2)
+      expect(screen.getByText('Natureza deste documento:')).toBeInTheDocument()
+      expect(screen.getByText('Como usar este estudo')).toBeInTheDocument()
     })
   })
 
@@ -141,7 +144,7 @@ describe('Report', () => {
   it('exibe o preço ideal de anúncio', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Faixa de amostra \(Método Comparativo\)/i)).toBeInTheDocument()
+       expect(screen.getByText(/Faixa indicativa \(Método Comparativo\)/i)).toBeInTheDocument()
     })
   })
 

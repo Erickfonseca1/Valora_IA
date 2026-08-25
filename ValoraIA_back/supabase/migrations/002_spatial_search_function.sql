@@ -2,6 +2,8 @@
 -- Returns listings within `radius_m` meters of the given point,
 -- filtered by usable_area within ±area_tolerance_pct (e.g. 0.20 = 20%).
 -- Excludes the exact source_url to avoid self-comparison.
+SET search_path = public, extensions;
+
 CREATE OR REPLACE FUNCTION search_listings_in_radius(
   p_lat              FLOAT8,
   p_lng              FLOAT8,
@@ -32,6 +34,7 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 PARALLEL SAFE
+SET search_path = extensions, public
 AS $$
   SELECT
     l.id,

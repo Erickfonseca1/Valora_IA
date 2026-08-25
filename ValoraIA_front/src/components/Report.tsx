@@ -256,7 +256,7 @@ export default function Report() {
   const laudoDate = new Date(valuation.created_at).toLocaleDateString('pt-BR', {
     day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo',
   })
-  const laudoId = `PTAM-${valuation.id.slice(-6).toUpperCase()}`
+  const laudoId = `ES-${valuation.id.slice(-6).toUpperCase()}`
 
   const handleDownloadPdf = async () => {
     if (!valuation) return
@@ -296,7 +296,7 @@ export default function Report() {
   const confidenceDiagnostics = valuation.confidence_diagnostics
 
   const fichaRows: { label: string; value: string }[] = [
-    { label: 'Nº do Laudo', value: laudoId },
+    { label: 'Nº do Estudo', value: laudoId },
     { label: 'Data de Emissão', value: laudoDate },
     { label: 'Tipo de Imóvel', value: propertyLabel },
     { label: 'Área construída', value: `${(valuation.area_construida_m2 ?? valuation.area_m2).toLocaleString('pt-BR')} m²` },
@@ -309,8 +309,8 @@ export default function Report() {
     { label: 'Topografia', value: SLOPE_LABELS[valuation.terrain_slope] ?? valuation.terrain_slope },
     { label: 'Nível em Relação à Rua', value: LEVEL_LABELS[valuation.street_level] ?? valuation.street_level },
     ...(valuation.is_corner ? [{ label: 'Situação', value: 'Imóvel de Esquina' }] : []),
-    { label: 'Finalidade', value: 'Determinação do Valor de Mercado' },
-    { label: 'Metodologia', value: 'Método Comparativo Direto de Dados de Mercado — NBR 14.653-1' },
+    { label: 'Finalidade', value: 'Subsídio técnico para construção do PTAM' },
+    { label: 'Metodologia', value: 'Método Comparativo Direto de Dados de Mercado — referência NBR 14.653-1' },
   ]
 
   return (
@@ -329,17 +329,17 @@ export default function Report() {
         }}>
           <div>
             <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700, marginBottom: 6 }}>
-              Parecer Técnico de Avaliação Mercadológica
+              Estudo Técnico de Avaliação — Subsídio para Elaboração de PTAM
             </div>
             <div style={{ color: '#fff', fontSize: 22, fontWeight: 800, fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: 0.5 }}>
               AVALIA
             </div>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 3 }}>
-              Avaliação por Inteligência Artificial · Conforme ABNT NBR 14.653
+              Metodologia referenciada na ABNT NBR 14.653 · resultado para análise do avaliador
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Nº do Laudo</div>
+            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 9, letterSpacing: 2, textTransform: 'uppercase', marginBottom: 4 }}>Nº do Estudo</div>
             <div style={{ color: '#fff', fontSize: 16, fontWeight: 800, fontFamily: "'DM Mono', monospace", letterSpacing: 1.5 }}>{laudoId}</div>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 6 }}>{laudoDate}</div>
           </div>
@@ -350,9 +350,25 @@ export default function Report() {
         </div>
       </div>
 
+      {/* ── NATUREZA DO DOCUMENTO ──────────────────────────────── */}
+      <div style={{
+        padding: '12px 16px',
+        background: '#FFFBEB',
+        border: '1px solid #FDE68A',
+        borderRadius: 8,
+        marginBottom: 14,
+        fontSize: 12,
+        color: '#92400E',
+        lineHeight: 1.65,
+      }}>
+        <strong style={{ color: '#92400E' }}>Natureza deste documento:</strong>{' '}
+        Este estudo foi gerado por IA com dados de anúncios públicos. Não constitui PTAM/laudo legal — o valor
+        depende de vistoria, análise crítica e julgamento do profissional habilitado.
+      </div>
+
       {/* ── 01. FICHA TÉCNICA ───────────────────────────────────── */}
       <SectionCard>
-        <SectionHeader number="01" title="Ficha Técnica do Laudo" />
+        <SectionHeader number="01" title="Ficha Técnica do Estudo" />
         <div>
           {fichaRows.map((row, i) => (
             <div key={i} style={{ borderBottom: '1px solid #E8E0CF', background: i % 2 === 0 ? '#FAFBFD' : '#fff', display: 'flex', flexWrap: 'wrap', gap: '2px 12px', padding: '9px 16px' }}>
@@ -377,16 +393,16 @@ export default function Report() {
         </SectionCard>
       )}
 
-      {/* ── 02. VALOR DE MERCADO DETERMINADO ───────────────────── */}
+      {/* ── 02. VALOR DE MERCADO INDICATIVO ────────────────────── */}
       <div style={{ marginBottom: 16 }}>
         <LiveValuationHero record={valuation} mode="static" />
       </div>
       <SectionCard>
-        <SectionHeader number="02" title="Valor de Mercado Determinado" />
+        <SectionHeader number="02" title="Valor de Mercado Indicativo" />
         <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 0 }}>
           <div style={{ padding: '20px 16px', borderBottom: '1px solid #E8E0CF' }} className="sm:border-b-0 sm:border-r sm:border-slate-100 sm:!p-[24px_28px]">
             <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-              Valor de Mercado (Método Comparativo)
+              Valor de Mercado Indicativo (Método Comparativo)
             </div>
             <div style={{ fontSize: 34, fontWeight: 900, color: PRIMARY, fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>
               {valuation.static_market_value_brl != null ? fmt(valuation.static_market_value_brl) : '—'}
@@ -404,7 +420,7 @@ export default function Report() {
           </div>
           <div style={{ padding: '20px 16px' }} className="sm:!p-[24px_28px]">
             <div style={{ fontSize: 11, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>
-              Faixa de amostra (Método Comparativo)
+              Faixa indicativa (Método Comparativo)
             </div>
             <div style={{ fontSize: 24, color: PRIMARY, fontWeight: 800, marginTop: 5, fontFamily: "'DM Mono', monospace", lineHeight: 1.2 }}>
               {valuation.static_market_value_brl != null
@@ -431,6 +447,28 @@ export default function Report() {
               </div>
             )}
           </div>
+        </div>
+      </SectionCard>
+
+      {/* ── 02a. COMO USAR ESTE ESTUDO ─────────────────────────── */}
+      <SectionCard>
+        <SectionHeader number="02a" title="Como usar este estudo" />
+        <div style={{ padding: '16px 20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 14 }}>
+          {[
+            { n: '01', t: 'Vistoria e confirmação visual', d: 'Confirme no imóvel as características usadas no cálculo e registre o relatório fotográfico.' },
+            { n: '02', t: 'Validação dos comparáveis', d: 'Revise os anúncios selecionados e descarte os que não refletem o mercado local.' },
+            { n: '03', t: 'Ajustes pelo seu julgamento', d: 'Aplique os fatores de homogeneização que considerar necessários com base na sua análise.' },
+            { n: '04', t: 'Conclusão do PTAM', d: 'Estruture o parecer final com ART/RRT ou selo CNAI, assumindo a responsabilidade técnica.' },
+          ].map(s => (
+            <div key={s.n} style={{ background: '#F7F4EE', border: '1px solid #E8E0CF', borderRadius: 8, padding: '12px 14px' }}>
+              <div style={{ fontSize: 10, fontWeight: 700, color: '#C9A227', fontFamily: "'DM Mono', monospace", letterSpacing: 1, marginBottom: 4 }}>{s.n}</div>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#1A1A1A', marginBottom: 3 }}>{s.t}</div>
+              <div style={{ fontSize: 11, color: '#64748B', lineHeight: 1.55 }}>{s.d}</div>
+            </div>
+          ))}
+        </div>
+        <div style={{ padding: '0 20px 14px', fontSize: 11, color: '#94A3B8', lineHeight: 1.55 }}>
+          Este estudo adianta a pesquisa e os cálculos; a conclusão do valor é responsabilidade do avaliador habilitado.
         </div>
       </SectionCard>
 
@@ -815,9 +853,9 @@ export default function Report() {
         color: '#94A3B8',
         lineHeight: 1.75,
       }}>
-        <strong style={{ color: '#64748B' }}>Aviso Legal:</strong> Este parecer foi gerado por sistema de inteligência artificial com base em dados públicos de oferta e transação imobiliária.
-        Os valores apresentados têm caráter informativo e não substituem laudo de avaliação assinado por profissional habilitado pelo IBAPE/CONFEA,
-        conforme exigido pela NBR 14.653-1 para laudos com fins legais, judiciais ou de garantia.
+        <strong style={{ color: '#64748B' }}>Aviso Legal:</strong> Este estudo foi gerado por sistema de inteligência artificial com base em dados públicos de oferta e transação imobiliária.
+        Os valores apresentados têm caráter informativo e não substituem PTAM nem laudo técnico final elaborado e assinado
+        pelo profissional habilitado responsável, conforme a finalidade e o conselho profissional aplicáveis.
       </div>
 
       {/* ── AÇÕES ───────────────────────────────────────────────── */}

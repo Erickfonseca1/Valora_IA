@@ -192,7 +192,7 @@ function ReportPreview() {
             <strong>AVALIA</strong>
             <span>Avaliação imobiliária</span>
           </div>
-          <span className="marketing-report-code">PTAM · 01</span>
+          <span className="marketing-report-code">ESTUDO · 01</span>
         </div>
         <div className="marketing-report-title">
           <span>Resultado da avaliação</span>
@@ -225,8 +225,8 @@ const FAQ_ITEMS = [
     answer: 'A AVALIA é uma plataforma de avaliação imobiliária assistida por inteligência artificial. Ela organiza os dados do imóvel, compara anúncios da região e apresenta uma estimativa informativa com os fatores que sustentam o resultado.',
   },
   {
-    question: 'A AVALIA substitui um laudo de avaliação?',
-    answer: 'Não. O resultado é automatizado e informativo. Ele não substitui um laudo elaborado e assinado por profissional habilitado, especialmente para financiamento, garantia, processo judicial ou outras finalidades formais.',
+     question: 'O estudo substitui o PTAM?',
+     answer: 'Não. A AVALIA adianta a pesquisa e os cálculos, mas não substitui o PTAM nem um laudo elaborado e assinado por profissional habilitado. O avaliador permanece responsável pela análise crítica, vistoria e conclusão do valor.',
   },
   {
     question: 'De onde vêm os dados comparáveis?',

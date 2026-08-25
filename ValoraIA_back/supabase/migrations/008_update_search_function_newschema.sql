@@ -1,6 +1,7 @@
 -- Update search_listings_in_radius for new schema:
 --   • platform and price_per_m2 columns removed from listings
 --   • property_type, construction_age, conservation_state added
+SET search_path = public, extensions;
 
 DROP FUNCTION IF EXISTS search_listings_in_radius(float8,float8,float8,float8,float8,int,int);
 
@@ -37,6 +38,7 @@ RETURNS TABLE (
 LANGUAGE sql
 STABLE
 PARALLEL SAFE
+SET search_path = extensions, public
 AS $$
   SELECT
     l.id,

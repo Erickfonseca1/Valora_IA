@@ -232,7 +232,7 @@ describe('ValuationFlow', () => {
     })
 
     await act(async () => {
-      fireEvent.click(screen.getByText('Ver laudo completo →'))
+       fireEvent.click(screen.getByText('Ver estudo completo →'))
     })
   })
 

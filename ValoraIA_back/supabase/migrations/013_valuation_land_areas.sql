@@ -1,6 +1,8 @@
 -- Separate building and lot areas for residential valuations.
 -- land_area is intentionally distinct from total_area: portal total_area
 -- is not reliable enough to be treated as lot area without explicit mapping.
+SET search_path = public, extensions;
+
 ALTER TABLE listings
   ADD COLUMN IF NOT EXISTS land_area NUMERIC(10,2)
   CHECK (land_area IS NULL OR land_area > 0);
@@ -44,6 +46,7 @@ RETURNS TABLE (
   distance_m FLOAT8
 )
 LANGUAGE sql STABLE PARALLEL SAFE
+SET search_path = extensions, public
 AS $$
   SELECT
     l.id, l.source_url, l.price, l.usable_area, l.land_area,
