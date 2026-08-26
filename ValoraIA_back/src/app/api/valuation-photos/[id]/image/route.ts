@@ -4,8 +4,9 @@ import { getAdminClient } from "@/lib/db/supabase";
 
 export const runtime = "nodejs";
 
-// Converts legacy HEIC objects on demand. New uploads are normalized by
-// /api/upload-photos, but older records still point at .HEIC files.
+// Serves photos through the backend (service role) so the storage bucket can
+// stay private. Accepts either the storage object path stored on new rows or
+// the legacy full public URL kept by older records.
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -22,33 +23,37 @@ export async function GET(
     return NextResponse.json({ success: false, error: "Photo not found" }, { status: 404 });
   }
 
-  let source: URL;
-  try {
-    source = new URL(data.photo_url);
-    const storageHost = process.env.NEXT_PUBLIC_SUPABASE_URL
-      ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).host
-      : null;
-    if (storageHost && source.host !== storageHost) {
-      return NextResponse.json({ success: false, error: "Unsupported photo source" }, { status: 403 });
+  let objectPath = data.photo_url;
+  if (/^https?:\/\//i.test(objectPath)) {
+    // Legacy rows store the full public URL; keep only the object path after
+    // the bucket segment so the download works against a private bucket.
+    try {
+      const url = new URL(objectPath);
+      const match = url.pathname.match(/(?:^|\/)([^/]+)\/([^/].*)$/);
+      objectPath = match ? match[2] : url.pathname.replace(/^\/+/, "");
+    } catch {
+      return NextResponse.json({ success: false, error: "Invalid photo URL" }, { status: 422 });
     }
-  } catch {
-    return NextResponse.json({ success: false, error: "Invalid photo URL" }, { status: 422 });
+  }
+  objectPath = objectPath.replace(/^\/+/, "");
+
+  const { data: blob, error: downloadError } = await db.storage
+    .from("property-photos")
+    .download(objectPath);
+
+  if (downloadError || !blob) {
+    return NextResponse.json({ success: false, error: "Photo not found" }, { status: 404 });
   }
 
-  const upstream = await fetch(source, { signal: AbortSignal.timeout(20_000) });
-  if (!upstream.ok) {
-    return NextResponse.json({ success: false, error: "Could not fetch photo" }, { status: 502 });
-  }
-
-  const bytes = Buffer.from(await upstream.arrayBuffer());
-  const contentType = upstream.headers.get("content-type") ?? "";
-  const isHeic = /heic|heif/i.test(contentType) || /\.(heic|heif)(?:\?|$)/i.test(source.pathname);
+  const bytes = Buffer.from(await blob.arrayBuffer());
+  const contentType = blob.type || "image/jpeg";
+  const isHeic = /heic|heif/i.test(contentType) || /\.(heic|heif)(?:\?|$)/i.test(objectPath);
 
   if (!isHeic) {
     return new NextResponse(new Uint8Array(bytes), {
       headers: {
         "Content-Type": contentType || "image/jpeg",
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": "private, max-age=86400",
         "Access-Control-Allow-Origin": "*",
       },
     });
@@ -59,7 +64,7 @@ export async function GET(
     return new NextResponse(new Uint8Array(jpeg), {
       headers: {
         "Content-Type": "image/jpeg",
-        "Cache-Control": "public, max-age=86400",
+        "Cache-Control": "private, max-age=86400",
         "Access-Control-Allow-Origin": "*",
       },
     });

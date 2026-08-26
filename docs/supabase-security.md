@@ -41,4 +41,17 @@ O alerta mostrado não aponta para `listings` ou `valuations`. Essas tabelas con
 
 Durante a auditoria foi identificado um risco real separado: `valuation_photos` era criada sem RLS pela migração `012`. As migrações `012` (novas instalações) e `017` (bancos existentes) agora habilitam RLS e deixam o acesso da tabela somente para `service_role`.
 
-Isso não torna os arquivos do Storage privados. O endpoint atual usa `getPublicUrl` no bucket `property-photos`, portanto quem possuir a URL consegue visualizar a imagem. Antes de permitir fotos de clientes em produção, o bucket deve ser privado e o backend deve entregar URLs assinadas ou uma rota autenticada.
+## Armazenamento de fotos (bucket privado)
+
+O bucket `property-photos` deve ser **privado** no painel do Supabase (Storage → property-photos → Configurações → "Private bucket"). Com isso:
+
+- `POST /api/upload-photos` retorna apenas o **path do objeto** (nunca URL pública) e o frontend nunca recebe URLs permanentes.
+- Toda imagem é exibida pelo proxy autenticado `GET /api/valuation-photos/[id]/image`, que baixa o objeto via `service_role` e faz streaming (com conversão de HEIC quando necessário).
+- O backend resolve paths para **signed URLs de curta duração** ao enviar fotos para análise de IA (Gemini).
+- **Metadados são removidos no upload**: o `sharp` reencoda a imagem (rotate + JPEG), eliminando EXIF/GPS, modelo de câmera e timestamps antes do armazenamento e de qualquer envio externo.
+- Registros antigos que guardam a URL pública legada continuam funcionando: o proxy extrai o path da URL e baixa pelo `service_role`.
+
+### Migração manual (uma vez)
+1. No painel: Storage → `property-photos` → marcar como **private**.
+2. Aplicar `supabase/migrations/018_audit_logs.sql` no SQL Editor.
+3. Validar com: abrir um estudo com fotos (devem carregar via proxy) e gerar o PDF (fotos inclusas).

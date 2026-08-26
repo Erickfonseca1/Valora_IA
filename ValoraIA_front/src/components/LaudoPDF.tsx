@@ -65,10 +65,10 @@ function buildStaticMapUrl(v: ValuationRecord): string {
   return url.toString()
 }
 
+// Photos are served through the backend proxy (private storage bucket).
+// The proxy handles both storage paths (new rows) and legacy public URLs.
 function displayPhotoUrl(photo: ValuationPhoto): string {
-  return /\.(heic|heif)(?:\?|$)/i.test(photo.photo_url)
-    ? `${API_BASE}/api/valuation-photos/${encodeURIComponent(photo.id)}/image`
-    : photo.photo_url
+  return `${API_BASE}/api/valuation-photos/${encodeURIComponent(photo.id)}/image`
 }
 
 const s = StyleSheet.create({

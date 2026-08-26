@@ -89,10 +89,10 @@ function valueRange(value: number, confidenceScore: number | null, intervalWidth
 
 const API_BASE = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:3000' : '')
 
+// Photos are served through the backend proxy (private storage bucket).
+// The proxy handles both storage paths (new rows) and legacy public URLs.
 function displayPhotoUrl(photo: ValuationPhoto): string {
-  return /\.(heic|heif)(?:\?|$)/i.test(photo.photo_url)
-    ? `${API_BASE}/api/valuation-photos/${encodeURIComponent(photo.id)}/image`
-    : photo.photo_url
+  return `${API_BASE}/api/valuation-photos/${encodeURIComponent(photo.id)}/image`
 }
 
 // ─── Photo thumbnail with natural aspect ratio ────────────────────────────────
@@ -831,7 +831,7 @@ export default function Report() {
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                   {photos.map((p, i) => (
-                    <a key={p.id} href={p.photo_url} target="_blank" rel="noreferrer" title="Abrir foto">
+                    <a key={p.id} href={displayPhotoUrl(p)} target="_blank" rel="noreferrer" title="Abrir foto">
                       <PhotoThumb src={displayPhotoUrl(p)} alt={`${room} ${i + 1}`} />
                     </a>
                   ))}
