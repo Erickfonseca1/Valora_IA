@@ -1,11 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/lib/db/supabase";
+import { getCurrentUser, getValuationScope, canAccessValuation } from "@/lib/access";
+import { logAudit } from "@/lib/security/audit";
+import { getClientIp } from "@/lib/security/rate-limit";
 import type { ApiResponse, ValuationRecord } from "@/types";
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ): Promise<NextResponse<ApiResponse<ValuationRecord>>> {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
 
   const db = getAdminClient();
@@ -20,6 +28,21 @@ export async function GET(
       { success: false, error: "Valuation not found" },
       { status: 404 }
     );
+  }
+
+  const scope = await getValuationScope(db, user.id);
+  if (!canAccessValuation(scope, { created_by: data.created_by, organization_id: data.organization_id })) {
+    return NextResponse.json({ success: false, error: "Not authorized" }, { status: 403 });
+  }
+
+  let organization: { name: string; logo_url: string | null } | null = null;
+  if (data.organization_id) {
+    const { data: org } = await db
+      .from("organizations")
+      .select("name, logo_url")
+      .eq("id", data.organization_id)
+      .maybeSingle();
+    if (org) organization = org as { name: string; logo_url: string | null };
   }
 
   const record: ValuationRecord = {
@@ -54,10 +77,104 @@ export async function GET(
     amenities: data.amenities ?? [],
     in_gated_community: data.in_gated_community ?? false,
     photos: await fetchValuationPhotos(id),
+    organization_id: data.organization_id ?? null,
+    created_by: data.created_by ?? null,
+    deleted_at: data.deleted_at ?? null,
+    organization,
     created_at: data.created_at,
   };
 
   return NextResponse.json({ success: true, data: record });
+}
+
+// ─── Soft delete (lixeira) ────────────────────────────────────────────────────
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<ApiResponse<{ ok: true }>>> {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const db = getAdminClient();
+
+  const { data: valuation } = await db.from("valuations").select("created_by, organization_id, deleted_at").eq("id", id).maybeSingle();
+  if (!valuation) {
+    return NextResponse.json({ success: false, error: "Valuation not found" }, { status: 404 });
+  }
+  if (valuation.deleted_at) {
+    return NextResponse.json({ success: false, error: "Already deleted" }, { status: 409 });
+  }
+
+  const scope = await getValuationScope(db, user.id);
+  if (!canAccessValuation(scope, { created_by: valuation.created_by, organization_id: valuation.organization_id })) {
+    return NextResponse.json({ success: false, error: "Not authorized" }, { status: 403 });
+  }
+
+  const { error } = await db.from("valuations").update({ deleted_at: new Date().toISOString() }).eq("id", id);
+  if (error) {
+    return NextResponse.json({ success: false, error: "Failed to delete valuation" }, { status: 500 });
+  }
+
+  await logAudit(db, {
+    action: "valuation.soft_delete",
+    entityType: "valuation",
+    entityId: id,
+    userId: user.id,
+    organizationId: valuation.organization_id,
+    ip: getClientIp(req),
+    userAgent: req.headers.get("user-agent") ?? undefined,
+  });
+
+  return NextResponse.json({ success: true, data: { ok: true } });
+}
+
+// ─── Restore from lixeira ─────────────────────────────────────────────────────
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+): Promise<NextResponse<ApiResponse<{ ok: true }>>> {
+  const user = await getCurrentUser(req);
+  if (!user) {
+    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await params;
+  const db = getAdminClient();
+
+  const { data: valuation } = await db.from("valuations").select("created_by, organization_id, deleted_at").eq("id", id).maybeSingle();
+  if (!valuation) {
+    return NextResponse.json({ success: false, error: "Valuation not found" }, { status: 404 });
+  }
+  if (!valuation.deleted_at) {
+    return NextResponse.json({ success: false, error: "Valuation is not deleted" }, { status: 409 });
+  }
+
+  const scope = await getValuationScope(db, user.id);
+  if (!canAccessValuation(scope, { created_by: valuation.created_by, organization_id: valuation.organization_id })) {
+    return NextResponse.json({ success: false, error: "Not authorized" }, { status: 403 });
+  }
+
+  const { error } = await db.from("valuations").update({ deleted_at: null }).eq("id", id);
+  if (error) {
+    return NextResponse.json({ success: false, error: "Failed to restore valuation" }, { status: 500 });
+  }
+
+  await logAudit(db, {
+    action: "valuation.restore",
+    entityType: "valuation",
+    entityId: id,
+    userId: user.id,
+    organizationId: valuation.organization_id,
+    ip: getClientIp(req),
+    userAgent: req.headers.get("user-agent") ?? undefined,
+  });
+
+  return NextResponse.json({ success: true, data: { ok: true } });
 }
 
 // ─── Photos per room (valuation_photos table) ────────────────────────────────

@@ -289,6 +289,14 @@ export interface ValuationRecord {
   } | null;
   photos?: ValuationPhoto[];
   created_at: string;
+  // Ownership (multi-tenant)
+  organization_id?: string | null;
+  created_by?: string | null;
+  deleted_at?: string | null;
+  organization?: {
+    name: string;
+    logo_url: string | null;
+  } | null;
 }
 
 export interface CreateValuationRequest {
@@ -407,3 +415,64 @@ export type ApiResponse<T> = ApiSuccess<T> | ApiError;
 // ─── Extraction (entrada natural por IA) ──────────────────────────────────────
 
 export type { ExtractedField, ExtractionResult } from "./extraction";
+
+// ─── Auth & Organizations (multi-tenant) ─────────────────────────────────────
+
+export type OrgType = "solo" | "imobiliaria" | "escritorio";
+export type MembershipRole = "owner" | "admin" | "avaliador" | "pending";
+
+export interface Profile {
+  id: string;
+  full_name: string;
+  creci: string | null;
+  cnaI: string | null;
+  avatar_url: string | null;
+  created_at: string;
+}
+
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  type: OrgType;
+  logo_url: string | null;
+  created_by: string | null;
+  plan: string;
+  created_at: string;
+}
+
+export interface Membership {
+  id: string;
+  organization_id: string;
+  user_id: string;
+  role: MembershipRole;
+  invited_by: string | null;
+  created_at: string;
+}
+
+export interface OrgInvite {
+  id: string;
+  organization_id: string;
+  email: string;
+  role: MembershipRole;
+  token: string;
+  invited_by: string | null;
+  accepted_by: string | null;
+  accepted_at: string | null;
+  revoked_at: string | null;
+  expires_at: string;
+  created_at: string;
+}
+
+export interface OrganizationMember {
+  user_id: string;
+  full_name: string | null;
+  email: string | null;
+  role: MembershipRole;
+  created_at: string;
+}
+
+export interface OrganizationDetail extends Organization {
+  members: OrganizationMember[];
+  invites: OrgInvite[];
+}
