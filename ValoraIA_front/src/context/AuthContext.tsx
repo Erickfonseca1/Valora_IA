@@ -6,7 +6,7 @@ import {
   useCallback,
   type ReactNode,
 } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, getSupabase } from '../lib/supabase'
 import type { Profile, Organization, Membership, MembershipRole, MeData } from '../types'
 import { fetchMe, completeOnboarding } from '../api'
 
@@ -64,8 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false
-    supabase()
-      .auth.getSession()
+    const client = getSupabase()
+    if (!client) {
+      // Supabase não configurado (dev sem .env): app roda sem autenticação.
+      setLoading(false)
+      setSessionReady(true)
+      return
+    }
+
+    client.auth.getSession()
       .then(async ({ data }) => {
         if (cancelled) return
         const session = data.session
@@ -88,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       })
 
-    const { data: listener } = supabase().auth.onAuthStateChange(async (event, session) => {
+    const { data: listener } = client.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_OUT') {
         setUser(null)
         setProfile(null)

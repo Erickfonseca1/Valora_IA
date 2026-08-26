@@ -47,16 +47,19 @@ vi.mock('../lib/supabase', () => {
     user: { id: 'u_1', email: 'teste@avalia.com' },
     access_token: 'fake-token',
   }
+  const fakeClient = {
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session }, error: null }),
+      onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+    },
+  }
   return {
-    supabase: () => ({
-      auth: {
-        getSession: vi.fn().mockResolvedValue({ data: { session }, error: null }),
-        onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
-        signInWithPassword: vi.fn(),
-        signUp: vi.fn(),
-        signOut: vi.fn(),
-      },
-    }),
+    isSupabaseConfigured: () => true,
+    getSupabase: () => fakeClient,
+    supabase: () => fakeClient,
   }
 })
 

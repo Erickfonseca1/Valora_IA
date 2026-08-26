@@ -7,13 +7,18 @@ import {
   getMarketTrend,
 } from '../api'
 
-vi.mock('../lib/supabase', () => ({
-  supabase: () => ({
+vi.mock('../lib/supabase', () => {
+  const fakeClient = {
     auth: {
       getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
     },
-  }),
-}))
+  }
+  return {
+    isSupabaseConfigured: () => true,
+    getSupabase: () => fakeClient,
+    supabase: () => fakeClient,
+  }
+})
 
 const BASE = 'http://localhost:3000'
 
