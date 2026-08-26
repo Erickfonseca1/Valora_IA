@@ -362,7 +362,7 @@ export default function Report() {
         lineHeight: 1.65,
       }}>
         <strong style={{ color: '#92400E' }}>Natureza deste documento:</strong>{' '}
-        Este estudo foi gerado por IA com dados de anúncios públicos. Não constitui PTAM/laudo legal — o valor
+        Este estudo foi gerado com dados de anúncios públicos. Não constitui PTAM/laudo legal — o valor
         depende de vistoria, análise crítica e julgamento do profissional habilitado.
       </div>
 
@@ -853,7 +853,7 @@ export default function Report() {
         color: '#94A3B8',
         lineHeight: 1.75,
       }}>
-        <strong style={{ color: '#64748B' }}>Aviso Legal:</strong> Este estudo foi gerado por sistema de inteligência artificial com base em dados públicos de oferta e transação imobiliária.
+        <strong style={{ color: '#64748B' }}>Aviso Legal:</strong> Este estudo foi gerado com base em dados públicos de oferta e transação imobiliária.
         Os valores apresentados têm caráter informativo e não substituem PTAM nem laudo técnico final elaborado e assinado
         pelo profissional habilitado responsável, conforme a finalidade e o conselho profissional aplicáveis.
       </div>

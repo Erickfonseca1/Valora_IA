@@ -136,7 +136,7 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
 
         <View style={{ padding: 8, backgroundColor: '#FFFBEB', border: '1 solid #FDE68A', borderRadius: 3, marginBottom: 10 }}>
           <Text style={{ fontSize: 7, color: '#92400E', lineHeight: 1.5 }}>
-            Natureza deste documento: este estudo foi gerado por IA com dados de anúncios públicos. Não constitui
+            Natureza deste documento: este estudo foi gerado com dados de anúncios públicos. Não constitui
             PTAM/laudo legal — o valor depende de vistoria, análise crítica e julgamento do profissional habilitado.
           </Text>
         </View>
@@ -453,7 +453,7 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
         )}
 
         <Text style={s.disclaimer}>
-           Aviso Legal: Este estudo foi gerado por sistema de inteligência artificial com base em dados públicos
+           Aviso Legal: Este estudo foi gerado com base em dados públicos
            de oferta e transação imobiliária. Os valores têm caráter informativo e não substituem PTAM nem laudo técnico
            final elaborado e assinado pelo profissional habilitado responsável, conforme a finalidade e o conselho profissional aplicáveis.
         </Text>
