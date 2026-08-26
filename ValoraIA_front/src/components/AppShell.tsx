@@ -1,6 +1,8 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { LayoutDashboard, PlusCircle, FileText, Briefcase, Settings, Plus } from 'lucide-react'
+import { LayoutDashboard, PlusCircle, FileText, Settings, Plus, ChevronDown, LogOut } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import type { Organization } from '../types'
 
 interface NavItem {
   icon: React.ElementType
@@ -13,9 +15,15 @@ const NAV_ITEMS: NavItem[] = [
   { icon: LayoutDashboard, label: 'Painel', path: '/app' },
   { icon: PlusCircle, label: 'Nova Avaliação', path: '/app/nova-avaliacao' },
   { icon: FileText, label: 'Relatórios', path: '/app/relatorios' },
-  { icon: Briefcase, label: 'Portfólio', path: '/app/portfolio', disabled: true },
-  { icon: Settings, label: 'Configurações', path: '/app/configuracoes', disabled: true },
+  { icon: Settings, label: 'Configurações', path: '/app/configuracoes' },
 ]
+
+function initials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  const first = parts[0]?.[0] ?? ''
+  const last = parts.length > 1 ? parts[parts.length - 1][0] : ''
+  return (first + last).toUpperCase()
+}
 
 function AvaliaWordmark() {
   return (
@@ -40,6 +48,62 @@ function AvaliaWordmark() {
   )
 }
 
+function OrgSwitcher({ organizations, activeOrg, onSelect }: {
+  organizations: Organization[]
+  activeOrg: Organization | null
+  onSelect: (orgId: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  if (organizations.length <= 1) {
+    return (
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)', padding: '0 2px' }}>
+        {activeOrg?.name ?? 'Sem organização'}
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 6, width: '100%',
+          background: 'transparent', border: 'none', cursor: 'pointer',
+          color: '#fff', fontSize: 11, fontFamily: 'inherit', textAlign: 'left',
+        }}
+      >
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: 130 }}>
+          {activeOrg?.name ?? 'Sem organização'}
+        </span>
+        <ChevronDown size={12} style={{ flexShrink: 0, opacity: 0.6 }} />
+      </button>
+      {open && (
+        <div style={{
+          position: 'absolute', bottom: '100%', left: 0, marginBottom: 6,
+          background: '#1F2937', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 8,
+          padding: 4, minWidth: 180, zIndex: 50,
+        }}>
+          {organizations.map((org) => (
+            <button
+              key={org.id}
+              onClick={() => { onSelect(org.id); setOpen(false) }}
+              style={{
+                display: 'block', width: '100%', textAlign: 'left', padding: '8px 10px',
+                background: org.id === activeOrg?.id ? 'rgba(201,162,39,0.15)' : 'transparent',
+                border: 'none', borderRadius: 6, cursor: 'pointer', color: '#fff',
+                fontSize: 12, fontFamily: 'inherit',
+              }}
+            >
+              {org.name}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 interface AppShellProps {
   children: ReactNode
 }
@@ -48,6 +112,7 @@ export default function AppShell({ children }: AppShellProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { profile, organizations, activeOrg, setActiveOrg, signOut, user } = useAuth()
 
   useEffect(() => { setSidebarOpen(false) }, [location.pathname])
 
@@ -56,6 +121,8 @@ export default function AppShell({ children }: AppShellProps) {
     window.addEventListener('resize', onResize)
     return () => window.removeEventListener('resize', onResize)
   }, [])
+
+  const displayName = profile?.full_name ?? user?.email?.split('@')[0] ?? 'Usuário'
 
   const Sidebar = (
     <aside
@@ -68,17 +135,16 @@ export default function AppShell({ children }: AppShellProps) {
 
       <nav className="flex-1 p-2.5 mt-4">
         {NAV_ITEMS.map(item => {
-          const active = !item.disabled && (
+          const active = (
             location.pathname === item.path ||
-            (item.path === '/app/relatorios' && location.pathname.startsWith('/app/relatorios')) ||
-            (item.path === '/app/relatorios' && location.pathname.startsWith('/app/resultado/'))
+            (item.path === '/app/relatorios' && (location.pathname.startsWith('/app/relatorios') || location.pathname.startsWith('/app/resultado/'))) ||
+            (item.path === '/app/configuracoes' && location.pathname.startsWith('/app/configuracoes'))
           )
           const Icon = item.icon
           return (
             <button
               key={item.path}
-              onClick={() => !item.disabled && navigate(item.path)}
-              disabled={item.disabled}
+              onClick={() => navigate(item.path)}
               className="sidebar-nav-item flex items-center gap-2.5 w-full py-2.5 rounded-lg border-none text-sm text-left mb-0.5 transition-all duration-150"
               style={{
                 paddingLeft: active ? 9 : 12,
@@ -87,8 +153,7 @@ export default function AppShell({ children }: AppShellProps) {
                 borderLeft: active ? '3px solid #C9A227' : '3px solid transparent',
                 color: '#fff',
                 fontWeight: active ? 600 : 400,
-                opacity: item.disabled ? 0.25 : 1,
-                cursor: item.disabled ? 'not-allowed' : 'pointer',
+                cursor: 'pointer',
                 fontFamily: 'inherit',
               }}
             >
@@ -100,18 +165,38 @@ export default function AppShell({ children }: AppShellProps) {
       </nav>
 
       <div className="px-5 pt-4" style={{ borderTop: '1px solid rgba(255,255,255,0.10)' }}>
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 mb-1">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white"
             style={{ background: 'rgba(255,255,255,0.15)' }}
           >
-            EP
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="" style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} />
+            ) : (
+              initials(displayName)
+            )}
           </div>
-          <div>
-            <div className="text-xs font-medium text-white">Edizio Peixoto</div>
-            <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.45)' }}>Corretor · Premium</div>
+          <div style={{ minWidth: 0 }}>
+            <div className="text-xs font-medium text-white" style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {displayName}
+            </div>
+            <OrgSwitcher
+              organizations={organizations}
+              activeOrg={activeOrg}
+              onSelect={(orgId) => setActiveOrg(orgId)}
+            />
           </div>
         </div>
+        <button
+          onClick={() => signOut()}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6, marginTop: 8,
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            color: 'rgba(255,255,255,0.45)', fontSize: 11, fontFamily: 'inherit',
+          }}
+        >
+          <LogOut size={12} /> Sair
+        </button>
       </div>
     </aside>
   )

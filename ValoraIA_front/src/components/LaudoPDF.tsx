@@ -128,7 +128,10 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
         {/* Letterhead */}
         <View style={s.header}>
           <Text style={s.headerEyebrow}>ESTUDO TÉCNICO DE AVALIAÇÃO — SUBSÍDIO PARA ELABORAÇÃO DE PTAM</Text>
-          <Text style={s.headerTitle}>AVALIA</Text>
+          {v.organization?.logo_url ? (
+            <Image src={v.organization.logo_url} style={{ height: 26, maxWidth: 120, objectFit: 'contain', marginBottom: 4 }} />
+          ) : null}
+          <Text style={s.headerTitle}>{v.organization?.name ?? 'AVALIA'}</Text>
           <Text style={s.headerSub}>Metodologia referenciada na ABNT NBR 14.653 · resultado para análise do avaliador</Text>
           <Text style={s.headerMeta}>{laudoId} · {laudoDate}</Text>
           <Text style={s.headerMeta}>Imóvel: {v.address}</Text>

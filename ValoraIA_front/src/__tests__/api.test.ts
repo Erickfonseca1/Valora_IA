@@ -7,6 +7,14 @@ import {
   getMarketTrend,
 } from '../api'
 
+vi.mock('../lib/supabase', () => ({
+  supabase: () => ({
+    auth: {
+      getSession: vi.fn().mockResolvedValue({ data: { session: null }, error: null }),
+    },
+  }),
+}))
+
 const BASE = 'http://localhost:3000'
 
 function mockFetch(response: unknown, success = true) {
@@ -47,7 +55,7 @@ describe('api', () => {
     globalThis.fetch = mockFetch(mockVal)
 
     const result = await getValuation('val_xyz')
-    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/valuations/val_xyz`, undefined)
+    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/valuations/val_xyz`, { headers: {} })
     expect(result).toEqual(mockVal)
   })
 
@@ -56,7 +64,7 @@ describe('api', () => {
     globalThis.fetch = mockFetch(mockMetrics)
 
     const result = await getDashboardMetrics()
-    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/dashboard/metrics`, undefined)
+    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/dashboard/metrics`, { headers: {} })
     expect(result).toEqual(mockMetrics)
   })
 
@@ -65,7 +73,7 @@ describe('api', () => {
     globalThis.fetch = mockFetch(mockResp)
 
     const result = await getDashboardValuations(5, 10)
-    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/dashboard/valuations?limit=5&offset=10`, undefined)
+    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/dashboard/valuations?limit=5&offset=10`, { headers: {} })
     expect(result).toEqual(mockResp)
   })
 
@@ -74,7 +82,7 @@ describe('api', () => {
     globalThis.fetch = mockFetch(mockResp)
 
     await getDashboardValuations()
-    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/dashboard/valuations?limit=10&offset=0`, undefined)
+    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/dashboard/valuations?limit=10&offset=0`, { headers: {} })
   })
 
   it('getMarketTrend encoda city e envia months', async () => {
@@ -82,7 +90,7 @@ describe('api', () => {
     globalThis.fetch = mockFetch(mockTrend)
 
     const result = await getMarketTrend('Rio de Janeiro', 6)
-    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/market/trend?city=Rio%20de%20Janeiro&months=6`, undefined)
+    expect(globalThis.fetch).toHaveBeenCalledWith(`${BASE}/api/market/trend?city=Rio+de+Janeiro&months=6`, { headers: {} })
     expect(result).toEqual(mockTrend)
   })
 

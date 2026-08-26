@@ -26,13 +26,46 @@ vi.mock('../api', () => ({
   uploadPhotos: vi.fn(),
   analyzePhotos: vi.fn(),
   extractProperty: vi.fn(),
+  completeOnboarding: vi.fn().mockResolvedValue({}),
+  fetchMe: vi.fn(),
+  listValuations: vi.fn(),
+  deleteValuation: vi.fn(),
+  restoreValuation: vi.fn(),
+  createOrganization: vi.fn(),
+  getOrganization: vi.fn(),
+  updateOrganization: vi.fn(),
+  inviteMember: vi.fn(),
+  acceptInvite: vi.fn(),
+  changeMemberRole: vi.fn(),
+  removeMember: vi.fn(),
+  updateProfile: vi.fn(),
+  uploadLogo: vi.fn(),
 }))
+
+vi.mock('../lib/supabase', () => {
+  const session = {
+    user: { id: 'u_1', email: 'teste@avalia.com' },
+    access_token: 'fake-token',
+  }
+  return {
+    supabase: () => ({
+      auth: {
+        getSession: vi.fn().mockResolvedValue({ data: { session }, error: null }),
+        onAuthStateChange: vi.fn().mockReturnValue({ data: { subscription: { unsubscribe: vi.fn() } } }),
+        signInWithPassword: vi.fn(),
+        signUp: vi.fn(),
+        signOut: vi.fn(),
+      },
+    }),
+  }
+})
 
 import {
   getDashboardMetrics,
   getDashboardValuations,
   getMarketTrend,
   getValuation,
+  fetchMe,
 } from '../api'
 
 const mockMetrics: DashboardMetrics = {
@@ -114,6 +147,15 @@ describe('App', () => {
     vi.mocked(getDashboardValuations).mockResolvedValue(mockValuationsResponse)
     vi.mocked(getMarketTrend).mockResolvedValue(mockTrend)
     vi.mocked(getValuation).mockResolvedValue(mockValuation)
+    vi.mocked(fetchMe).mockResolvedValue({
+      profile: { id: 'u_1', full_name: 'Usuário Teste', creci: null, cnaI: null, avatar_url: null, created_at: '' },
+      organizations: [
+        { id: 'org_1', name: 'Avaliações de Teste', slug: 'teste', type: 'solo', logo_url: null, created_by: 'u_1', plan: 'free', created_at: '' },
+      ],
+      memberships: [
+        { id: 'm_1', organization_id: 'org_1', user_id: 'u_1', role: 'owner', invited_by: null, created_at: '' },
+      ],
+    })
   })
 
   it('renderiza a landing page na rota /', async () => {
@@ -153,12 +195,10 @@ describe('App', () => {
     expect(await screen.findByText('Conheça como funciona')).toBeInTheDocument()
   })
 
-  it('sempre renderiza o AppShell com sidebar', () => {
+  it('sempre renderiza o AppShell com sidebar', async () => {
     renderApp('/app')
     // AppShell sidebar content appears twice in jsdom (desktop + mobile drawer)
     // because CSS is not applied, both variants are visible in the DOM
-    expect(screen.getAllByText('AVALIA').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText('Avaliação Imobiliária').length).toBeGreaterThanOrEqual(1)
-    expect(screen.getAllByText('Edizio Peixoto').length).toBeGreaterThanOrEqual(1)
+    expect(await screen.findAllByText('Usuário Teste').then((els) => els.length)).toBeGreaterThanOrEqual(1)
   })
 })

@@ -331,8 +331,24 @@ export default function Report() {
             <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 9, letterSpacing: 3, textTransform: 'uppercase', fontWeight: 700, marginBottom: 6 }}>
               Estudo Técnico de Avaliação — Subsídio para Elaboração de PTAM
             </div>
-            <div style={{ color: '#fff', fontSize: 22, fontWeight: 800, fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: 0.5 }}>
-              AVALIA
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {valuation.organization?.logo_url && (
+                <img
+                  src={valuation.organization.logo_url}
+                  alt="Logo da organização"
+                  style={{ height: 28, maxWidth: 90, objectFit: 'contain', borderRadius: 4 }}
+                />
+              )}
+              <div>
+                <div style={{ color: '#fff', fontSize: 22, fontWeight: 800, fontFamily: 'Georgia, "Times New Roman", serif', letterSpacing: 0.5 }}>
+                  {valuation.organization?.name ?? 'AVALIA'}
+                </div>
+                {valuation.organization && (
+                  <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, marginTop: 1 }}>
+                    por meio da plataforma AVALIA
+                  </div>
+                )}
+              </div>
             </div>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 11, marginTop: 3 }}>
               Metodologia referenciada na ABNT NBR 14.653 · resultado para análise do avaliador
