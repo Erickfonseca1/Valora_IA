@@ -55,6 +55,9 @@ Backend requires `ValoraIA_back/.env.local` (see `.env.local.example`):
 - `INGEST_WEBHOOK_SECRET` — shared secret for `/api/ingest` webhook (Apify scraper)
 
 Frontend: set `VITE_API_URL` to point at the backend when running in production (different domain).
+Frontend auth (Supabase): `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` (see `ValoraIA_front/.env.local.example`).
+Requires the Supabase project to have email/password auth enabled. Every product route behind `/app` requires a session;
+the backend validates the `Authorization: Bearer` JWT via `src/lib/access.ts` (`getCurrentUser`).
 
 ## Architecture
 
@@ -79,12 +82,21 @@ Two Supabase clients in `src/lib/db/supabase.ts`:
 - `getAdminClient()` — bypasses RLS; for valuation writes and scraper ingestion
 
 Key route groups:
-- `POST /api/valuations` — creates a full PTAM record (geocodes, runs valuation engine, persists)
-- `GET /api/valuations/[id]` — fetch single record
-- `GET /api/dashboard/*` — aggregated metrics and recent valuations list
+- `POST /api/valuations` — creates a full PTAM record (geocodes, runs valuation engine, persists) — requires auth; records `created_by` + `organization_id` (active org from `x-org-id` header)
+- `GET /api/valuations` — paginated, tenant-scoped list with `q`/`status=active|deleted`/`property_type` filters
+- `GET /api/valuations/[id]` — fetch single record (author or owner/admin of the org); `DELETE` = soft delete (lixeira); `POST` = restore
+- `GET /api/dashboard/*` — aggregated metrics and recent valuations list (tenant-scoped)
+- `POST /api/auth/onboarding` — creates profile + personal "solo" org + owner membership (idempotent)
+- `GET/PATCH /api/me` — profile + organizations + memberships
+- `POST /api/organizations` + `GET/PATCH /api/organizations/[id]` — org management (owner/admin)
+- `POST /api/organizations/[id]/invites` + `POST /api/invites/accept` — invite members by e-mail token
+- `PATCH/DELETE /api/organizations/[id]/members/[userId]` — role changes / removal
+- `POST /api/upload-logo` — organization logo (public bucket `org-logos`)
 - `POST /api/ingest` — webhook endpoint for scraped listings (authenticated via `x-ingest-secret` header)
-- `POST /api/upload-photos` / `POST /api/analyze-photos` — Supabase Storage upload + Gemini Vision analysis
+- `POST /api/upload-photos` / `POST /api/analyze-photos` — Supabase Storage upload + Gemini Vision analysis (private bucket, proxy at `GET /api/valuation-photos/[id]/image`)
 - `GET /api/market/trend` — price trend series for a city
+
+Multi-tenant model: `profiles` (1:1 auth.users) · `organizations` (solo/team) · `memberships` (role: owner/admin/avaliador/pending). Valuations belong to an org and an author; RLS (migrations 019–022) isolates by membership. The backend uses the service role but always applies `getValuationScope()` (author OR org owner/admin). New DB migrations under `supabase/migrations/` must be applied manually in the Supabase SQL editor.
 
 ### Valuation Engine (`src/lib/math/`)
 
