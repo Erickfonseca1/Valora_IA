@@ -5,6 +5,8 @@ import { runValuation } from "@/lib/math/valuation-engine";
 import { ensureLocalComparables } from "@/lib/apify/on-demand";
 import { runInvolutive } from "@/lib/math/involutive-engine";
 import { geocodeAddress, reverseGeocode } from "@/lib/geocoding/google-maps";
+import { getClientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
+import { logAudit } from "@/lib/security/audit";
 import type {
   ApiResponse,
   ValuationRecord,
@@ -47,6 +49,9 @@ const ValuationCreateSchema = z.object({
 export const maxDuration = 300;
 
 export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<ValuationRecord>>> {
+  const ip = getClientIp(req);
+  if (!rateLimit(`valuation:${ip}`, 20, 60_000)) return rateLimitResponse();
+
   let body: unknown;
   try {
     body = await req.json();
@@ -234,6 +239,15 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
       { status: 500 }
     );
   }
+
+  await logAudit(db, {
+    action: "valuation.create",
+    entityType: "valuation",
+    entityId: row.id,
+    ip,
+    userAgent: req.headers.get("user-agent") ?? undefined,
+    metadata: { property_type, city: geo.city },
+  });
 
   // ── Persist photos per room (best-effort; doesn't fail the valuation) ──────
   let persistedPhotos: import("@/types").ValuationPhoto[] = [];

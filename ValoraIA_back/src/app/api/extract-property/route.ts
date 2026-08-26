@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { extractFromText, extractFromAudio } from "@/lib/ai/property-extractor";
 import type { ApiResponse, ExtractionResult } from "@/types";
+import { getClientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const MAX_AUDIO_BYTES = 15 * 1024 * 1024; // 15 MB
 
@@ -10,6 +11,9 @@ const TextSchema = z.object({ text: z.string().min(1).max(5000) });
 export async function POST(
   req: NextRequest
 ): Promise<NextResponse<ApiResponse<ExtractionResult>>> {
+  const ip = getClientIp(req);
+  if (!rateLimit(`extract:${ip}`, 20, 60_000)) return rateLimitResponse();
+
   const contentType = req.headers.get("content-type") ?? "";
 
   if (contentType.includes("multipart/form-data")) {

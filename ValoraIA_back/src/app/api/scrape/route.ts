@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getAdminClient } from "@/lib/db/supabase";
 import type { ApiResponse, PropertyType } from "@/types";
 import { buildListingAmenities } from "./amenities-map";
+import { getClientIp, rateLimit, rateLimitResponse } from "@/lib/security/rate-limit";
 
 const INGEST_SECRET = process.env.INGEST_WEBHOOK_SECRET;
 const APIFY_TOKEN = process.env.APIFY_API_TOKEN;
@@ -122,6 +123,9 @@ function inferConstructionAge(item: ZapItem): number | null {
 // ─── Route handler ────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<ScrapeResult>>> {
+  const ip = getClientIp(req);
+  if (!rateLimit(`scrape:${ip}`, 5, 60_000)) return rateLimitResponse();
+
   if (INGEST_SECRET) {
     if (req.headers.get("x-ingest-secret") !== INGEST_SECRET) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
