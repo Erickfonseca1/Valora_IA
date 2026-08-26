@@ -606,6 +606,11 @@ export default function ValuationFlow() {
               Opcional, porém recomendado. Selecione o cômodo e adicione as fotos.
               Quando enviadas, a IA analisa o padrão construtivo e pode sugerir o estado de conservação.
             </p>
+            <p style={{ fontSize: 12, color: '#92720A', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 8, padding: '10px 14px', margin: 0, lineHeight: 1.6 }}>
+              <strong>Privacidade:</strong> fotografe o imóvel <strong>sem pessoas</strong> e evite
+              documentos, placas e itens que identifiquem o proprietário. Os dados de localização
+              (GPS) embutidos nas fotos são removidos automaticamente no envio.
+            </p>
 
             {/* Room selector */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>

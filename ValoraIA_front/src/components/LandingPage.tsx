@@ -7,10 +7,12 @@ import {
   Check,
   ChevronDown,
   FileDown,
+  FileSearch,
   FileText,
   GitCompareArrows,
   House,
   Layers3,
+  Lock,
   MapPinned,
   Mic,
   Ruler,
@@ -237,6 +239,10 @@ const FAQ_ITEMS = [
     answer: 'O fluxo contempla apartamentos, casas, imóveis comerciais e terrenos. Para terrenos, a plataforma também pode apresentar cenários ilustrativos baseados nas premissas configuradas, sem substituir uma análise urbanística oficial.',
   },
   {
+    question: 'Como a AVALIA trata a privacidade e a LGPD?',
+    answer: 'A plataforma coleta apenas o necessário para a avaliação, remove metadados de localização das fotos, restringe o acesso por conta e organização e mantém logs de auditoria. A AVALIA atua como operadora dos dados; o corretor ou a imobiliária é o controlador e responde pela autorização do proprietário do imóvel.',
+  },
+  {
     question: 'Como a inteligência artificial participa do processo?',
     answer: 'A IA pode transformar uma descrição em texto ou áudio em dados estruturados para revisão. O cálculo combina métodos estatísticos e regras de homogeneização quando há dados suficientes para isso.',
   },
@@ -393,6 +399,21 @@ export default function LandingPage() {
               <div className="marketing-audience-card"><Building2 size={20} /><strong>Corretores</strong><span>Agilize a precificação e leve uma conversa mais fundamentada para o proprietário.</span></div>
               <div className="marketing-audience-card"><Target size={20} /><strong>Avaliadores</strong><span>Organize comparáveis, fatores e memória de cálculo em uma única experiência.</span></div>
               <div className="marketing-audience-card"><BarChart3 size={20} /><strong>Imobiliárias</strong><span>Crie uma linguagem comum para decisões de preço e acompanhamento de mercado.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section className="marketing-section marketing-security-section">
+          <div className="marketing-container">
+            <SectionHeading
+              eyebrow="SEGURANÇA E PRIVACIDADE"
+              title="Tratamento de dados com responsabilidade."
+              description="A AVALIA adota medidas técnicas e organizacionais para proteger os dados tratados na plataforma, com transparência alinhada à LGPD."
+            />
+            <div className="marketing-audience-grid">
+              <div className="marketing-audience-card"><Lock size={20} /><strong>Armazenamento privado</strong><span>Fotos e estudos ficam em ambiente com controle de acesso; imagens são entregues por URLs de curta duração.</span></div>
+              <div className="marketing-audience-card"><ShieldCheck size={20} /><strong>Privacidade por padrão</strong><span>Metadados de localização (GPS) das fotos são removidos no envio, e apenas o necessário é coletado.</span></div>
+              <div className="marketing-audience-card"><FileSearch size={20} /><strong>LGPD</strong><span>Transparência sobre o tratamento, responsabilidade técnica do avaliador e canais para direitos do titular.</span></div>
             </div>
           </div>
         </section>
