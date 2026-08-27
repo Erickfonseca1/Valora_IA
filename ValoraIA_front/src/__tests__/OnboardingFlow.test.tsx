@@ -30,12 +30,16 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
-function renderFlow(onClose = vi.fn()) {
-  return render(
-    <MemoryRouter>
-      <OnboardingFlow onClose={onClose} />
-    </MemoryRouter>
-  )
+function renderFlow(onClose = vi.fn(), onStartTour = vi.fn()) {
+  return {
+    onClose,
+    onStartTour,
+    ...render(
+      <MemoryRouter>
+        <OnboardingFlow onClose={onClose} onStartTour={onStartTour} />
+      </MemoryRouter>
+    ),
+  }
 }
 
 describe('OnboardingFlow', () => {
@@ -46,9 +50,8 @@ describe('OnboardingFlow', () => {
     expect(screen.getByText('Sua marca nos estudos')).toBeInTheDocument()
   })
 
-  it('salva perfil e org e inicia o tour ao concluir', async () => {
-    const onClose = vi.fn()
-    renderFlow(onClose)
+  it('salva perfil e org e dispara o tour ao concluir', async () => {
+    const { onStartTour } = renderFlow()
 
     fireEvent.change(screen.getByPlaceholderText('Ex.: Erick Fonseca'), { target: { value: 'Erick Fonseca' } })
     fireEvent.click(screen.getByText('Próximo →')) // marca
@@ -58,7 +61,7 @@ describe('OnboardingFlow', () => {
     await waitFor(() => {
       expect(updateProfile).toHaveBeenCalledWith(expect.objectContaining({ full_name: 'Erick Fonseca' }))
       expect(updateOrganization).not.toHaveBeenCalled()
-      expect(screen.getByText('Painel de atividade')).toBeInTheDocument()
+      expect(onStartTour).toHaveBeenCalled()
     })
   })
 

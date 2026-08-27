@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { LayoutDashboard, PlusCircle, FileText, Settings, Plus, ChevronDown, LogOut } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import OnboardingFlow from './OnboardingFlow'
+import OnboardingTour from './OnboardingTour'
+import { updateProfile } from '../api'
 import type { Organization } from '../types'
 
 interface NavItem {
@@ -113,20 +115,28 @@ export default function AppShell({ children }: AppShellProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { profile, organizations, activeOrg, setActiveOrg, signOut, user, sessionReady } = useAuth()
-  const [showOnboarding, setShowOnboarding] = useState(false)
+  const { profile, organizations, activeOrg, setActiveOrg, signOut, user, sessionReady, refreshMe } = useAuth()
+  const [onboarding, setOnboarding] = useState<'none' | 'data' | 'tour'>('none')
 
   useEffect(() => {
     if (!sessionReady || !user) return
     // Dispara mesmo quando o profile ainda não carregou (refresh lento/falho);
     // se o onboarding já foi concluído em algum momento, não re-apresenta.
     if (profile?.onboarding_completed_at) {
-      setShowOnboarding(false)
+      setOnboarding('none')
       return
     }
-    const t = setTimeout(() => setShowOnboarding(true), 900)
+    const t = setTimeout(() => setOnboarding('data'), 900)
     return () => clearTimeout(t)
   }, [sessionReady, user, profile])
+
+  const completeOnboarding = async () => {
+    try {
+      await updateProfile({ onboarding_completed_at: new Date().toISOString() })
+      await refreshMe()
+    } catch { /* best-effort */ }
+    setOnboarding('none')
+  }
 
   useEffect(() => { setSidebarOpen(false) }, [location.pathname])
 
@@ -275,7 +285,15 @@ export default function AppShell({ children }: AppShellProps) {
         </main>
       </div>
 
-      {showOnboarding && <OnboardingFlow onClose={() => setShowOnboarding(false)} />}
+      {onboarding === 'data' && (
+        <OnboardingFlow
+          onClose={completeOnboarding}
+          onStartTour={() => setOnboarding('tour')}
+        />
+      )}
+      {onboarding === 'tour' && (
+        <OnboardingTour onFinish={completeOnboarding} onSkip={completeOnboarding} />
+      )}
     </div>
   )
 }

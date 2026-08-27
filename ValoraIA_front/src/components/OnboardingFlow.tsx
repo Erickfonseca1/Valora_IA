@@ -1,7 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { updateProfile, updateOrganization, uploadLogo, createOrganization } from '../api'
-import OnboardingTour from './OnboardingTour'
 
 const PRIMARY = '#111827'
 const GOLD = '#C9A227'
@@ -29,9 +28,8 @@ const inputStyle: React.CSSProperties = {
   outline: 'none', width: '100%', boxSizing: 'border-box',
 }
 
-export default function OnboardingFlow({ onClose }: { onClose: () => void }) {
+export default function OnboardingFlow({ onClose, onStartTour }: { onClose: () => void; onStartTour: () => void }) {
   const { profile, organizations, memberships, activeOrg, refreshMe, setActiveOrg } = useAuth()
-  const [phase, setPhase] = useState<'data' | 'tour'>('data')
   const [fullName, setFullName] = useState(profile?.full_name ?? '')
   const [creci, setCreci] = useState(profile?.creci ?? '')
   const [cnai, setCnai] = useState(profile?.cnai ?? '')
@@ -92,7 +90,8 @@ export default function OnboardingFlow({ onClose }: { onClose: () => void }) {
         await updateOrganization(activeOrg.id, { name: orgName.trim() })
       }
       await refreshMe()
-      setPhase('tour')
+      // Apresentação é montada pelo AppShell (fundo = plataforma real).
+      onStartTour()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao salvar')
     } finally {
@@ -213,8 +212,6 @@ export default function OnboardingFlow({ onClose }: { onClose: () => void }) {
           </div>
         </div>
       </div>
-
-      {phase === 'tour' && <OnboardingTour onFinish={() => finish()} onSkip={() => finish()} />}
     </div>
   )
 }
