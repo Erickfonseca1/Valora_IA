@@ -64,7 +64,13 @@ const CASES: Array<{
 async function ensureUser(db: ReturnType<typeof import("../src/lib/db/supabase")["getAdminClient"]>, email: string, name: string, creci: string) {
   const { data: existing } = await db.auth.admin.listUsers({ page: 1, perPage: 200 });
   const found = (existing?.users ?? []).find((u) => u.email === email);
-  if (found) return found.id;
+
+  // Conta existe → corrige perfil/metadata para o nome atual (idempotente).
+  if (found) {
+    await db.from("profiles").upsert({ id: found.id, full_name: name, creci });
+    await db.auth.admin.updateUserById(found.id, { user_metadata: { full_name: name } });
+    return found.id;
+  }
 
   const { data, error } = await db.auth.admin.createUser({
     email,
