@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import App from '../App'
 import type {
@@ -165,6 +165,17 @@ describe('App', () => {
     renderApp('/')
     expect(await screen.findByText('Conheça como funciona')).toBeInTheDocument()
     expect(screen.getByText('O estudo substitui o PTAM?')).toBeInTheDocument()
+    expect(screen.getByText(/Planos e preços/i)).toBeInTheDocument()
+    expect(screen.getByText('Mais escolhido')).toBeInTheDocument()
+    expect(screen.getByText('Comece grátis')).toBeInTheDocument()
+  })
+
+  it('alterna a exibição anual (2 meses grátis) na seção de preços', async () => {
+    renderApp('/')
+    expect(await screen.findByText(/Planos e preços/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Anual'))
+    expect(screen.getByText(/cobrado anualmente: R\$ 1\.290/)).toBeInTheDocument()
+    expect(screen.getByText(/cobrado anualmente: R\$ 2\.790/)).toBeInTheDocument()
   })
 
   it('renderiza Dashboard na rota /app', async () => {

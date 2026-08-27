@@ -2047,3 +2047,15 @@ html {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ─── Pricing (landing) ─────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .pricing-bottom {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+.marketing-pricing-section {
+  background: var(--marketing-parchment);
+}

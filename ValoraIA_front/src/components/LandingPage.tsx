@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 import {
   ArrowDownRight,
   ArrowRight,
@@ -221,13 +221,230 @@ function ReportPreview() {
   )
 }
 
-const FAQ_ITEMS = [
+// ─── Pricing section ──────────────────────────────────────────────────────────
+
+type Billing = 'monthly' | 'yearly'
+
+interface Plan {
+  name: string
+  audience: string
+  monthly: number
+  yearlyTotal: number
+  yearlyMonthly: number
+  highlight?: boolean
+  features: string[]
+  cta: string
+}
+
+const PLANS: Plan[] = [
   {
+    name: 'Solo Pro',
+    audience: 'Corretor avaliador individual',
+    monthly: 129,
+    yearlyTotal: 1290,
+    yearlyMonthly: 107,
+    features: [
+      '1 usuário',
+      '30 estudos por mês',
+      'Logo e nome da sua marca no estudo',
+      'Trend do bairro e da cidade',
+      'Análise de fotos por IA',
+      'Exportação em PDF completa',
+    ],
+    cta: 'Começar teste de 7 dias',
+  },
+  {
+    name: 'Imobiliária',
+    audience: 'Equipes de até 5 corretores',
+    monthly: 279,
+    yearlyTotal: 2790,
+    yearlyMonthly: 232,
+    highlight: true,
+    features: [
+      'Até 3 cadeiras incluídas (+ R$ 39 por cadeira)',
+      '150 estudos por mês',
+      'Membros com papéis (avaliador/admin)',
+      'Painel do gestor com a produção da equipe',
+      'Convites por e-mail com link de aceite',
+      'Suporte por WhatsApp',
+    ],
+    cta: 'Começar teste de 7 dias',
+  },
+  {
+    name: 'Imobiliária+',
+    audience: 'Corretoras e escritórios em crescimento',
+    monthly: 549,
+    yearlyTotal: 5490,
+    yearlyMonthly: 458,
+    features: [
+      'Até 10 cadeiras',
+      '300 estudos por mês',
+      'Tudo do plano Imobiliária',
+      'Treinamento da equipe incluso',
+      'Suporte prioritário',
+      'Acompanhamento de onboarding',
+    ],
+    cta: 'Falar com especialista',
+  },
+]
+
+function PricingSection() {
+  const [billing, setBilling] = useState<Billing>('monthly')
+
+  const fmt = (v: number) =>
+    v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
+
+  return (
+    <section className="marketing-section marketing-pricing-section">
+      <div className="marketing-container">
+        <SectionHeading
+          eyebrow="PLANOS E PREÇOS"
+          title="Um preço por organização — não por usuário."
+          description="Cada plano acompanha o tamanho do seu time e o volume de estudos do mês. Comece grátis, cresça sem mudar de plataforma e cancele quando quiser."
+        />
+
+        {/* Billing toggle */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: 36 }}>
+          <div style={{ display: 'inline-flex', background: 'rgba(255,255,255,0.6)', border: '1px solid var(--marketing-border)', borderRadius: 999, padding: 4 }}>
+            {(['monthly', 'yearly'] as Billing[]).map((b) => (
+              <button
+                key={b}
+                onClick={() => setBilling(b)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '9px 22px', borderRadius: 999,
+                  border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700,
+                  background: billing === b ? '#111827' : 'transparent',
+                  color: billing === b ? '#fff' : 'var(--marketing-muted)',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {b === 'monthly' ? 'Mensal' : 'Anual'}
+                {b === 'yearly' && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 999,
+                    background: billing === b ? 'rgba(201,162,39,0.25)' : '#FEFCF5',
+                    color: '#92720A', letterSpacing: 0.4,
+                  }}>
+                    2 meses grátis
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Plan cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 16, marginTop: 40, alignItems: 'stretch' }}>
+          {PLANS.map((plan) => (
+            <div
+              key={plan.name}
+              style={{
+                display: 'flex', flexDirection: 'column',
+                background: '#fff',
+                border: plan.highlight ? '1.5px solid #C9A227' : `1px solid var(--marketing-border)`,
+                borderRadius: 16,
+                padding: '26px 24px',
+                boxShadow: plan.highlight ? '0 18px 45px rgba(201,162,39,0.14)' : '0 6px 24px rgba(17,24,39,0.05)',
+                position: 'relative',
+              }}
+            >
+              {plan.highlight && (
+                <span style={{
+                  position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)',
+                  background: '#C9A227', color: '#111827', fontSize: 10, fontWeight: 800,
+                  letterSpacing: 1.2, textTransform: 'uppercase', padding: '5px 14px', borderRadius: 999,
+                }}>
+                  Mais escolhido
+                </span>
+              )}
+              <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.5, textTransform: 'uppercase', color: 'var(--marketing-gold-dark)', marginBottom: 4 }}>
+                {plan.name}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--marketing-muted)', marginBottom: 18 }}>
+                {plan.audience}
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 2 }}>
+                <span style={{ fontSize: 42, fontWeight: 800, letterSpacing: '-0.04em', color: 'var(--marketing-ink)' }}>
+                  {fmt(billing === 'monthly' ? plan.monthly : plan.yearlyMonthly)}
+                </span>
+                <span style={{ fontSize: 14, color: 'var(--marketing-muted)', fontWeight: 600 }}>/mês</span>
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--marketing-faint)', minHeight: 18, marginBottom: 16 }}>
+                {billing === 'yearly'
+                  ? `cobrado anualmente: ${fmt(plan.yearlyTotal)} (2 meses grátis)`
+                  : 'sem fidelidade · cancele quando quiser'}
+              </div>
+
+              <ul style={{ listStyle: 'none', margin: '0 0 22px', padding: 0, display: 'flex', flexDirection: 'column', gap: 9, flex: 1 }}>
+                {plan.features.map((feature) => (
+                  <li key={feature} style={{ display: 'flex', gap: 9, fontSize: 12.5, color: 'var(--marketing-muted)', lineHeight: 1.5 }}>
+                    <Check size={15} style={{ flexShrink: 0, marginTop: 1, color: 'var(--marketing-gold-dark)' }} />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <a
+                href="/login"
+                style={{
+                  display: 'block', textAlign: 'center', padding: '13px 16px', borderRadius: 10,
+                  background: plan.name === 'Imobiliária+' ? '#F7F4EE' : '#111827',
+                  color: plan.name === 'Imobiliária+' ? '#111827' : '#fff',
+                  fontWeight: 700, fontSize: 13.5, textDecoration: 'none', border: plan.name === 'Imobiliária+' ? '1px solid var(--marketing-border)' : 'none',
+                }}
+              >
+                {plan.cta} <ArrowRight size={14} style={{ verticalAlign: '-2px', marginLeft: 4 }} />
+              </a>
+            </div>
+          ))}
+        </div>
+
+        {/* Free + institutional */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.35fr', gap: 16, marginTop: 16 }} className="pricing-bottom">
+          <div style={{ background: '#FEFCF5', border: '1px solid #E8D99A', borderRadius: 16, padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#111827' }}>Comece grátis</div>
+            <div style={{ fontSize: 12.5, color: 'var(--marketing-muted)', lineHeight: 1.6, marginTop: 4 }}>
+              <strong style={{ color: '#111827' }}>R$ 0</strong> — 2 estudos por mês, valores indicativos com faixa e memória de cálculo. Sem cartão.
+            </div>
+            <a href="/login" style={{ display: 'inline-block', marginTop: 12, fontSize: 13, fontWeight: 700, color: '#111827', textDecoration: 'none', borderBottom: '1.5px solid #C9A227', paddingBottom: 2, width: 'fit-content' }}>
+              Criar conta grátis →
+            </a>
+          </div>
+          <div style={{ background: '#111827', borderRadius: 16, padding: '24px 26px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18 }}>
+            <div>
+              <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: 'uppercase', color: '#C9A227', marginBottom: 5 }}>
+                Institucional
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#fff' }}>Bancos, consórcios e escritórios credenciados</div>
+              <div style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.6)', lineHeight: 1.6, marginTop: 4 }}>
+                Quotas sob medida, API, SSO e conformidade para produção de laudos em escala — a partir de R$ 1.500/mês, sob contrato.
+              </div>
+            </div>
+            <a href="/login" style={{ whiteSpace: 'nowrap', padding: '12px 18px', borderRadius: 10, background: '#C9A227', color: '#111827', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}>
+              Falar com especialista
+            </a>
+          </div>
+        </div>
+
+        <p style={{ textAlign: 'center', margin: '28px 0 0', fontSize: 12, color: 'var(--marketing-faint)' }}>
+          Pagamento via Pix ou cartão · 7 dias grátis nos planos pagos · O preço é por organização, não por usuário.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+const FAQ_ITEMS = [  {
     question: 'O que é a AVALIA?',
     answer: 'A AVALIA é uma plataforma de avaliação imobiliária assistida por inteligência artificial. Ela organiza os dados do imóvel, compara anúncios da região e apresenta uma estimativa informativa com os fatores que sustentam o resultado.',
   },
   {
-     question: 'O estudo substitui o PTAM?',
+    question: 'Como funciona a cobrança e posso cancelar?',
+    answer: 'A assinatura é por organização (não por usuário) e pode ser paga mensal ou anualmente — o plano anual dá 2 meses grátis. Não há fidelidade: cancele quando quiser e, se a cota de estudos do mês acabar, você pode comprar créditos avulsos sem mudar de plano.',
+  },
+  {
+    question: 'O estudo substitui o PTAM?',
      answer: 'Não. A AVALIA adianta a pesquisa e os cálculos, mas não substitui o PTAM nem um laudo elaborado e assinado por profissional habilitado. O avaliador permanece responsável pela análise crítica, vistoria e conclusão do valor.',
   },
   {
@@ -417,6 +634,8 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        <PricingSection />
 
         <section className="marketing-section marketing-faq-section">
           <div className="marketing-container marketing-faq-grid">
