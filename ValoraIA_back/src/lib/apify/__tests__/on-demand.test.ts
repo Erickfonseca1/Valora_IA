@@ -6,8 +6,35 @@ import { checkLocalCoverage, collectOnDemand, ensureLocalComparables } from "@/l
 
 const rpcMock = vi.fn();
 
+// Supabase builder encadeado (mínimo para o freshness check). O hook `fromImpl`
+// permite trocar o retorno do freshness por teste (fresco vs frio).
+const fromImpl = vi.hoisted(() => vi.fn(() => listChainEmpty()));
+
+function listChainEmpty() {
+  const next = {
+    select: () => next,
+    ilike: () => next,
+    eq: () => next,
+    gte: () => Promise.resolve({ data: [], error: null }),
+  };
+  return next;
+}
+
+function listChainFresh() {
+  const next = {
+    select: () => next,
+    ilike: () => next,
+    eq: () => next,
+    gte: () => Promise.resolve({ data: [{ id: "x" }], error: null }),
+  };
+  return next;
+}
+
 vi.mock("@/lib/db/supabase", () => ({
-  getAdminClient: vi.fn(() => ({ rpc: rpcMock })),
+  getAdminClient: vi.fn(() => ({
+    rpc: rpcMock,
+    from: fromImpl,
+  })),
 }));
 
 vi.mock("@/lib/apify/ingest", () => ({
@@ -114,5 +141,34 @@ describe("ensureLocalComparables", () => {
     expect(res.before.sufficient).toBe(true);
     expect(res.collected).toBe(0);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("não dispara Apify quando o bairro está fresco (cache TTL)", async () => {
+    fromImpl.mockImplementation(() => listChainFresh() as never)
+    rpcMock.mockReset();
+    rpcMock.mockResolvedValue({
+      data: [
+        { property_type: "house" },
+        { property_type: "house" },
+        { property_type: "house" },
+      ],
+      error: null,
+    });
+
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => [] });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const res = await ensureLocalComparables({
+      lat: -7.1,
+      lng: -34.8,
+      neighborhood: "Bancários",
+      city: "João Pessoa",
+      propertyType: "house",
+    });
+
+    expect(res.skipped_due_to_cache).toBe(true);
+    expect(res.collected).toBe(0);
+    expect(fetchMock).not.toHaveBeenCalled();
+    fromImpl.mockImplementation(() => listChainEmpty() as never)
   });
 });

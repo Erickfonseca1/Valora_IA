@@ -15,6 +15,14 @@ const ACTOR_TYPES: Record<PropertyType, string[]> = {
 /** Minimum listings of the SAME typology before the engine runs without top-up */
 const MIN_LOCAL_SAMPLES = 5;
 
+/**
+ * TTL do cache de bairro: após uma coleta Apify, os listings do bairro
+ * ficam "quentes" por este período — novas avaliações no mesmo bairro/tipologia
+ * NÃO disparam novo run (o market prior ancora amostras fracas).
+ * Meta de custo: variável ≤15% da receita.
+ */
+const NEIGHBORHOOD_CACHE_TTL_DAYS = 15;
+
 // ─── Local density check ──────────────────────────────────────────────────────
 // Counts same-typology listings within the target radius. The engine's own
 // MIN_SAMPLES is 5; we top up before the engine runs so its fallbacks
@@ -55,6 +63,34 @@ export async function checkLocalCoverage(
   const found = rows.filter((r) => (r.property_type ?? "apartment") === propertyType).length;
 
   return { found, target: MIN_LOCAL_SAMPLES, sufficient: found >= MIN_LOCAL_SAMPLES };
+}
+
+// ─── Neighborhood freshness ───────────────────────────────────────────────────
+// Any listing of the neighborhood (any typology) refreshed inside the TTL means
+// the bairro was collected recently — skip a new Apify run to protect margin.
+
+export async function isNeighborhoodFresh(
+  neighborhood: string | null,
+  city: string,
+  propertyType: PropertyType
+): Promise<boolean> {
+  if (!neighborhood) return false;
+  const db = getAdminClient();
+  const cutoff = new Date(Date.now() - NEIGHBORHOOD_CACHE_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data, error } = await db
+    .from("listings")
+    .select("id", { count: "exact", head: true })
+    .ilike("neighborhood", `%${neighborhood}%`)
+    .eq("city", city)
+    .eq("property_type", propertyType)
+    .gte("last_seen", cutoff);
+
+  if (error) {
+    console.error("[on-demand] freshness check error:", error.message);
+    return false;
+  }
+  return (data ?? []).length > 0;
 }
 
 // ─── On-demand Apify collection ───────────────────────────────────────────────
@@ -151,41 +187,52 @@ export async function ensureLocalComparables(p: {
   neighborhood: string | null;
   city: string;
   propertyType: PropertyType;
-}): Promise<{ before: LocalCoverage; after: LocalCoverage; collected: number; actor_runs_finished: boolean; errors: string[] }> {
+}): Promise<{ before: LocalCoverage; after: LocalCoverage; collected: number; actor_runs_finished: boolean; errors: string[]; skipped_due_to_cache: boolean }> {
   const errors: string[] = [];
 
   const before = await checkLocalCoverage(p.lat, p.lng, 2000, p.propertyType);
   let after = before;
   let collected = 0;
   let actorRunsFinished = false;
+  let skippedDueToCache = false;
 
   if (!before.sufficient) {
-    const bairroResult = await collectOnDemand({
-      neighborhood: p.neighborhood,
-      city: p.city,
-      propertyType: p.propertyType,
-    });
-
-    collected = bairroResult.collected;
-    actorRunsFinished = bairroResult.actor_runs_finished;
-    if (bairroResult.error) errors.push(bairroResult.error);
-
-    after = await checkLocalCoverage(p.lat, p.lng, 2000, p.propertyType);
-
-    // Widening fallback: if the bairro produced nothing useful, try the whole city
-    // (more samples, higher chance of same-typology comps elsewhere).
-    if (!after.sufficient && bairroResult.actor_runs_finished && bairroResult.collected === 0) {
-      const cityResult = await collectOnDemand({
-        neighborhood: null,
+    // Cache de bairro: se o bairro foi coletado dentro do TTL, não gastamos
+    // outro run Apify — dados existentes + market prior ancoram a amostra.
+    const fresh = await isNeighborhoodFresh(p.neighborhood, p.city, p.propertyType);
+    if (fresh) {
+      skippedDueToCache = true;
+      console.log(
+        `[on-demand] ${p.neighborhood}/${p.city} fresh (TTL ${NEIGHBORHOOD_CACHE_TTL_DAYS}d) — skipping Apify run`
+      );
+    } else {
+      const bairroResult = await collectOnDemand({
+        neighborhood: p.neighborhood,
         city: p.city,
         propertyType: p.propertyType,
       });
-      collected += cityResult.collected;
-      actorRunsFinished = actorRunsFinished && cityResult.actor_runs_finished;
-      if (cityResult.error) errors.push(cityResult.error);
+
+      collected = bairroResult.collected;
+      actorRunsFinished = bairroResult.actor_runs_finished;
+      if (bairroResult.error) errors.push(bairroResult.error);
+
       after = await checkLocalCoverage(p.lat, p.lng, 2000, p.propertyType);
+
+      // Widening fallback: if the bairro produced nothing useful, try the whole city
+      // (more samples, higher chance of same-typology comps elsewhere).
+      if (!after.sufficient && bairroResult.actor_runs_finished && bairroResult.collected === 0) {
+        const cityResult = await collectOnDemand({
+          neighborhood: null,
+          city: p.city,
+          propertyType: p.propertyType,
+        });
+        collected += cityResult.collected;
+        actorRunsFinished = actorRunsFinished && cityResult.actor_runs_finished;
+        if (cityResult.error) errors.push(cityResult.error);
+        after = await checkLocalCoverage(p.lat, p.lng, 2000, p.propertyType);
+      }
     }
   }
 
-  return { before, after, collected, actor_runs_finished: actorRunsFinished, errors };
+  return { before, after, collected, actor_runs_finished: actorRunsFinished, errors, skipped_due_to_cache: skippedDueToCache };
 }

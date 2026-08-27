@@ -258,7 +258,14 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     entityId: row.id,
     ip,
     userAgent: req.headers.get("user-agent") ?? undefined,
-    metadata: { property_type, city: geo.city },
+    metadata: {
+      property_type,
+      city: geo.city,
+      neighborhood: geo.neighborhood,
+      // Unit economics: o que este estudo consumiu de coleta de dados.
+      apify_collected: onDemandResult?.collected ?? 0,
+      apify_skipped_cache: onDemandResult?.skipped_due_to_cache ?? true,
+    },
   });
 
   // ── Persist photos per room (best-effort; doesn't fail the valuation) ──────
