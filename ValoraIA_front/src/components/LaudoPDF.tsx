@@ -1,6 +1,7 @@
 import { Document, Page, View, Text, StyleSheet, Image } from '@react-pdf/renderer'
 import type { ValuationRecord, ValuationPhoto } from '../types'
 import { FRONT_CATALOG } from '../amenities'
+import { enquadrar } from '../lib/nbr146532'
 
 // ─── Photos per room (grouped, rooms in submission order) ─────────────────────
 
@@ -197,6 +198,12 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
           <FichaRow label="Estado de Conservação" value={CONSERVATION_LABELS[v.conservation_state] ?? v.conservation_state} />
           {v.is_corner && <FichaRow label="Situação" value="Imóvel de Esquina" />}
             <FichaRow label="Metodologia" value="Método Comparativo Direto de Dados de Mercado — referência NBR 14.653" />
+          {v.author && (
+            <>
+              <FichaRow label="Avaliador" value={v.author.full_name} />
+              <FichaRow label="Registro" value={[v.author.creci && `CRECI ${v.author.creci}`, v.author.cnai && `CNAI ${v.author.cnai}`].filter(Boolean).join(' · ') || '—'} />
+            </>
+          )}
         </View>
 
         {/* Comodidades por escopo */}
@@ -280,6 +287,40 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
             </Text>
           </View>
         </View>
+
+        {/* Enquadramento NBR (resumo técnico-informativo) */}
+        {(() => {
+          const enc = enquadrar(v)
+          if (!enc) return null
+          return (
+            <>
+              <Text style={s.sectionTitle}>02d · ENQUADRAMENTO NBR 14653-2</Text>
+              <View style={s.card}>
+                <View style={s.row}>
+                  <Text style={s.rowLabel}>Grau (itens principais da Tabela 1)</Text>
+                  <Text style={[s.rowValue, { fontFamily: 'Helvetica-Bold' }]}>
+                    {enc.grau === 3 ? 'Grau III' : enc.grau === 2 ? 'Grau II' : enc.grau === 1 ? 'Grau I' : '—'}
+                  </Text>
+                </View>
+                <View style={s.row}>
+                  <Text style={s.rowLabel}>Precisão (IC 80%)</Text>
+                  <Text style={s.rowValue}>{enc.precisaoPct != null ? `${enc.precisaoPct.toLocaleString('pt-BR')}% do valor` : '—'}</Text>
+                </View>
+                <View style={[s.row, { borderBottom: 'none' }]}>
+                  <Text style={s.rowLabel}>Itens avaliados</Text>
+                  <Text style={s.rowValue}>
+                    {enc.items.map((i) => `${i.met ? '✓' : '–'} ${i.label}`).join(' · ')}
+                  </Text>
+                </View>
+                <View style={{ padding: '6 10', backgroundColor: '#F8FAFC' }}>
+                  <Text style={{ fontSize: 7, color: MUTED, lineHeight: 1.5 }}>
+                    Enquadramento técnico-informativo; classificação oficial é do avaliador habilitado.
+                  </Text>
+                </View>
+              </View>
+            </>
+          )
+        })()}
 
         {/* Fundamentação referencial (prior-only) */}
         {isPriorOnly && v.market_reference && (

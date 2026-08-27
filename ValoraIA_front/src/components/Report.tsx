@@ -5,6 +5,7 @@ import { getValuation } from '../api'
 import { FRONT_CATALOG } from '../amenities'
 import ValueWaterfall from './ValueWaterfall'
 import LiveValuationHero from './LiveValuationHero'
+import { enquadrar } from '../lib/nbr146532'
 import { pdf } from '@react-pdf/renderer'
 import LaudoPDF from './LaudoPDF'
 import { toPng } from 'html-to-image'
@@ -342,6 +343,10 @@ export default function Report() {
     { label: 'Topografia', value: SLOPE_LABELS[valuation.terrain_slope] ?? valuation.terrain_slope },
     { label: 'Nível em Relação à Rua', value: LEVEL_LABELS[valuation.street_level] ?? valuation.street_level },
     ...(valuation.is_corner ? [{ label: 'Situação', value: 'Imóvel de Esquina' }] : []),
+    ...(valuation.author ? [
+      { label: 'Avaliador', value: valuation.author.full_name },
+      { label: 'Registro', value: [valuation.author.creci && `CRECI ${valuation.author.creci}`, valuation.author.cnai && `CNAI ${valuation.author.cnai}`].filter(Boolean).join(' · ') || '—' },
+    ] : []),
     { label: 'Finalidade', value: 'Subsídio técnico para construção do PTAM' },
     { label: 'Metodologia', value: 'Método Comparativo Direto de Dados de Mercado — referência NBR 14.653-1' },
   ]
@@ -654,6 +659,55 @@ export default function Report() {
           </div>
         </CollapsibleSection>
       )}
+
+      {/* ── 02d. ENQUADRAMENTO NBR 14653-2 (colapsável) ───────────── */}
+      {(() => {
+        const enc = enquadrar(valuation)
+        if (!enc) return null
+        return (
+          <CollapsibleSection number="02d" title="Enquadramento NBR 14653-2 (informativo)">
+            <div style={{ padding: '16px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 12 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Grau alcançado
+                </span>
+                <span style={{
+                  background: enc.grau === 3 ? '#F0FDF4' : enc.grau === 2 ? '#FEFCF5' : '#FFFBEB',
+                  border: `1px solid ${enc.grau === 3 ? '#BBF7D0' : enc.grau === 2 ? '#E8D99A' : '#FDE68A'}`,
+                  color: enc.grau === 3 ? '#166534' : enc.grau === 2 ? '#92720A' : '#B45309',
+                  fontWeight: 900, fontFamily: "'DM Mono', monospace", fontSize: 14, padding: '4px 12px', borderRadius: 999,
+                }}>
+                  {enc.grau ? (enc.grau === 3 ? 'Grau III' : enc.grau === 2 ? 'Grau II' : 'Grau I') : '—'}
+                </span>
+                {enc.precisaoPct != null && (
+                  <span style={{ fontSize: 11, color: '#64748B' }}>
+                    precisão do IC 80%: <strong style={{ fontFamily: "'DM Mono', monospace" }}>{enc.precisaoPct.toLocaleString('pt-BR')}%</strong>
+                  </span>
+                )}
+              </div>
+              <p style={{ fontSize: 12, color: '#64748B', lineHeight: 1.6, margin: '0 0 14px' }}>{enc.resumo}</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {enc.items.map((item) => (
+                  <div key={item.label} style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: '#475569' }}>
+                    <span style={{ flexShrink: 0, color: item.met ? '#16A34A' : '#94A3B8', fontWeight: 800 }}>
+                      {item.met ? '✓' : '–'}
+                    </span>
+                    <span>
+                      <strong style={{ color: '#1A1A1A' }}>{item.label}</strong>
+                      <span style={{ color: '#94A3B8' }}> · {item.detail}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <p style={{ fontSize: 10, color: '#94A3B8', lineHeight: 1.55, margin: '14px 0 0' }}>
+                Enquadramento técnico-informativo baseado nos itens principais da Tabela 1 (NBR 14653-2),
+                adaptado aos dados disponíveis. A classificação oficial e a homologação do grau são de
+                responsabilidade do avaliador habilitado.
+              </p>
+            </div>
+          </CollapsibleSection>
+        )
+      })()}
 
       {/* ── 03. IMÓVEIS REFERENCIAIS ─────────────────────────────── */}
       {isPriorOnly && valuation.market_reference && (
