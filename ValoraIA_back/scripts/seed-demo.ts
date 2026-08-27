@@ -11,9 +11,30 @@
  * Aviso: usa a service role — rodar apenas em ambiente de demonstração.
  */
 
-import { getAdminClient } from "../src/lib/db/supabase";
-import { runValuation } from "../src/lib/math/valuation-engine";
-import { geocodeAddress } from "../src/lib/geocoding/google-maps";
+import fs from "fs";
+import path from "path";
+
+// O tsx não lê .env.local do Next automaticamente; carregamos na mão
+// (sem sobrescrever variáveis já presentes no ambiente).
+function loadEnvLocal(): void {
+  const envPath = path.resolve(process.cwd(), ".env.local");
+  if (!fs.existsSync(envPath)) {
+    console.warn("[seed] .env.local não encontrado em", envPath);
+    return;
+  }
+  const content = fs.readFileSync(envPath, "utf-8");
+  for (const line of content.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    const value = trimmed.slice(eq + 1).trim();
+    if (!(key in process.env)) process.env[key] = value;
+  }
+}
+
+loadEnvLocal();
 
 const DEMO_EMAIL = "demo@avalia.demo";
 const DEMO_PASSWORD = "Demo1234!";
@@ -40,7 +61,7 @@ const CASES: Array<{
   { address: "Rua Maximiano Chaves, 120, Bessa, João Pessoa, PB", property_type: "house", area_m2: 240, bedrooms: 4, bathrooms: 3, parking_spaces: 3, construction_age: 20, conservation_state: "reparos_simples", is_corner: false, terrain_slope: "plano", street_level: "acima_nivel" },
 ];
 
-async function ensureUser(db: ReturnType<typeof getAdminClient>, email: string, name: string, creci: string) {
+async function ensureUser(db: ReturnType<typeof import("../src/lib/db/supabase")["getAdminClient"]>, email: string, name: string, creci: string) {
   const { data: existing } = await db.auth.admin.listUsers({ page: 1, perPage: 200 });
   const found = (existing?.users ?? []).find((u) => u.email === email);
   if (found) return found.id;
@@ -56,7 +77,7 @@ async function ensureUser(db: ReturnType<typeof getAdminClient>, email: string, 
   return data!.user.id;
 }
 
-async function ensureOrg(db: ReturnType<typeof getAdminClient>, ownerId: string) {
+async function ensureOrg(db: ReturnType<typeof import("../src/lib/db/supabase")["getAdminClient"]>, ownerId: string) {
   const { data: existing } = await db.from("organizations").select("id").eq("slug", DEMO_ORG_SLUG).maybeSingle();
   if (existing) return existing.id;
 
@@ -70,6 +91,11 @@ async function ensureOrg(db: ReturnType<typeof getAdminClient>, ownerId: string)
 }
 
 async function main() {
+  // Imports dinâmicos: só depois do env carregado (supabase.ts lê process.env).
+  const { getAdminClient } = await import("../src/lib/db/supabase");
+  const { runValuation } = await import("../src/lib/math/valuation-engine");
+  const { geocodeAddress } = await import("../src/lib/geocoding/google-maps");
+
   const db = getAdminClient();
 
   console.log("1/4 criando usuários demo…");
