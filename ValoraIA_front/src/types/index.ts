@@ -308,7 +308,7 @@ export interface Profile {
   id: string
   full_name: string
   creci: string | null
-  cnaI: string | null
+  cnai: string | null
   avatar_url: string | null
   created_at: string
 }

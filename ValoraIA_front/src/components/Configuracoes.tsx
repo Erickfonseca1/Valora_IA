@@ -471,13 +471,13 @@ function ProfileTab({ onSaved, onError }: { onSaved: () => void; onError: (msg: 
   const { profile } = useAuth()
   const [fullName, setFullName] = useState(profile?.full_name ?? '')
   const [creci, setCreci] = useState(profile?.creci ?? '')
-  const [cnaI, setCnaI] = useState(profile?.cnaI ?? '')
+  const [cnai, setCnaI] = useState(profile?.cnai ?? '')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     setFullName(profile?.full_name ?? '')
     setCreci(profile?.creci ?? '')
-    setCnaI(profile?.cnaI ?? '')
+    setCnaI(profile?.cnai ?? '')
   }, [profile])
 
   const handleSubmit = async (e: FormEvent) => {
@@ -485,7 +485,7 @@ function ProfileTab({ onSaved, onError }: { onSaved: () => void; onError: (msg: 
     setSaving(true)
     onError('')
     try {
-      await updateProfile({ full_name: fullName.trim(), creci: creci.trim() || null, cnaI: cnaI.trim() || null })
+      await updateProfile({ full_name: fullName.trim(), creci: creci.trim() || null, cnai: cnai.trim() || null })
       onSaved()
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Erro ao salvar perfil')
@@ -509,7 +509,7 @@ function ProfileTab({ onSaved, onError }: { onSaved: () => void; onError: (msg: 
       </label>
       <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: '#334155', fontWeight: 600 }}>
         CNAI (avaliador imobiliário)
-        <input value={cnaI} onChange={(e) => setCnaI(e.target.value)} placeholder="Opcional"
+        <input value={cnai} onChange={(e) => setCnaI(e.target.value)} placeholder="Opcional"
           style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E0CF', fontSize: 14, fontFamily: 'inherit' }} />
       </label>
       <p style={{ fontSize: 11, color: '#94A3B8', margin: 0, lineHeight: 1.6 }}>

@@ -163,7 +163,7 @@ export function fetchMe(): Promise<MeData> {
   return callApi('/api/me')
 }
 
-export function updateProfile(patch: Partial<Pick<Profile, 'full_name' | 'creci' | 'cnaI' | 'avatar_url'>>): Promise<MeData> {
+export function updateProfile(patch: Partial<Pick<Profile, 'full_name' | 'creci' | 'cnai' | 'avatar_url'>>): Promise<MeData> {
   return callApi('/api/me', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },

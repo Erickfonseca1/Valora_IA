@@ -30,7 +30,7 @@ export async function POST(
     const { data: created, error } = await db
       .from("profiles")
       .insert({ id: user.id, full_name: fullName })
-      .select("id, full_name, creci, cnaI, avatar_url, created_at")
+      .select("id, full_name, creci, cnai, avatar_url, created_at")
       .single();
     if (error && !error.message.includes("duplicate")) {
       return NextResponse.json({ success: false, error: "Failed to create profile" }, { status: 500 });
@@ -62,7 +62,7 @@ export async function POST(
   }
 
   const [profile, organizations, memberships] = await Promise.all([
-    db.from("profiles").select("id, full_name, creci, cnaI, avatar_url, created_at").eq("id", user.id).single(),
+    db.from("profiles").select("id, full_name, creci, cnai, avatar_url, created_at").eq("id", user.id).single(),
     db.from("organizations").select("*").in("id", (await db.from("memberships").select("organization_id").eq("user_id", user.id)).data?.map((m) => m.organization_id) ?? []),
     db.from("memberships").select("*").eq("user_id", user.id),
   ]);

@@ -5,7 +5,7 @@ import AppShell from '../components/AppShell'
 
 vi.mock('../context/AuthContext', () => ({
   useAuth: () => ({
-    profile: { id: 'u_1', full_name: 'Edizio Peixoto', creci: null, cnaI: null, avatar_url: null, created_at: '' },
+    profile: { id: 'u_1', full_name: 'Edizio Peixoto', creci: null, cnai: null, avatar_url: null, created_at: '' },
     organizations: [
       { id: 'org_1', name: 'Avaliações de Edizio', slug: 'edizio', type: 'solo', logo_url: null, created_by: 'u_1', plan: 'free', created_at: '' },
     ],

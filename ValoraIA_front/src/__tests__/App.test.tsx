@@ -151,7 +151,7 @@ describe('App', () => {
     vi.mocked(getMarketTrend).mockResolvedValue(mockTrend)
     vi.mocked(getValuation).mockResolvedValue(mockValuation)
     vi.mocked(fetchMe).mockResolvedValue({
-      profile: { id: 'u_1', full_name: 'Usuário Teste', creci: null, cnaI: null, avatar_url: null, created_at: '' },
+      profile: { id: 'u_1', full_name: 'Usuário Teste', creci: null, cnai: null, avatar_url: null, created_at: '' },
       organizations: [
         { id: 'org_1', name: 'Avaliações de Teste', slug: 'teste', type: 'solo', logo_url: null, created_by: 'u_1', plan: 'free', created_at: '' },
       ],

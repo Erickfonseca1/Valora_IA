@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   id         UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name  TEXT NOT NULL,
   creci      TEXT,
-  cnaI       TEXT,
+  cnai       TEXT,
   avatar_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
