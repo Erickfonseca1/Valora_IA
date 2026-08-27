@@ -5,13 +5,14 @@ import AppShell from '../components/AppShell'
 
 vi.mock('../context/AuthContext', () => ({
   useAuth: () => ({
-    profile: { id: 'u_1', full_name: 'Edizio Peixoto', creci: null, cnai: null, avatar_url: null, created_at: '' },
+    profile: { id: 'u_1', full_name: 'Edizio Peixoto', creci: null, cnaI: null, avatar_url: null, onboarding_completed_at: '2026-01-01T00:00:00Z', created_at: '' },
     organizations: [
       { id: 'org_1', name: 'Avaliações de Edizio', slug: 'edizio', type: 'solo', logo_url: null, created_by: 'u_1', plan: 'free', created_at: '' },
     ],
     activeOrg: { id: 'org_1', name: 'Avaliações de Edizio', slug: 'edizio', type: 'solo', logo_url: null, created_by: 'u_1', plan: 'free', created_at: '' },
     memberships: [{ id: 'm_1', organization_id: 'org_1', user_id: 'u_1', role: 'owner', invited_by: null, created_at: '' }],
     user: { id: 'u_1', email: 'edizio@exemplo.com' },
+    sessionReady: true,
     setActiveOrg: vi.fn(),
     signOut: vi.fn(),
   }),

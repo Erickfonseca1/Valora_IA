@@ -310,6 +310,7 @@ export interface Profile {
   creci: string | null
   cnai: string | null
   avatar_url: string | null
+  onboarding_completed_at?: string | null
   created_at: string
 }
 

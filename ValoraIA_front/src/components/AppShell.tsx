@@ -2,20 +2,21 @@ import { useState, useEffect, type ReactNode } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { LayoutDashboard, PlusCircle, FileText, Settings, Plus, ChevronDown, LogOut } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
+import OnboardingFlow from './OnboardingFlow'
 import type { Organization } from '../types'
 
 interface NavItem {
   icon: React.ElementType
   label: string
   path: string
-  disabled?: boolean
+  tour?: string
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { icon: LayoutDashboard, label: 'Painel', path: '/app' },
-  { icon: PlusCircle, label: 'Nova Avaliação', path: '/app/nova-avaliacao' },
-  { icon: FileText, label: 'Relatórios', path: '/app/relatorios' },
-  { icon: Settings, label: 'Configurações', path: '/app/configuracoes' },
+  { icon: LayoutDashboard, label: 'Painel', path: '/app', tour: 'dashboard' },
+  { icon: PlusCircle, label: 'Nova Avaliação', path: '/app/nova-avaliacao', tour: 'new' },
+  { icon: FileText, label: 'Relatórios', path: '/app/relatorios', tour: 'reports' },
+  { icon: Settings, label: 'Configurações', path: '/app/configuracoes', tour: 'config' },
 ]
 
 function initials(name: string): string {
@@ -112,7 +113,16 @@ export default function AppShell({ children }: AppShellProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { profile, organizations, activeOrg, setActiveOrg, signOut, user } = useAuth()
+  const { profile, organizations, activeOrg, setActiveOrg, signOut, user, sessionReady } = useAuth()
+  const [showOnboarding, setShowOnboarding] = useState(false)
+
+  useEffect(() => {
+    if (sessionReady && user && profile && !profile.onboarding_completed_at) {
+      const t = setTimeout(() => setShowOnboarding(true), 600)
+      return () => clearTimeout(t)
+    }
+    setShowOnboarding(false)
+  }, [sessionReady, user, profile])
 
   useEffect(() => { setSidebarOpen(false) }, [location.pathname])
 
@@ -145,6 +155,7 @@ export default function AppShell({ children }: AppShellProps) {
             <button
               key={item.path}
               onClick={() => navigate(item.path)}
+              data-tour={item.tour}
               className="sidebar-nav-item flex items-center gap-2.5 w-full py-2.5 rounded-lg border-none text-sm text-left mb-0.5 transition-all duration-150"
               style={{
                 paddingLeft: active ? 9 : 12,
@@ -259,6 +270,8 @@ export default function AppShell({ children }: AppShellProps) {
           {children}
         </main>
       </div>
+
+      {showOnboarding && <OnboardingFlow onClose={() => setShowOnboarding(false)} />}
     </div>
   )
 }
