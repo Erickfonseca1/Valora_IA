@@ -41,6 +41,14 @@ const ValuationCreateSchema = z.object({
     scope: z.enum(["interno", "condo", "proximo"]),
   })).optional(),
   in_gated_community: z.boolean().optional(),
+  // Zoneamento é informado pelo avaliador (quando houver dado confiável).
+  // Sem estes parâmetros, não calculamos cenários involutivos — evitamos
+  // apresentar resultado com índice de aproveitamento inventado (stub).
+  zoning_params: z.object({
+    IAb: z.number().positive().optional(),
+    IAmax: z.number().positive().optional(),
+    TO: z.number().min(0).max(1).optional(),
+  }).optional(),
   photos: z.array(z.object({
     room: z.string().min(1).max(60),
     url: z.string().min(1).max(2048),
@@ -86,6 +94,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     lat: bodyLat, lng: bodyLng,
     construction_age, conservation_state, terrain_slope, street_level, is_corner,
     amenities, in_gated_community, photos,
+    zoning_params: requestedZoning,
   } = parsed.data;
 
   const area_construida_m2 = requestedConstructionArea ?? legacyArea;
@@ -127,15 +136,17 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     }
   }
 
-  // ── Zoning stub (no public BR zoning API — urban default) ────────────────
-  const zoning_params: ZoningParams = { IAb: 1.0, IAmax: 2.0, TO: 0.5 };
+  // ── Zoning: apenas o informado pelo avaliador (indicativo do plano diretor).
+  // Sem dados confiáveis, o método involutivo não é calculado — nada de índice
+  // de aproveitamento inventado no laudo.
+  const zoning_params = (requestedZoning ?? null) as ZoningParams | null;
 
   // ── On-demand comparables (scraping inteligente) ─────────────────────────
   // If the local DB lacks same-typology comps near the target, trigger a
   // synchronous VivaReal scrape scoped to the bairro+typology. Best-effort:
   // never blocks the valuation — errors just log and the engine proceeds
   // with whatever exists (market prior anchors weak samples).
-  let onDemandResult: { before: unknown; after: unknown; collected: number; errors: string[] } | null = null;
+  let onDemandResult: { before: unknown; after: unknown; collected: number; errors: string[]; skipped_due_to_cache?: boolean } | null = null;
   try {
     onDemandResult = await ensureLocalComparables({
       lat: geo.lat,
@@ -194,9 +205,9 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     confidence_diagnostics,
   } = engineResult;
 
-  // ── Involutive (land only) ────────────────────────────────────────────────
+  // ── Involutive (land only, com zoneamento informado) ───────────────────────
   let involutiveResult = null;
-  if (property_type === "land") {
+  if (property_type === "land" && zoning_params?.IAmax != null) {
     involutiveResult = runInvolutive({
       area_terreno: effectiveLandArea!,
       zoning_params,

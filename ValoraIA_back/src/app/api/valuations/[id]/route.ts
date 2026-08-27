@@ -45,6 +45,16 @@ export async function GET(
     if (org) organization = org as { name: string; logo_url: string | null };
   }
 
+  let author: { full_name: string; creci: string | null; cnai: string | null } | null = null;
+  if (data.created_by) {
+    const { data: p } = await db
+      .from("profiles")
+      .select("full_name, creci, cnai")
+      .eq("id", data.created_by)
+      .maybeSingle();
+    if (p) author = { full_name: p.full_name, creci: p.creci, cnai: p.cnai };
+  }
+
   const record: ValuationRecord = {
     id: data.id,
     address: data.address,
@@ -81,6 +91,7 @@ export async function GET(
     created_by: data.created_by ?? null,
     deleted_at: data.deleted_at ?? null,
     organization,
+    author,
     created_at: data.created_at,
   };
 

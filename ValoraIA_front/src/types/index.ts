@@ -169,6 +169,7 @@ export interface ValuationRecord {
     blend_weight: number
     sample_quality: number
   } | null
+  method_estimates?: MethodEstimate[]
   photos?: ValuationPhoto[]
   created_at: string
   // Ownership (multi-tenant)
@@ -178,6 +179,11 @@ export interface ValuationRecord {
   organization?: {
     name: string
     logo_url: string | null
+  } | null
+  author?: {
+    full_name: string
+    creci: string | null
+    cnai: string | null
   } | null
 }
 
@@ -233,6 +239,7 @@ export interface CreateValuationBody {
   amenities?: AmenitySelection[]
   in_gated_community?: boolean
   photos?: { room: string; url: string }[]
+  zoning_params?: { IAb?: number; IAmax?: number; TO?: number }
 }
 
 export interface ValuationPhoto {

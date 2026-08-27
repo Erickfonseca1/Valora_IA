@@ -297,6 +297,11 @@ export interface ValuationRecord {
     name: string;
     logo_url: string | null;
   } | null;
+  author?: {
+    full_name: string;
+    creci: string | null;
+    cnai: string | null;
+  } | null;
 }
 
 export interface CreateValuationRequest {
