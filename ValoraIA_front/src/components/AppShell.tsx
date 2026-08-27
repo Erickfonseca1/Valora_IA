@@ -7,6 +7,30 @@ import OnboardingTour from './OnboardingTour'
 import { updateProfile } from '../api'
 import type { Organization } from '../types'
 
+// Redundância local: a conclusão do onboarding é marcada imediatamente no
+// navegador (não depende do backend) e depois confirmada no servidor.
+const ONBOARDING_DONE_KEY = 'avalia.onboarding-done'
+
+function onboardingDoneLocally(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDING_DONE_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function setOnboardingDoneLocally() {
+  try {
+    localStorage.setItem(ONBOARDING_DONE_KEY, '1')
+  } catch { /* private mode */ }
+}
+
+export function clearOnboardingDoneLocally() {
+  try {
+    localStorage.removeItem(ONBOARDING_DONE_KEY)
+  } catch { /* private mode */ }
+}
+
 interface NavItem {
   icon: React.ElementType
   label: string
@@ -121,8 +145,8 @@ export default function AppShell({ children }: AppShellProps) {
   useEffect(() => {
     if (!sessionReady || !user) return
     // Dispara mesmo quando o profile ainda não carregou (refresh lento/falho);
-    // se o onboarding já foi concluído em algum momento, não re-apresenta.
-    if (profile?.onboarding_completed_at) {
+    // concluído = flag no servidor OU marcação local (faz o F5 não repor o fluxo).
+    if (profile?.onboarding_completed_at || onboardingDoneLocally()) {
       setOnboarding('none')
       return
     }
@@ -131,10 +155,11 @@ export default function AppShell({ children }: AppShellProps) {
   }, [sessionReady, user, profile])
 
   const completeOnboarding = () => {
-    // Fecha o overlay imediatamente (sem esperar rede) e marca a flag em
-    // segundo plano. Se a gravação falhar, o onboarding volta no próximo
-    // acesso — comportamento aceitável e recuperável.
+    // Fecha o overlay imediatamente (sem esperar rede), marca localmente e
+    // confirma no servidor em segundo plano. Se a gravação falhar, o F5 não
+    // reposiciona o onboarding local (a gravação real continua best-effort).
     setOnboarding('none')
+    setOnboardingDoneLocally()
     updateProfile({ onboarding_completed_at: new Date().toISOString() })
       .then(() => refreshMe())
       .catch(() => { /* best-effort */ })

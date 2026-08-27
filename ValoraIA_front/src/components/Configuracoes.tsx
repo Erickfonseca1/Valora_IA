@@ -10,6 +10,7 @@ import {
   createOrganization,
   uploadLogo,
 } from '../api'
+import { clearOnboardingDoneLocally } from './AppShell'
 import type { OrganizationDetail, OrganizationMember, OrgInvite } from '../types'
 
 const PRIMARY = '#111827'
@@ -47,6 +48,7 @@ export default function Configuracoes() {
     setReplayLoading(true)
     setError(null)
     try {
+      clearOnboardingDoneLocally()
       await updateProfile({ onboarding_completed_at: null })
       await refreshMe()
       window.location.reload()

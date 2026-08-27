@@ -53,6 +53,7 @@ describe('AppShell', () => {
   })
 
   it('renderiza o onboarding quando a flag não foi concluída', async () => {
+    localStorage.removeItem('avalia.onboarding-done')
     vi.mocked(useAuth).mockImplementation(() => ({
       profile: { id: 'u_1', full_name: 'Novo Usuário', creci: null, cnai: null, avatar_url: null, onboarding_completed_at: null, created_at: '' },
       organizations: [
@@ -72,6 +73,32 @@ describe('AppShell', () => {
 
     renderWithRouter()
     expect(await screen.findByText('Perfil profissional')).toBeInTheDocument()
+  })
+
+  it('não reabre o onboarding quando concluído localmente (flag server nula)', async () => {
+    localStorage.setItem('avalia.onboarding-done', '1')
+    vi.mocked(useAuth).mockImplementation(() => ({
+      profile: { id: 'u_1', full_name: 'Novo Usuário', creci: null, cnai: null, avatar_url: null, onboarding_completed_at: null, created_at: '' },
+      organizations: [
+        { id: 'org_1', name: 'Avaliações de Novo', slug: 'novo', type: 'solo', logo_url: null, created_by: 'u_1', plan: 'free', created_at: '' },
+      ],
+      activeOrg: { id: 'org_1', name: 'Avaliações de Novo', slug: 'novo', type: 'solo', logo_url: null, created_by: 'u_1', plan: 'free', created_at: '' },
+      memberships: [{ id: 'm_1', organization_id: 'org_1', user_id: 'u_1', role: 'owner', invited_by: null, created_at: '' }],
+      user: { id: 'u_1', email: 'novo@exemplo.com' },
+      sessionReady: true,
+      setActiveOrg: vi.fn(),
+      signOut: vi.fn(),
+      refreshMe: vi.fn().mockResolvedValue(undefined),
+      loading: false,
+      signIn: vi.fn(),
+      signUp: vi.fn(),
+    }))
+
+    renderWithRouter()
+    await new Promise((resolve) => setTimeout(resolve, 1100))
+    expect(screen.queryByText('Perfil profissional')).not.toBeInTheDocument()
+    expect(screen.getByTestId('child')).toBeInTheDocument()
+    localStorage.removeItem('avalia.onboarding-done')
   })
 
   it('renderiza a logo e nome da aplicação', () => {
