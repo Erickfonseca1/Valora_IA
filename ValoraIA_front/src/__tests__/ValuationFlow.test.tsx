@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import type { ReactNode } from 'react'
@@ -105,6 +105,10 @@ async function advanceThroughPhotoStep() {
 }
 
 describe('ValuationFlow', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
+
   it('renderiza o título da página', () => {
     renderFlow()
     expect(screen.getByText('Nova Avaliação')).toBeInTheDocument()
@@ -298,49 +302,24 @@ describe('ValuationFlow', () => {
     expect(screen.queryByText('Vagas')).not.toBeInTheDocument()
   })
 
-  it('Terreno não mostra Quartos, Banheiros nem Vagas no passo 1', async () => {
+  it('Terreno fica desabilitado (avaliação em breve)', async () => {
     renderFlow()
     await skipIntakeStep()
-    fireEvent.click(screen.getByText('Terreno'))
-    expect(screen.queryByText('Quartos')).not.toBeInTheDocument()
-    expect(screen.queryByText('Banheiros')).not.toBeInTheDocument()
-    expect(screen.queryByText('Vagas')).not.toBeInTheDocument()
+    const terrenoBtn = screen.getByText('Terreno').closest('button') as HTMLButtonElement
+    expect(terrenoBtn.disabled).toBe(true)
+    // Clicar não altera o tipo selecionado (apartamento é o default):
+    // "Do condomínio" continua visível (só aparece para apartamento)
+    fireEvent.click(terrenoBtn)
+    expect(screen.getByText('Do condomínio')).toBeInTheDocument()
   })
 
-  it('Terreno envia bedrooms/bathrooms/parking como undefined', async () => {
+  it('review step não exibe campos ocultos para Comercial', async () => {
     renderFlow()
 
     // Step 0 → Step 1 (skip IntakeStep)
     await act(async () => { fireEvent.click(screen.getByText('Pular')) })
 
-    fireEvent.click(screen.getByText('Terreno'))
-    fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
-      target: { value: 'Loteamento Alphaville, Barueri, SP' },
-    })
-    fireEvent.change(screen.getByPlaceholderText('ex. 98'), {
-      target: { value: '500' },
-    })
-
-    // Step 1 → Step 2 (Conservação & Fotos)
-    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
-    // Step 2 → Step 3 (Revisão)
-    await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
-    await act(async () => { fireEvent.click(screen.getByText('✦ Gerar Avaliação IA')) })
-
-    expect(createValuation).toHaveBeenCalledWith(expect.objectContaining({
-      address: 'Loteamento Alphaville, Barueri, SP',
-      property_type: 'land',
-      area_m2: 500,
-    }))
-  })
-
-  it('review step não exibe campos ocultos para Terreno', async () => {
-    renderFlow()
-
-    // Step 0 → Step 1 (skip IntakeStep)
-    await act(async () => { fireEvent.click(screen.getByText('Pular')) })
-
-    fireEvent.click(screen.getByText('Terreno'))
+    fireEvent.click(screen.getByText('Comercial'))
     fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
       target: { value: 'Rua Teste, 100' },
     })
@@ -417,6 +396,25 @@ describe('ValuationFlow', () => {
 
     expect(uploadPhotosByRoom).toHaveBeenCalled()
     expect(analyzePhotos).not.toHaveBeenCalled()
+    expect(screen.getByText('Revisar Detalhes')).toBeInTheDocument()
+  })
+
+  it('pula a etapa de fotos sem enviar arquivos', async () => {
+    const fakeFile = new File(['fake'], 'foto.jpg', { type: 'image/jpeg' })
+
+    renderFlow()
+    await fillStep0AndAdvance()
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement
+    await act(async () => {
+      fireEvent.change(fileInput, { target: { files: [fakeFile] } })
+    })
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('Pular etapa (fotos opcionais)'))
+    })
+
+    expect(uploadPhotosByRoom).not.toHaveBeenCalled()
     expect(screen.getByText('Revisar Detalhes')).toBeInTheDocument()
   })
 })

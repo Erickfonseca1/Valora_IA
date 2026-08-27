@@ -10,11 +10,11 @@ import IntakeStep from './IntakeStep'
 import ExtractionCard from './ExtractionCard'
 import LiveValuationHero from './LiveValuationHero'
 
-const PROPERTY_TYPES: { label: string; value: PropertyType }[] = [
+const PROPERTY_TYPES: { label: string; value: PropertyType; soon?: boolean }[] = [
   { label: 'Apartamento', value: 'apartment' },
   { label: 'Casa', value: 'house' },
   { label: 'Comercial', value: 'commercial' },
-  { label: 'Terreno', value: 'land' },
+  { label: 'Terreno', value: 'land', soon: true },
 ]
 
 const PHOTOS_ENABLED = true
@@ -124,6 +124,7 @@ export default function ValuationFlow() {
   const internoVisible = form.propertyType !== 'land'
 
   const handlePropertyTypeChange = (value: PropertyType) => {
+    if ((value as string) === 'land') return // avaliação de terrenos desativada (em breve)
     setForm(f => ({
       ...f,
       propertyType: value,
@@ -180,6 +181,12 @@ export default function ValuationFlow() {
     } finally {
       setPhotoUploading(false)
     }
+  }
+
+  // Pular a etapa de fotos: descarta o que foi selecionado e avança para revisão.
+  const handleSkipPhotos = () => {
+    setForm(f => ({ ...f, roomPhotos: {}, roomPhotoUrls: [] }))
+    setStep(s => s + 1)
   }
 
   const handleSubmit = async () => {
@@ -382,8 +389,23 @@ export default function ValuationFlow() {
               <label className="block text-sm font-medium text-slate-700 mb-1.5">Tipo de Imóvel</label>
               <div className="flex gap-2">
                 {PROPERTY_TYPES.map(t => (
-                  <button key={t.value} onClick={() => handlePropertyTypeChange(t.value)} style={pillStyle(form.propertyType === t.value)}>
+                  <button
+                    key={t.value}
+                    onClick={() => handlePropertyTypeChange(t.value)}
+                    disabled={t.soon}
+                    title={t.soon ? 'Avaliação de terrenos chega em breve' : undefined}
+                    style={{
+                      ...pillStyle(form.propertyType === t.value),
+                      opacity: t.soon ? 0.45 : 1,
+                      cursor: t.soon ? 'not-allowed' : 'pointer',
+                    }}
+                  >
                     {t.label}
+                    {t.soon && (
+                      <span style={{ fontSize: 9, fontWeight: 700, marginLeft: 6, color: '#92720A', textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                        breve
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
@@ -809,6 +831,15 @@ export default function ValuationFlow() {
           >
             Voltar
           </button>
+          {PHOTOS_ENABLED && step === 2 && (
+            <button
+              onClick={handleSkipPhotos}
+              className="px-5 py-2.5 rounded-lg border border-slate-200 bg-white text-slate-500 text-sm font-medium"
+              style={{ cursor: 'pointer', fontFamily: 'inherit' }}
+            >
+              Pular etapa (fotos opcionais)
+            </button>
+          )}
           <button
             onClick={handleContinue}
             disabled={!canAdvance || (PHOTOS_ENABLED && photoUploading)}
