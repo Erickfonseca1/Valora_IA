@@ -209,6 +209,7 @@ export async function POST(req: NextRequest): Promise<NextResponse<ApiResponse<V
     .from("valuations")
     .insert({
       address,
+      city: geo.city ?? null,
       lat: geo.lat,
       lng: geo.lng,
       property_type,

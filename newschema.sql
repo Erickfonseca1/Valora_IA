@@ -136,6 +136,7 @@ CREATE TABLE valuations (
   address                     TEXT NOT NULL,
   lat                         FLOAT8,
   lng                         FLOAT8,
+  city                        TEXT,
   property_type               property_type_enum NOT NULL,
   area_construida_m2          NUMERIC(10,2),
   area_terreno_m2              NUMERIC(10,2),
