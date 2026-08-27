@@ -13,14 +13,15 @@ interface MeData {
 const ProfilePatchSchema = z.object({
   full_name: z.string().min(1).max(120).optional(),
   creci: z.string().max(40).nullable().optional(),
-  cnai: z.string().max(40).nullable().optional(),
+  cnaI: z.string().max(40).nullable().optional(),
   avatar_url: z.string().url().max(2048).nullable().optional(),
+  onboarding_completed_at: z.string().nullable().optional(),
 });
 
 async function loadMe(db: ReturnType<typeof getAdminClient>, userId: string): Promise<MeData> {
   const { data: profile } = await db
     .from("profiles")
-    .select("id, full_name, creci, cnai, avatar_url, created_at")
+    .select("id, full_name, creci, cnaI, avatar_url, onboarding_completed_at, created_at")
     .eq("id", userId)
     .maybeSingle();
 
@@ -81,8 +82,11 @@ export async function PATCH(
   const updates: Record<string, unknown> = {};
   if (parsed.data.full_name !== undefined) updates.full_name = parsed.data.full_name;
   if (parsed.data.creci !== undefined) updates.creci = parsed.data.creci;
-  if (parsed.data.cnai !== undefined) updates.cnai = parsed.data.cnai;
+  if (parsed.data.cnaI !== undefined) updates.cnaI = parsed.data.cnaI;
   if (parsed.data.avatar_url !== undefined) updates.avatar_url = parsed.data.avatar_url;
+  if (parsed.data.onboarding_completed_at !== undefined) {
+    updates.onboarding_completed_at = parsed.data.onboarding_completed_at;
+  }
 
   const { error } = await db.from("profiles").update(updates).eq("id", user.id);
   if (error) {

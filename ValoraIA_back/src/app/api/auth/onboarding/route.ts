@@ -62,7 +62,7 @@ export async function POST(
   }
 
   const [profile, organizations, memberships] = await Promise.all([
-    db.from("profiles").select("id, full_name, creci, cnai, avatar_url, created_at").eq("id", user.id).single(),
+    db.from("profiles").select("id, full_name, creci, cnai, avatar_url, onboarding_completed_at, created_at").eq("id", user.id).single(),
     db.from("organizations").select("*").in("id", (await db.from("memberships").select("organization_id").eq("user_id", user.id)).data?.map((m) => m.organization_id) ?? []),
     db.from("memberships").select("*").eq("user_id", user.id),
   ]);
