@@ -409,16 +409,16 @@ export default function Report() {
         </SectionCard>
       )}
 
-      {/* ── 02. VALOR DE MERCADO INDICATIVO ────────────────────── */}
+      {/* ── 02. COMPOSIÇÃO DO VALOR ───────────────────────────── */}
       <div style={{ marginBottom: 16 }}>
         <LiveValuationHero record={valuation} mode="static" />
       </div>
       <SectionCard>
-        <SectionHeader number="02" title="Valor de Mercado Indicativo" />
+        <SectionHeader number="02" title="Composição do Valor" />
         <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 0 }}>
           <div style={{ padding: '20px 16px', borderBottom: '1px solid #E8E0CF' }} className="sm:border-b-0 sm:border-r sm:border-slate-100 sm:!p-[24px_28px]">
             <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
-              Valor de Mercado Indicativo (Método Comparativo)
+              Valor Central de Referência (resultado do estudo)
             </div>
             <div style={{ fontSize: 34, fontWeight: 900, color: PRIMARY, fontFamily: "'DM Mono', monospace", lineHeight: 1 }}>
               {valuation.static_market_value_brl != null ? fmt(valuation.static_market_value_brl) : '—'}
@@ -433,8 +433,81 @@ export default function Report() {
                 Baseado no R$/m² verificado do bairro {priorBairro} (sem comparáveis diretos)
               </div>
             )}
+            <div style={{ marginTop: 14, padding: '10px 12px', borderLeft: '2px solid #C9A227', background: '#FEFCF5', color: '#64748B', fontSize: 11, lineHeight: 1.55 }}>
+              <strong style={{ color: '#1F2937' }}>Como ler</strong>
+              <div style={{ marginTop: 4 }}>
+                O valor central é o <strong style={{ color: '#1F2937' }}>resultado deste estudo</strong> — não é o PTAM final.
+                A faixa e o contexto da amostra ao lado indicam quanto o mercado local permite interpretar.
+              </div>
+            </div>
           </div>
           <div style={{ padding: '20px 16px' }} className="sm:!p-[24px_28px]">
+            {valuation.market_reference && valuation.homogenization_factors && (
+              <div style={{ marginBottom: 18, background: '#F7F4EE', border: '1px solid #E8E0CF', borderRadius: 10, padding: '12px 14px' }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
+                  Como o valor foi formado (A → B → resultado)
+                </div>
+                {(() => {
+                  const base = Number(valuation.homogenization_factors!.market_value)
+                  const area = Number(valuation.homogenization_factors!.area_m2)
+                  const anchor = Number(valuation.market_reference!.price_per_m2) * area
+                  const result = Number(valuation.static_market_value_brl ?? 0)
+                  const weight = Math.round(valuation.market_reference!.blend_weight * 100)
+                  const quality = Math.round(valuation.market_reference!.sample_quality * 100)
+                  const min = Math.min(base, anchor, result) || 1
+                  const max = Math.max(base, anchor, result) || 1
+                  const pct = (v: number) => Math.min(100, Math.max(0, ((v - min) / (max - min || 1)) * 100))
+                  const stages = [
+                    { tag: 'A', label: `Base dos comparáveis · detalhe em 02b`, value: base, sub: 'R$/m² ensemble × fatores físicos × comodidades × área' },
+                    { tag: 'B', label: `Referência do bairro (${valuation.market_reference!.neighborhood}) · detalhe em 02c`, value: anchor, sub: `${fmtM2(Math.round(valuation.market_reference!.price_per_m2))} verificado × ${area.toLocaleString('pt-BR')} m² · peso no resultado: ${weight}%` },
+                  ]
+                  return (
+                    <>
+                      {stages.map((s, i) => (
+                        <div key={s.tag} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', marginBottom: i === 0 ? 10 : 0 }}>
+                          <div style={{ width: 20, height: 20, borderRadius: 6, background: '#fff', border: '1px solid #E8E0CF', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, fontFamily: "'DM Mono', monospace", flexShrink: 0 }}>
+                            {s.tag}
+                          </div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: '#334155' }}>{s.label}</div>
+                            <div style={{ fontSize: 15, fontWeight: 800, color: '#475569', fontFamily: "'DM Mono', monospace", marginTop: 2 }}>
+                              {fmt(s.value)}
+                            </div>
+                            <div style={{ fontSize: 10, color: '#94A3B8', lineHeight: 1.5, marginTop: 2 }}>{s.sub}</div>
+                          </div>
+                        </div>
+                      ))}
+                      <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start', paddingTop: 10, marginTop: 10, borderTop: '1px dashed #E8E0CF' }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 6, background: ACCENT, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: 11, fontFamily: "'DM Mono', monospace", flexShrink: 0 }}>✦</div>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#1A1A1A' }}>Resultado do estudo</div>
+                          <div style={{ fontSize: 18, fontWeight: 900, color: PRIMARY, fontFamily: "'DM Mono', monospace", marginTop: 2 }}>
+                            {fmt(result)}
+                          </div>
+                          <div style={{ fontSize: 10, color: '#94A3B8', lineHeight: 1.5, marginTop: 2 }}>
+                            Combinação de A e B pelo peso — quanto melhor a amostra direta (qualidade {quality}%), menos a referência influencia.
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Régua: onde o resultado cai entre a base e a âncora */}
+                      <div style={{ marginTop: 12 }}>
+                        <div style={{ position: 'relative', height: 6, background: '#E8E0CF', borderRadius: 3 }}>
+                          <div style={{ position: 'absolute', left: `${pct(anchor)}%`, top: -3, width: 12, height: 12, borderRadius: '50%', background: '#94A3B8', transform: 'translateX(-50%)' }} />
+                          <div style={{ position: 'absolute', left: `${pct(base)}%`, top: -3, width: 12, height: 12, borderRadius: '50%', background: '#94A3B8', transform: 'translateX(-50%)' }} />
+                          <div style={{ position: 'absolute', left: `${pct(result)}%`, top: -4, width: 14, height: 14, borderRadius: '50%', background: ACCENT, border: '2px solid #fff', boxShadow: '0 1px 3px rgba(0,0,0,0.25)', transform: 'translateX(-50%)' }} />
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: '#94A3B8', marginTop: 6 }}>
+                          <span>B · referência do bairro</span>
+                          <span style={{ color: '#B45309', fontWeight: 700 }}>✦ resultado</span>
+                          <span>A · base dos comparáveis</span>
+                        </div>
+                      </div>
+                    </>
+                  )
+                })()}
+              </div>
+            )}
             <div style={{ fontSize: 11, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1 }}>
               Faixa indicativa (Método Comparativo)
             </div>
@@ -448,7 +521,7 @@ export default function Report() {
                 : '—'}
             </div>
             <div style={{ fontSize: 12, color: '#64748B', lineHeight: 1.55, marginTop: 12 }}>
-              O valor central à esquerda é o resultado do cálculo comparativo; esta faixa mostra o espaço de interpretação da amostra. Use ambos junto ao imóvel, ao mercado local e à negociação.
+              O valor central é o resultado do estudo; esta faixa mostra o espaço de interpretação da amostra. Use ambos junto ao imóvel, ao mercado local e à negociação.
             </div>
             <div style={{ fontSize: 11, color: '#94A3B8', marginTop: 10 }}>
               {confidenceDiagnostics
@@ -499,12 +572,12 @@ export default function Report() {
       {/* ── 02c. REFERÊNCIA DE MERCADO VERIFICADA ────────────────── */}
       {valuation.market_reference && (
         <SectionCard>
-          <SectionHeader number="02c" title="Âncora Local e Composição do Resultado" />
+          <SectionHeader number="02c" title="Referência do Bairro — Passo B (peso no resultado)" />
           <div style={{ padding: '12px 20px', background: '#FEFCF5', borderBottom: '1px solid #E8D99A', fontSize: 12, color: '#64748B', lineHeight: 1.6 }}>
             <strong style={{ color: '#1E293B' }}>Como ler esta etapa:</strong> a 02b mostra a base
-            calculada pelos comparáveis. Esta etapa mostra uma referência independente do bairro,
-            usada para ancorar o resultado quando a amostra direta é fraca ou pouco representativa.
-            Ela não é um segundo valor do imóvel.
+            calculada pelos comparáveis (passo A). Esta etapa mostra a referência independente do bairro
+            (<strong style={{ color: '#1E293B' }}>passo B</strong>), que é ponderada com a base quando a
+            amostra direta é fraca ou pouco representativa. Ela não é um segundo valor do imóvel.
           </div>
           <div style={{ padding: '14px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
             <div>
@@ -523,7 +596,7 @@ export default function Report() {
             </div>
             <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 6 }}>
               <div>
-                <span style={{ fontSize: 11, color: '#94A3B8', marginRight: 6 }}>Peso desta âncora no resultado:</span>
+                <span style={{ fontSize: 11, color: '#94A3B8', marginRight: 6 }}>Peso no resultado:</span>
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#334155', fontFamily: "'DM Mono', monospace" }}>
                   {Math.round(valuation.market_reference.blend_weight * 100)}%
                 </span>
@@ -534,12 +607,20 @@ export default function Report() {
                   {Math.round(valuation.market_reference.sample_quality * 100)}%
                 </span>
               </div>
+              {valuation.homogenization_factors && (
+                <div>
+                  <span style={{ fontSize: 11, color: '#94A3B8', marginRight: 6 }}>Âncora em R$:</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: '#334155', fontFamily: "'DM Mono', monospace" }}>
+                    {fmt(Math.round(valuation.market_reference.price_per_m2 * valuation.homogenization_factors.area_m2))}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <div style={{ padding: '0 20px 14px', fontSize: 11, color: '#94A3B8', lineHeight: 1.5 }}>
             Este R$/m² vem de pesquisa de mercado verificada e funciona como referência locacional.
-            O resultado final combina a base da 02b com esta âncora conforme o peso indicado acima;
-            quanto maior esse peso, maior a influência da referência do bairro sobre o resultado.
+            O resultado do estudo combina a base da 02b com esta âncora conforme o peso acima:
+            quanto maior o peso, mais a referência do bairro aproxima o valor central dela.
           </div>
         </SectionCard>
       )}

@@ -57,7 +57,8 @@ export default function ValueWaterfall({ factors }: { factors: HomogenizationFac
       <p style={{ fontSize: 13, color: '#6B6B6B', margin: '0 0 18px', lineHeight: 1.7 }}>
         Esta etapa mostra a construção da base técnica a partir dos comparáveis selecionados. O preço
         unitário recebe os ajustes do próprio imóvel avaliado; cada fator multiplica o R$/m² acumulado.
-        A referência verificada do bairro, quando utilizada, é explicada separadamente na etapa seguinte.
+        Este é o <strong style={{ color: '#1A1A1A' }}>passo A do fluxo</strong> — a base comparável é
+        ponderada com a referência do bairro (02c) para chegar ao valor central do estudo.
       </p>
 
       {/* Base */}
@@ -115,7 +116,7 @@ export default function ValueWaterfall({ factors }: { factors: HomogenizationFac
       {/* Valor final */}
       <div style={{ background: '#FEFCF5', border: `1px solid #E8D99A`, borderRadius: 8, padding: '14px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ fontSize: 11, fontWeight: 700, color: '#92720A', textTransform: 'uppercase', letterSpacing: 1 }}>
-          Resultado da base comparável
+          Passo A · Base comparável (antes da ponderação com o bairro)
         </div>
         <div style={{ fontSize: 22, fontWeight: 900, color: GOLD, fontFamily: MONO }}>
           {fmtBRL(factors.market_value)}

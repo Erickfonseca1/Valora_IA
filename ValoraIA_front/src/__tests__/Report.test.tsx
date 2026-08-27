@@ -94,6 +94,10 @@ const { mockValuation } = vi.hoisted(() => ({
       amenity_internal: 1.06, amenity_condo: 1.0, amenity_proximo: 1.0, amenity_factor: 1.06,
       combined_factor: 1.113, ppm2_homogenized: 5565, area_m2: 98, market_value: 545370,
     },
+    market_reference: {
+      neighborhood: 'Manaíra', raw_price_per_m2: 6500, price_per_m2: 5850,
+      match_score: 1, blend_weight: 0.3, sample_quality: 0.7,
+    },
   },
 }))
 
@@ -156,10 +160,20 @@ describe('Report', () => {
     })
   })
 
+  it('exibe a composição do valor (A → B → resultado) com pesos', async () => {
+    renderReport()
+    await waitFor(() => {
+      expect(screen.getByText(/Como o valor foi formado \(A → B → resultado\)/i)).toBeInTheDocument()
+      expect(screen.getByText(/Base dos comparáveis · detalhe em 02b/i)).toBeInTheDocument()
+      expect(screen.getByText(/Referência do bairro \(Manaíra\) · detalhe em 02c/i)).toBeInTheDocument()
+      expect(screen.getByText(/peso no resultado: 30%/i)).toBeInTheDocument()
+    })
+  })
+
   it('exibe a seção de fatores de preço', async () => {
     renderReport()
     await waitFor(() => {
-      expect(screen.getByText(/Fatores físicos/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/Fatores físicos/i).length).toBeGreaterThanOrEqual(1)
       expect(screen.getByText(/Comodidades por escopo/i)).toBeInTheDocument()
     })
   })
@@ -232,7 +246,7 @@ describe('Report', () => {
     await waitFor(() => {
       expect(screen.getByText('R$/m² homogeneizado')).toBeInTheDocument()
       expect(screen.getByText('Área útil')).toBeInTheDocument()
-      expect(screen.getByText(/Fator de oferta de 10%/i)).toBeInTheDocument()
+      expect(screen.getAllByText(/Fator de oferta de 10%/i).length).toBeGreaterThanOrEqual(1)
     })
   })
 

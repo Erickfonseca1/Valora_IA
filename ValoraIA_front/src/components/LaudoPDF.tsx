@@ -234,6 +234,19 @@ export default function LaudoPDF({ valuation: v, mapImage }: { valuation: Valuat
               </Text>
             </View>
           )}
+          {!isPriorOnly && v.market_reference && v.homogenization_factors && (
+            <View style={{ marginTop: 8, padding: 8, backgroundColor: '#F7F4EE', borderRadius: 3 }}>
+              <Text style={{ fontSize: 7, color: '#475569', fontFamily: 'Helvetica-Bold', letterSpacing: 1, marginBottom: 3 }}>
+                COMPOSIÇÃO DO VALOR (A → B → RESULTADO)
+              </Text>
+              <Text style={{ fontSize: 7, color: '#64748B', lineHeight: 1.5 }}>
+                A · Base dos comparáveis: {fmtBRL(v.homogenization_factors.market_value)} · {' '}
+                B · Referência do bairro ({v.market_reference.neighborhood}):{' '}
+                {fmtBRL(v.market_reference.price_per_m2 * v.homogenization_factors.area_m2)} · peso no resultado {Math.round(v.market_reference.blend_weight * 100)}% →{' '}
+                Resultado: {fmtBRL(v.static_market_value_brl ?? 0)}
+              </Text>
+            </View>
+          )}
           <Text style={{ fontSize: 8, color: '#64748B', lineHeight: 1.5, marginTop: 8 }}>
             O valor central é o resultado do cálculo; a faixa mostra o espaço de interpretação da amostra.
             Use ambos junto ao imóvel, ao mercado local e à negociação.
