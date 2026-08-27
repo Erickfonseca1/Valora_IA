@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useState,
+  useRef,
   useCallback,
   type ReactNode,
 } from 'react'
@@ -47,7 +48,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshMe = useCallback(async () => {
     try {
       const me = await fetchMe() as MeData
-      setProfile(me.profile)
+      // Fallback: se o perfil ainda não existe no servidor, usa o nome do
+      // signup (user_metadata) para não exibir o prefixo do e-mail.
+      const meta = (userMetaRef.current?.full_name as string | undefined) ?? null
+      setProfile(me.profile ?? (meta ? { id: userMetaRef.current!.id, full_name: meta, creci: null, cnai: null, avatar_url: null, created_at: '' } : null))
       setOrganizations(me.organizations)
       setMemberships(me.memberships)
       const active = me.organizations.find((o) => o.id === activeOrgId) ?? me.organizations[0] ?? null
@@ -62,6 +66,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.warn('[auth] refreshMe falhou (perfil/nome podem não aparecer):', err)
     }
   }, [activeOrgId])
+
+  // Guarda o user_metadata da sessão (nome do signup) para o fallback acima.
+  const userMetaRef = useRef<{ id: string; full_name?: unknown } | null>(null)
+
+  const syncFromSession = (sessionUser: { id: string; email?: string | null; user_metadata?: Record<string, unknown> }) => {
+    userMetaRef.current = {
+      id: sessionUser.id,
+      full_name: sessionUser.user_metadata?.full_name ?? sessionUser.user_metadata?.name,
+    }
+    setUser({ id: sessionUser.id, email: sessionUser.email ?? null })
+  }
 
   useEffect(() => {
     let cancelled = false
@@ -78,13 +93,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (cancelled) return
         const session = data.session
         if (session?.user) {
-          setUser({ id: session.user.id, email: session.user.email ?? null })
-          try {
-            await completeOnboarding()
-            await refreshMe()
-          } catch {
-            // Onboarding is best-effort; a later refresh recovers.
-          }
+          syncFromSession(session.user)
+          // Onboarding e carga do perfil são independentes: uma falha na outra
+          // não pode impedir o nome/organizações de carregarem.
+          try { await completeOnboarding() } catch { /* best-effort */ }
+          try { await refreshMe() } catch { /* refreshMe já loga */ }
         }
         setLoading(false)
         setSessionReady(true)
@@ -105,13 +118,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setActiveOrgId(null)
         localStorage.removeItem(ORG_STORAGE_KEY)
       } else if (event === 'SIGNED_IN' && session?.user) {
-        setUser({ id: session.user.id, email: session.user.email ?? null })
-        try {
-          await completeOnboarding()
-          await refreshMe()
-        } catch { /* best-effort */ }
+        syncFromSession(session.user)
+        try { await completeOnboarding() } catch { /* best-effort */ }
+        try { await refreshMe() } catch { /* refreshMe já loga */ }
       } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        setUser({ id: session.user.id, email: session.user.email ?? null })
+        syncFromSession(session.user)
       }
       setLoading(false)
       setSessionReady(true)
