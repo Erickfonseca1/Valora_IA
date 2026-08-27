@@ -280,9 +280,7 @@ const PLANS: Plan[] = [
       'Até 10 cadeiras',
       '200 estudos por mês',
       'Tudo do plano Imobiliária',
-      'Treinamento da equipe incluso',
       'Suporte prioritário',
-      'Acompanhamento de onboarding',
     ],
     cta: 'Falar com especialista',
   },
@@ -295,7 +293,7 @@ function PricingSection() {
     v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 
   return (
-    <section className="marketing-section marketing-pricing-section">
+    <section id="precos" className="marketing-section marketing-pricing-section">
       <div className="marketing-container">
         <SectionHeading
           eyebrow="PLANOS E PREÇOS"
@@ -477,6 +475,7 @@ export default function LandingPage() {
             <a href="#como-funciona">Como funciona</a>
             <a href="#metodologia">Metodologia</a>
             <a href="#relatorio">Relatório</a>
+            <a href="#precos">Preços</a>
           </nav>
           <div className="marketing-header-actions">
             <a href="/app" className="marketing-header-login">Acessar plataforma</a>
@@ -491,6 +490,7 @@ export default function LandingPage() {
               <a href="#como-funciona">Como funciona</a>
               <a href="#metodologia">Metodologia</a>
               <a href="#relatorio">Relatório</a>
+              <a href="#precos">Preços</a>
               <a href="/app">Acessar plataforma</a>
             </nav>
           </details>
