@@ -130,12 +130,14 @@ export default function AppShell({ children }: AppShellProps) {
     return () => clearTimeout(t)
   }, [sessionReady, user, profile])
 
-  const completeOnboarding = async () => {
-    try {
-      await updateProfile({ onboarding_completed_at: new Date().toISOString() })
-      await refreshMe()
-    } catch { /* best-effort */ }
+  const completeOnboarding = () => {
+    // Fecha o overlay imediatamente (sem esperar rede) e marca a flag em
+    // segundo plano. Se a gravação falhar, o onboarding volta no próximo
+    // acesso — comportamento aceitável e recuperável.
     setOnboarding('none')
+    updateProfile({ onboarding_completed_at: new Date().toISOString() })
+      .then(() => refreshMe())
+      .catch(() => { /* best-effort */ })
   }
 
   useEffect(() => { setSidebarOpen(false) }, [location.pathname])
