@@ -262,7 +262,7 @@ const PLANS: Plan[] = [
     highlight: true,
     features: [
       'Até 3 cadeiras incluídas (+ R$ 39 por cadeira)',
-      '150 estudos por mês',
+      '100 estudos por mês',
       'Membros com papéis (avaliador/admin)',
       'Painel do gestor com a produção da equipe',
       'Convites por e-mail com link de aceite',
@@ -278,7 +278,7 @@ const PLANS: Plan[] = [
     yearlyMonthly: 458,
     features: [
       'Até 10 cadeiras',
-      '300 estudos por mês',
+      '200 estudos por mês',
       'Tudo do plano Imobiliária',
       'Treinamento da equipe incluso',
       'Suporte prioritário',
@@ -429,6 +429,7 @@ function PricingSection() {
 
         <p style={{ textAlign: 'center', margin: '28px 0 0', fontSize: 12, color: 'var(--marketing-faint)' }}>
           Pagamento via Pix ou cartão · 7 dias grátis nos planos pagos · O preço é por organização, não por usuário.
+          Acabou a cota do mês? Créditos avulsos de 10 estudos por R$ 29,90, sem mudar de plano.
         </p>
       </div>
     </section>

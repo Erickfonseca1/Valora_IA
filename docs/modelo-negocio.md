@@ -76,10 +76,14 @@ Cobrança por uso fica restrita a *quotas* (número de avaliações por plano) �
 | Plano | Preço | Público | Incluso |
 |---|---|---|---|
 | **Free** | R$ 0 | Aquisição (leads, trial 7 dias ou 2 avaliações) | 2 avaliações/mês, laudo com marca AVALIA, dashboard/trend básico |
-| **Captação Pro** | **R$ 149/mês** (anual: R$ 1.485, −17%) | Micro imobiliária (1–3 corretores) | Quota ~30 avaliações/mês, **laudo white-label (logo da imobiliária)**, trend por bairro/cidade, todos os métodos do motor |
-| **Escritório** | **R$ 299/mês** (anual: R$ 2.980, −17%) | Imobiliária média (até 10 corretores) | Multi-usuário, painel do gestor, gestão de laudos, suporte por WhatsApp, fotos IA como bônus |
-| **Institucional** | R$ 590–1.500/mês + setup (sales-led) | 15+ corretores, SECOVI, consórcios, bancos | SSO/API, quotas sob medida, treinamento, conformidade, zoneamento/PL custom |
-| **Anual** | −17% (padrão do mercado) | Todos | Retenção e antecipação de caixa |
+| **Solo Pro** | **R$ 129/mês** (anual: R$ 1.290, −17% = 2 meses grátis) | Corretor avaliador individual | 30 avaliações/mês, **laudo white-label (logo/nome)**, trend por bairro/cidade, fotos IA, PDF completo |
+| **Imobiliária** | **R$ 279/mês** (anual: R$ 2.790, −17%) | Micro imobiliária (3 cadeiras incl.; extra R$ 39/cadeira) | 100 avaliações/mês, multi-usuário, painel do gestor, membros com papéis, convites, suporte WhatsApp |
+| **Imobiliária+** | **R$ 549/mês** (anual: R$ 5.490, −17%) | Imobiliária média (até 10 cadeiras) | 200 avaliações/mês, tudo do anterior + treinamento e suporte prioritário |
+| **Créditos avulsos** | R$ 29,90 / 10 estudos | Todos (excedente da cota) | Não muda o plano; validade 12 meses — ~85% de margem |
+| **Institucional** | R$ 1.500–4.000/mês + setup (sales-led) | 15+ corretores, SECOVI, consórcios, bancos | SSO/API, quotas sob medida, treinamento, conformidade, zoneamento/PL custom |
+| **Anual** | −17% (2 meses grátis, padrão do mercado) | Todos | Retenção e antecipação de caixa |
+
+**Cotas dimensionadas pela meta de custo:** variável ≤15% da receita com custo-alvo de US$ 0,075–0,10/estudo (Apify cacheado + prior curado). Excedente via créditos avulsos — nunca downgrade forçado nem perda de dados.
 
 ### Racional value-based
 
@@ -125,7 +129,66 @@ Cobrança por uso fica restrita a *quotas* (número de avaliações por plano) �
 
 ---
 
-## 7. Roadmap de execução
+## 7. Unit economics — custos de infraestrutura por perfil de usuário
+
+> Seção para apresentação ao sócio. Valores de referência 2026, câmbio US$ 1 ≈ R$ 5,30.
+> Metas: custo variável ≤ 15% da receita dos planos pagos e custo fixo da plataforma
+> alocado ≤ 10% da receita mensal no momento em que se sustentar.
+
+### 7.1 O que custa cada componente (por avaliação)
+
+| Componente | O que é | Custo/estudo (cenário alvo) |
+|---|---|---|
+| **Apify (scraping VivaReal)** | 1 run por bairro+tipologia alimenta vários estudos | **US$ 0,03** amortizado (com cache 15 dias) — sem cache: US$ 0,16–0,60 |
+| **Google Maps — Geocoding** | endereço → coordenadas | US$ 0,005 |
+| **Google Maps — Places Nearby** | POIs do entorno (esco-las, hospitais > fator vizinhança) | US$ 0,032 |
+| **Google Maps — Static Maps** | mapa de fundo do PDF | US$ 0,002 |
+| **Gemini Vision (fotos)** | leitura das fotos → sugestão padrão/conservação (8 fotos) | US$ 0,002–0,01 (Flash US$0,30/1M in, US$2,50/1M out) |
+| **Supabase (compute/storage/auth)** | variável por operação | US$ 0,003 |
+| **TOTAL por estudo (alvo)** | | **≈ US$ 0,075–0,10 (R$ 0,40–0,53)** |
+
+Pior caso com Apify sem cache: US$ 0,65/estudo (R$ 3,45) — **motivo da meta de cache de 15 dias** (já implementada: bairro "quente" não refaz run; prior curado por cidade ancora amostras fracas).
+
+### 7.2 Custo fixo mensal da plataforma (arquitetura escalável)
+
+| Nível | Receita mensal | Stack | Custo fixo/mês |
+|---|---|---|---|
+| MVP | 0–R$ 15k | Railway Pro (backend, cap de gasto) US$ 25–45 + **Supabase Pro US$ 25** + front estático (Cloudflare Pages US$ 0) + observabilidade US$ 5–15 | **US$ 55–85 (R$ 290–450)** |
+| Crescimento | R$ 15–60k | Railway tiers + Supabase Pro multi-instância + filas/workers | US$ 150–300 |
+| Escala | R$ 100k+ | Kubernetes/VPS + Postgres dedicado | US$ 500–1.500 |
+
+**Por que não Vercel como backend:** workload pesado (sharp/HEIC + scraping síncrono até 5 min) custa US$ 55–110/mês em Vercel Pro e a cobrança por banda/CPU surpreende em pico. Railway (cap configurado) + Supabase é o equilíbrio MVP-escalável. (Vite front fica em CDN grátis.)
+
+### 7.3 Custos por plano (1 organização usando 100% da cota)
+
+| Plano | Preço R$ | Receita US$ | Estudos/mês | Custo variável US$ | Fixo share* | **Custo total** | **Margem bruta** |
+|---|---|---|---|---|---|---|---|
+| **Free** | 0 | 0 | 2 | 0,15–0,20 | ~0 | US$ 0,20 | Prejuízo proposital (aquisição; 2 estudos não disparam run por cache+prior) |
+| **Solo Pro** | 129 | 24,3 | 30 | 2,3–3,0 | 5 | US$ 8,3 | **≈ 66–90%** |
+| **Imobiliária** | 279 | 52,6 | 100 | 7,5–10,0 | 8 | US$ 18 | **≈ 66–86%** |
+| **Imobiliária+** | 549 | 103,6 | 200 | 15–20 | 12 | US$ 32 | **≈ 69–85%** |
+| Créditos avulsos | 29,90 (10 estudos) | 5,6 | 10 | 0,75–1,00 | ~0 | US$ 1 | **≈ 82–87%** |
+| Institucional | sob contrato | alto | alto | 25–40% da receita | — | — | neg. ≥ 60% |
+
+*Fixo share = proporção de ~US$ 60/mês de plataforma dividida por ~8–15 clientes pagos ativos.
+
+- **Ponto de equilíbrio da plataforma:** ~R$ 3.500–4.500/mês de receita (≈ 8–12 clientes pagos médios) cobre o fixo US$ 55–85.
+- **Como a margem é garantida:** cache de bairro TTL 15 dias (implementado) + prior curado por cidade (Nordeste coberto; expandir capitais) + cotas por plano como teto de gasto + créditos avulsos com ~85% de margem.
+- **Meta de longo prazo:** variável ≤15% e fixo ≤10% → margem operacional alvo **≥ 70% bruto / ≥ 55% operacional**, padrão SaaS saudável.
+
+### 7.4 Segurança dos dados (diligência para sócio/parceiros)
+
+- **Supabase** (Postgres + Auth + Storage + RLS): SOC 2 Type II, criptografia em trânsito/repouso, backup automático (Pro: 7 dias + PITR opcional), auth gerenciado com MFA/rate-limit nativo; **bucket de fotos privado + proxy autenticado + EXIF removido; audit_logs**. 
+- **Pendências formais:** (1) DPA com clientes e SCCs ANPD com provedores (Supabase/Google/Apify — prazo Res. ANPD 19/2024 venceu ago/2025); (2) nomear Encarregado/DPO (documentos prontos em `docs/lgpd/`).
+- **Futuro enterprise (bancos/consórcios):** avaliar self-hosted Postgres ou Supabase Dedicated + ISO 27001 antes de questionários de segurança institucionais.
+
+---
+
+*Fontes de preço: ai.google.dev/gemini-api/docs/pricing (Gemini Flash $0,30/1M in · $2,50/1M out), Google Maps Platform core pricing (Geocoding US$5/1 mil · Places Nearby Search Pro US$32/1 mil · Static Maps US$2/1 mil), Railway (US$5 base + uso) / Vercel Pro US$20/seat + consumo (não recomendado p/ backend), Supabase Pro US$25/mês, Apify (faixa por run informada pelo time: US$0,16–0,60).*
+
+---
+
+## 8. Roadmap de execução
 
 ### Fase 1 — Fundação monetizável (~2–3 semanas)
 - Auth (Supabase) com contas + organização por imobiliária.
