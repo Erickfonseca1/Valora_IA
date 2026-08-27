@@ -31,6 +31,7 @@ export default function Configuracoes() {
   const [detail, setDetail] = useState<OrganizationDetail | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [replayLoading, setReplayLoading] = useState(false)
 
   const membership = memberships.find((m) => m.organization_id === orgId)
   const isManager = membership?.role === 'owner' || membership?.role === 'admin'
@@ -42,14 +43,38 @@ export default function Configuracoes() {
       .catch((e) => setError(e.message))
   }, [orgId])
 
+  const handleReplayTour = async () => {
+    setReplayLoading(true)
+    setError(null)
+    try {
+      await updateProfile({ onboarding_completed_at: null })
+      await refreshMe()
+      window.location.reload()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erro ao reiniciar apresentação')
+      setReplayLoading(false)
+    }
+  }
+
   if (!user) return null
 
   return (
     <div style={{ maxWidth: 860, margin: '0 auto' }}>
-      <h1 className="text-xl font-bold text-slate-900" style={{ letterSpacing: '-0.3px', marginBottom: 4 }}>Configurações</h1>
-      <p className="text-sm text-slate-500" style={{ marginTop: 0, marginBottom: 20 }}>
-        Organização, membros e perfil profissional
-      </p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <h1 className="text-xl font-bold text-slate-900" style={{ letterSpacing: '-0.3px', marginBottom: 4 }}>Configurações</h1>
+          <p className="text-sm text-slate-500" style={{ marginTop: 0, marginBottom: 20 }}>
+            Organização, membros e perfil profissional
+          </p>
+        </div>
+        <button
+          onClick={handleReplayTour}
+          disabled={replayLoading}
+          style={{ border: '1px solid #E8E0CF', background: '#fff', borderRadius: 8, padding: '8px 14px', cursor: replayLoading ? 'wait' : 'pointer', fontSize: 12, fontWeight: 600, color: '#475569', fontFamily: 'inherit' }}
+        >
+          {replayLoading ? 'Recarregando…' : 'Ver apresentação novamente'}
+        </button>
+      </div>
 
       {/* Organization selector (when member of more than one) */}
       {organizations.length > 1 && (

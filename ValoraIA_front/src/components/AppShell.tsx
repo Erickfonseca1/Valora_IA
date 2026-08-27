@@ -117,11 +117,15 @@ export default function AppShell({ children }: AppShellProps) {
   const [showOnboarding, setShowOnboarding] = useState(false)
 
   useEffect(() => {
-    if (sessionReady && user && profile && !profile.onboarding_completed_at) {
-      const t = setTimeout(() => setShowOnboarding(true), 600)
-      return () => clearTimeout(t)
+    if (!sessionReady || !user) return
+    // Dispara mesmo quando o profile ainda não carregou (refresh lento/falho);
+    // se o onboarding já foi concluído em algum momento, não re-apresenta.
+    if (profile?.onboarding_completed_at) {
+      setShowOnboarding(false)
+      return
     }
-    setShowOnboarding(false)
+    const t = setTimeout(() => setShowOnboarding(true), 900)
+    return () => clearTimeout(t)
   }, [sessionReady, user, profile])
 
   useEffect(() => { setSidebarOpen(false) }, [location.pathname])
