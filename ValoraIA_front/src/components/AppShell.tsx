@@ -52,6 +52,12 @@ function initials(name: string): string {
   return (first + last).toUpperCase()
 }
 
+// Primeiro + segundo nome (ex.: "Edizio Belo Peixoto" → "Edizio Belo").
+function shortName(full: string | null): string {
+  if (!full) return ''
+  return full.trim().split(/\s+/).filter(Boolean).slice(0, 2).join(' ')
+}
+
 function AvaliaWordmark() {
   return (
     <div>
@@ -139,6 +145,7 @@ export default function AppShell({ children }: AppShellProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [displayName, setDisplayName] = useState('')
   const { profile, organizations, activeOrg, setActiveOrg, signOut, user, sessionReady, refreshMe } = useAuth()
   const [onboarding, setOnboarding] = useState<'none' | 'data' | 'tour'>('none')
 
@@ -173,7 +180,9 @@ export default function AppShell({ children }: AppShellProps) {
     return () => window.removeEventListener('resize', onResize)
   }, [])
 
-  const displayName = profile?.full_name ?? user?.email?.split('@')[0] ?? 'Usuário'
+  useEffect(() => {
+    setDisplayName(shortName(profile?.full_name ?? null) || (user?.email?.split('@')[0] ?? 'Usuário'))
+  }, [profile, user])
 
   const Sidebar = (
     <aside

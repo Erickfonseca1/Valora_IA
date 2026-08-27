@@ -57,8 +57,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         localStorage.removeItem(ORG_STORAGE_KEY)
       }
-    } catch {
+    } catch (err) {
       // Session exists but profile/orgs could not load; retry on next refresh.
+      console.warn('[auth] refreshMe falhou (perfil/nome podem não aparecer):', err)
     }
   }, [activeOrgId])
 
