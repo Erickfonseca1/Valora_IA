@@ -11,6 +11,7 @@ import type {
   OrganizationDetail,
   Membership,
   Profile,
+  TeamMemberProduction,
 } from './types'
 import { supabase } from './lib/supabase'
 
@@ -120,6 +121,10 @@ export function getDashboardMetrics(): Promise<DashboardMetrics> {
 
 export function getDashboardValuations(limit = 10, offset = 0): Promise<DashboardValuationsResponse> {
   return callApi(`/api/dashboard/valuations?limit=${limit}&offset=${offset}`)
+}
+
+export function getTeamDashboard(): Promise<{ members: TeamMemberProduction[] }> {
+  return callApi('/api/dashboard/team')
 }
 
 export function getMarketTrend(city: string, months = 12): Promise<MarketTrendResponse> {

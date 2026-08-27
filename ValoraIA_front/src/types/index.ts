@@ -368,6 +368,15 @@ export interface OrganizationDetail extends Organization {
   invites: OrgInvite[]
 }
 
+export interface TeamMemberProduction {
+  user_id: string
+  full_name: string | null
+  email: string | null
+  role: MembershipRole
+  this_month: number
+  total: number
+}
+
 export interface MeData {
   profile: Profile | null
   organizations: Organization[]

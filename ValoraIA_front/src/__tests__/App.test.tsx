@@ -40,6 +40,7 @@ vi.mock('../api', () => ({
   removeMember: vi.fn(),
   updateProfile: vi.fn(),
   uploadLogo: vi.fn(),
+  getTeamDashboard: vi.fn().mockResolvedValue({ members: [] }),
 }))
 
 vi.mock('../lib/supabase', () => {

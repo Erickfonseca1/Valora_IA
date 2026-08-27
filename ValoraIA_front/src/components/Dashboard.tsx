@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { DashboardMetrics, DashboardValuationItem, MarketTrendResponse } from '../types'
-import { getDashboardMetrics, getDashboardValuations, getMarketTrend } from '../api'
+import type { DashboardMetrics, DashboardValuationItem, MarketTrendResponse, TeamMemberProduction, MembershipRole } from '../types'
+import { getDashboardMetrics, getDashboardValuations, getMarketTrend, getTeamDashboard } from '../api'
+import { useAuth } from '../context/AuthContext'
 import { ConfidenceBadge, DailyActivityChart, MiniLineChart } from './Charts'
 
 const GOLD = '#C9A227'
@@ -35,29 +36,44 @@ const fmtDate = (iso: string) => {
   return d.toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' })
 }
 
+const ROLE_LABELS: Record<string, string> = {
+  owner: 'Dono',
+  admin: 'Admin',
+  avaliador: 'Avaliador',
+}
+
 export default function Dashboard() {
   const navigate = useNavigate()
+  const { profile, memberships, activeOrg } = useAuth()
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null)
   const [valuations, setValuations] = useState<DashboardValuationItem[]>([])
   const [trend, setTrend] = useState<MarketTrendResponse | null>(null)
+  const [team, setTeam] = useState<TeamMemberProduction[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
+
+  const activeRole: MembershipRole | null = activeOrg
+    ? (memberships.find((m) => m.organization_id === activeOrg.id)?.role ?? null)
+    : null
+  const isGestor = activeRole === 'owner' || activeRole === 'admin'
 
   useEffect(() => {
     setLoading(true)
     Promise.all([
       getDashboardMetrics(),
       getDashboardValuations(10, 0),
+      isGestor ? getTeamDashboard() : Promise.resolve(null),
     ])
-      .then(([m, v]) => {
+      .then(([m, v, t]) => {
         setMetrics(m)
         setValuations(v.items)
+        setTeam(t?.members ?? null)
         return getMarketTrend(m.market_city)
       })
       .then(t => setTrend(t))
       .catch(e => setError(e.message))
       .finally(() => setLoading(false))
-  }, [])
+  }, [isGestor])
 
   if (loading) {
     return (
@@ -122,7 +138,10 @@ export default function Dashboard() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold m-0" style={{ color: '#1A1A1A' }}>Painel</h1>
-        <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>Bem-vinda de volta, Maria. Aqui está seu panorama de mercado.</p>
+        <p className="text-sm mt-1" style={{ color: '#6B6B6B' }}>
+          {profile?.full_name ? `Bem-vindo(a) de volta, ${profile.full_name.split(' ')[0]}.` : 'Bem-vindo(a) de volta.'}{' '}
+          Aqui está seu panorama de mercado.
+        </p>
       </div>
 
       {/* Metric Cards */}
@@ -159,6 +178,40 @@ export default function Dashboard() {
           </div>
         ))}
       </div>
+
+      {/* Produção da equipe (gestores) */}
+      {isGestor && team && team.length > 0 && (
+        <div className="bg-white rounded-xl p-5 mb-6" style={{ border: '1px solid #E8E0CF' }}>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-[15px] font-semibold m-0" style={{ color: '#1A1A1A' }}>Produção da Equipe</h2>
+            <span className="text-xs font-medium" style={{ color: '#9E9E9E' }}>Estudos por membro · mês atual</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr style={{ background: '#F7F4EE' }}>
+                  <th className="px-4 py-2.5 text-left font-medium text-xs uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Membro</th>
+                  <th className="px-4 py-2.5 text-left font-medium text-xs uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Papel</th>
+                  <th className="px-4 py-2.5 text-right font-medium text-xs uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Este mês</th>
+                  <th className="px-4 py-2.5 text-right font-medium text-xs uppercase tracking-wide" style={{ color: '#9E9E9E' }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {team.map((m, i) => (
+                  <tr key={m.user_id} style={{ borderTop: '1px solid #E8E0CF', background: i % 2 === 0 ? '#fff' : '#FAFBFD' }}>
+                    <td className="px-4 py-3">
+                      <div className="font-medium" style={{ color: '#1A1A1A' }}>{m.full_name ?? m.email ?? '—'}</div>
+                    </td>
+                    <td className="px-4 py-3" style={{ color: '#6B6B6B' }}>{ROLE_LABELS[m.role] ?? m.role}</td>
+                    <td className="px-4 py-3 text-right font-bold" style={{ color: GOLD, fontFamily: MONO }}>{m.this_month}</td>
+                    <td className="px-4 py-3 text-right" style={{ color: '#6B6B6B', fontFamily: MONO }}>{m.total}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Daily Valuations */}
       <div className="bg-white rounded-xl p-5 mb-6" style={{ border: '1px solid #E8E0CF' }}>

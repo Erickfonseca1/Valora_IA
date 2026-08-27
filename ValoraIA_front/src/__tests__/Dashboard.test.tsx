@@ -67,8 +67,17 @@ vi.mock('../api', () => ({
   getDashboardMetrics: vi.fn().mockResolvedValue(mockMetrics),
   getDashboardValuations: vi.fn().mockResolvedValue(mockValuations),
   getMarketTrend: vi.fn().mockResolvedValue(mockTrend),
+  getTeamDashboard: vi.fn().mockResolvedValue({ members: [] }),
   createValuation: vi.fn(),
   getValuation: vi.fn(),
+}))
+
+vi.mock('../context/AuthContext', () => ({
+  useAuth: () => ({
+    profile: { id: 'u_1', full_name: 'Maria Silva', creci: null, cnai: null, avatar_url: null, created_at: '' },
+    memberships: [],
+    activeOrg: null,
+  }),
 }))
 
 function renderDashboard() {
@@ -84,7 +93,7 @@ describe('Dashboard', () => {
     renderDashboard()
     await waitFor(() => {
       expect(screen.getByText('Painel')).toBeInTheDocument()
-      expect(screen.getByText('Bem-vinda de volta, Maria. Aqui está seu panorama de mercado.')).toBeInTheDocument()
+      expect(screen.getByText(/Bem-vindo\(a\) de volta, Maria\./)).toBeInTheDocument()
     })
   })
 
