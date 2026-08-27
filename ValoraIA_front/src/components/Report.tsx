@@ -209,6 +209,39 @@ function SectionCard({ children, style }: { children: ReactNode; style?: React.C
   )
 }
 
+// Collapsible detail panel. Inicialmente fechado; o conteúdo permanece no DOM
+// (oculto) para não perder contexto de acessibilidade/SEO do estudo.
+function CollapsibleSection({ number, title, children }: { number: string; title: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <SectionCard>
+      <button
+        onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+          background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left',
+          borderLeft: '3px solid #C9A227', padding: '10px 16px',
+          borderBottom: '1px solid #E8E0CF', fontFamily: 'inherit',
+        }}
+      >
+        <span style={{ fontFamily: "'DM Mono', monospace", fontSize: 11, fontWeight: 700, color: '#C9A227', letterSpacing: 1, minWidth: 20 }}>
+          {number}
+        </span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#1A1A1A', letterSpacing: '-0.2px', textTransform: 'uppercase', flex: 1 }}>
+          {title}
+        </span>
+        <span style={{ color: '#94A3B8', fontSize: 11, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.15s' }} aria-hidden>
+          ▸
+        </span>
+      </button>
+      <div data-collapsible={number} style={{ display: open ? 'block' : 'none' }}>
+        {children}
+      </div>
+    </SectionCard>
+  )
+}
+
 export default function Report() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
@@ -415,8 +448,8 @@ export default function Report() {
       </div>
       <SectionCard>
         <SectionHeader number="02" title="Composição do Valor" />
-        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 0 }}>
-          <div style={{ padding: '20px 16px', borderBottom: '1px solid #E8E0CF' }} className="sm:border-b-0 sm:border-r sm:border-slate-100 sm:!p-[24px_28px]">
+        <div className="grid grid-cols-1" style={{ gap: 0 }}>
+          <div style={{ padding: '20px 16px', borderBottom: '1px solid #E8E0CF' }} className="sm:!p-[24px_28px]">
             <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
               Valor Central de Referência (resultado do estudo)
             </div>
@@ -442,8 +475,7 @@ export default function Report() {
             </div>
           </div>
           <div style={{ padding: '20px 16px' }} className="sm:!p-[24px_28px]">
-            {valuation.market_reference && valuation.homogenization_factors && (
-              <div style={{ marginBottom: 18, background: '#F7F4EE', border: '1px solid #E8E0CF', borderRadius: 10, padding: '12px 14px' }}>
+            {valuation.market_reference && valuation.homogenization_factors && (              <div style={{ marginBottom: 18, background: '#F7F4EE', border: '1px solid #E8E0CF', borderRadius: 10, padding: '12px 14px' }}>
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>
                   Como o valor foi formado (A → B → resultado)
                 </div>
@@ -561,18 +593,16 @@ export default function Report() {
         </div>
       </SectionCard>
 
-      {/* ── 02b. MEMÓRIA DE CÁLCULO ─────────────────────────────── */}
+      {/* ── 02b. MEMÓRIA DE CÁLCULO (colapsável) ───────────────── */}
       {valuation.homogenization_factors && (
-        <SectionCard>
-          <SectionHeader number="02b" title="Base Comparável Homogeneizada" />
+        <CollapsibleSection number="02b" title="Base Comparável Homogeneizada">
           <ValueWaterfall factors={valuation.homogenization_factors} />
-        </SectionCard>
+        </CollapsibleSection>
       )}
 
-      {/* ── 02c. REFERÊNCIA DE MERCADO VERIFICADA ────────────────── */}
+      {/* ── 02c. REFERÊNCIA DE MERCADO (colapsável) ─────────────── */}
       {valuation.market_reference && (
-        <SectionCard>
-          <SectionHeader number="02c" title="Referência do Bairro — Passo B (peso no resultado)" />
+        <CollapsibleSection number="02c" title="Referência do Bairro — Passo B (peso no resultado)">
           <div style={{ padding: '12px 20px', background: '#FEFCF5', borderBottom: '1px solid #E8D99A', fontSize: 12, color: '#64748B', lineHeight: 1.6 }}>
             <strong style={{ color: '#1E293B' }}>Como ler esta etapa:</strong> a 02b mostra a base
             calculada pelos comparáveis (passo A). Esta etapa mostra a referência independente do bairro
@@ -622,7 +652,7 @@ export default function Report() {
             O resultado do estudo combina a base da 02b com esta âncora conforme o peso acima:
             quanto maior o peso, mais a referência do bairro aproxima o valor central dela.
           </div>
-        </SectionCard>
+        </CollapsibleSection>
       )}
 
       {/* ── 03. IMÓVEIS REFERENCIAIS ─────────────────────────────── */}

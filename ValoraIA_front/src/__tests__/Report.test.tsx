@@ -170,6 +170,18 @@ describe('Report', () => {
     })
   })
 
+  it('mantém 02b e 02c fechadas (colapsáveis) por padrão', async () => {
+    const { container } = renderReport()
+    await waitFor(() => {
+      const b = container.querySelector('[data-collapsible="02b"]') as HTMLElement | null
+      const c = container.querySelector('[data-collapsible="02c"]') as HTMLElement | null
+      expect(b).toBeTruthy()
+      expect(c).toBeTruthy()
+      if (b) expect(b.style.display).toBe('none')
+      if (c) expect(c.style.display).toBe('none')
+    })
+  })
+
   it('exibe a seção de fatores de preço', async () => {
     renderReport()
     await waitFor(() => {
