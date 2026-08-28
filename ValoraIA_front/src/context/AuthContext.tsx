@@ -24,6 +24,9 @@ interface AuthState {
   signOut: () => Promise<void>
   setActiveOrg: (orgId: string) => void
   refreshMe: () => Promise<void>
+  // Aplica um MeData já carregado (ex.: resposta do PATCH /api/me) no estado
+  // — evita esperar um novo GET e mantém sidebar/perfil sincronizados.
+  applyMe: (me: MeData) => void
 }
 
 const AuthContext = createContext<AuthState | null>(null)
@@ -45,27 +48,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.getItem(ORG_STORAGE_KEY)
   )
 
+  const applyMe = useCallback((me: MeData) => {
+    setProfile(me.profile)
+    setOrganizations(me.organizations)
+    setMemberships(me.memberships)
+    const active = me.organizations.find((o) => o.id === activeOrgId) ?? me.organizations[0] ?? null
+    if (active) {
+      setActiveOrgId(active.id)
+      localStorage.setItem(ORG_STORAGE_KEY, active.id)
+    } else {
+      localStorage.removeItem(ORG_STORAGE_KEY)
+    }
+  }, [activeOrgId])
+
   const refreshMe = useCallback(async () => {
     try {
       const me = await fetchMe() as MeData
       // Fallback: se o perfil ainda não existe no servidor, usa o nome do
       // signup (user_metadata) para não exibir o prefixo do e-mail.
       const meta = (userMetaRef.current?.full_name as string | undefined) ?? null
-      setProfile(me.profile ?? (meta ? { id: userMetaRef.current!.id, full_name: meta, creci: null, cnai: null, avatar_url: null, created_at: '' } : null))
-      setOrganizations(me.organizations)
-      setMemberships(me.memberships)
-      const active = me.organizations.find((o) => o.id === activeOrgId) ?? me.organizations[0] ?? null
-      if (active) {
-        setActiveOrgId(active.id)
-        localStorage.setItem(ORG_STORAGE_KEY, active.id)
-      } else {
-        localStorage.removeItem(ORG_STORAGE_KEY)
-      }
+      applyMe(
+        me.profile
+          ? me
+          : { ...me, profile: meta ? { id: userMetaRef.current!.id, full_name: meta, creci: null, cnai: null, avatar_url: null, created_at: '' } : null }
+      )
     } catch (err) {
       // Session exists but profile/orgs could not load; retry on next refresh.
       console.warn('[auth] refreshMe falhou (perfil/nome podem não aparecer):', err)
     }
-  }, [activeOrgId])
+  }, [activeOrgId, applyMe])
 
   // Guarda o user_metadata da sessão (nome do signup) para o fallback acima.
   const userMetaRef = useRef<{ id: string; full_name?: unknown } | null>(null)
@@ -168,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     signOut,
     setActiveOrg,
     refreshMe,
+    applyMe,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

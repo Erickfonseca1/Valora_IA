@@ -22,6 +22,7 @@ vi.mock('../context/AuthContext', () => ({
     user: { id: 'u_1', email: 'teste@avalia.com' },
     sessionReady: true,
     refreshMe: vi.fn().mockResolvedValue(undefined),
+    applyMe: vi.fn(),
     setActiveOrg: vi.fn(),
   }),
 }))

@@ -53,15 +53,28 @@ export async function GET(
       : Promise.resolve({ data: null }),
   ]);
 
-  // Resolve member names/emails (best-effort)
+  // Resolve member names/emails (best-effort, em lote — sem N+1 por membro)
   const members: OrganizationMember[] = [];
+  const ids = (memberRows?.data ?? []).map((r: { user_id: string }) => r.user_id);
+
+  let emailMap: Record<string, string> = {};
+  if (ids.length > 0) {
+    for (let page = 1; page <= 20; page++) {
+      const { data: pageUsers } = await db.auth.admin.listUsers({ page, perPage: 200 });
+      if (!pageUsers?.users?.length) break;
+      for (const u of pageUsers.users) {
+        if (ids.includes(u.id) && u.email) emailMap[u.id] = u.email;
+      }
+      if (Object.keys(emailMap).length >= ids.length) break;
+    }
+  }
+
   for (const row of (memberRows?.data ?? []) as Array<{ user_id: string; role: string; created_at: string }>) {
     const { data: profile } = await db.from("profiles").select("full_name").eq("id", row.user_id).maybeSingle();
-    const { data: authUser } = await db.auth.admin.getUserById(row.user_id);
     members.push({
       user_id: row.user_id,
       full_name: profile?.full_name ?? null,
-      email: authUser?.user?.email ?? null,
+      email: emailMap[row.user_id] ?? null,
       role: row.role as OrganizationMember["role"],
       created_at: row.created_at,
     });

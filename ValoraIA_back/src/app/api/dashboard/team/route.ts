@@ -64,6 +64,15 @@ export async function GET(
     if (r.created_by) totalCount[r.created_by] = (totalCount[r.created_by] ?? 0) + 1;
   }
 
+  // Emails em lote (evita N+1 por membro)
+  let emailMap: Record<string, string> = {};
+  {
+    const { data: pageUsers } = await db.auth.admin.listUsers({ page: 1, perPage: 200 });
+    for (const u of (pageUsers?.users ?? [])) {
+      if (memberIds.includes(u.id) && u.email) emailMap[u.id] = u.email;
+    }
+  }
+
   const out: TeamMemberProduction[] = [];
   for (const m of members) {
     const { data: profile } = await db
@@ -71,11 +80,10 @@ export async function GET(
       .select("full_name")
       .eq("id", m.user_id)
       .maybeSingle();
-    const { data: authUser } = await db.auth.admin.getUserById(m.user_id);
     out.push({
       user_id: m.user_id,
       full_name: profile?.full_name ?? null,
-      email: authUser?.user?.email ?? null,
+      email: emailMap[m.user_id] ?? null,
       role: m.role,
       this_month: monthCount[m.user_id] ?? 0,
       total: totalCount[m.user_id] ?? 0,

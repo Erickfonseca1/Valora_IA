@@ -495,16 +495,16 @@ function MembersTab({ detail, orgId, isManager, onSaved, onError }: {
 // ─── Profile tab ──────────────────────────────────────────────────────────────
 
 function ProfileTab({ onSaved, onError }: { onSaved: () => void; onError: (msg: string) => void }) {
-  const { profile } = useAuth()
+  const { profile, applyMe } = useAuth()
   const [fullName, setFullName] = useState(profile?.full_name ?? '')
   const [creci, setCreci] = useState(profile?.creci ?? '')
-  const [cnai, setCnaI] = useState(profile?.cnai ?? '')
+  const [cnai, setCnai] = useState(profile?.cnai ?? '')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     setFullName(profile?.full_name ?? '')
     setCreci(profile?.creci ?? '')
-    setCnaI(profile?.cnai ?? '')
+    setCnai(profile?.cnai ?? '')
   }, [profile])
 
   const handleSubmit = async (e: FormEvent) => {
@@ -512,7 +512,10 @@ function ProfileTab({ onSaved, onError }: { onSaved: () => void; onError: (msg: 
     setSaving(true)
     onError('')
     try {
-      await updateProfile({ full_name: fullName.trim(), creci: creci.trim() || null, cnai: cnai.trim() || null })
+      const me = await updateProfile({ full_name: fullName.trim(), creci: creci.trim() || null, cnai: cnai.trim() || null })
+      // Aplica a resposta imediatamente no contexto (sidebar/abas sincronizam
+      // sem esperar um novo GET — resolve a lentidão/staleness).
+      applyMe(me)
       onSaved()
     } catch (err) {
       onError(err instanceof Error ? err.message : 'Erro ao salvar perfil')
@@ -536,7 +539,7 @@ function ProfileTab({ onSaved, onError }: { onSaved: () => void; onError: (msg: 
       </label>
       <label style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 13, color: '#334155', fontWeight: 600 }}>
         CNAI (avaliador imobiliário)
-        <input value={cnai} onChange={(e) => setCnaI(e.target.value)} placeholder="Opcional"
+        <input value={cnai} onChange={(e) => setCnai(e.target.value)} placeholder="Opcional"
           style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid #E8E0CF', fontSize: 14, fontFamily: 'inherit' }} />
       </label>
       <p style={{ fontSize: 11, color: '#94A3B8', margin: 0, lineHeight: 1.6 }}>

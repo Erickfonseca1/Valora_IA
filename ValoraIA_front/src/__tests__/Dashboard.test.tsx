@@ -77,6 +77,8 @@ vi.mock('../context/AuthContext', () => ({
     profile: { id: 'u_1', full_name: 'Maria Silva', creci: null, cnai: null, avatar_url: null, created_at: '' },
     memberships: [],
     activeOrg: null,
+    refreshMe: vi.fn().mockResolvedValue(undefined),
+    applyMe: vi.fn(),
   }),
 }))
 
