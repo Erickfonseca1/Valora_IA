@@ -293,33 +293,26 @@ describe('ValuationFlow', () => {
     expect(screen.getByText('Vagas')).toBeInTheDocument()
   })
 
-  it('Comercial não mostra Quartos, Banheiros nem Vagas no passo 1', async () => {
+  it('Comercial e Terreno ficam desabilitados (em breve)', async () => {
     renderFlow()
     await skipIntakeStep()
-    fireEvent.click(screen.getByText('Comercial'))
-    expect(screen.queryByText('Quartos')).not.toBeInTheDocument()
-    expect(screen.queryByText('Banheiros')).not.toBeInTheDocument()
-    expect(screen.queryByText('Vagas')).not.toBeInTheDocument()
-  })
-
-  it('Terreno fica desabilitado (avaliação em breve)', async () => {
-    renderFlow()
-    await skipIntakeStep()
+    const comercialBtn = screen.getByText('Comercial').closest('button') as HTMLButtonElement
     const terrenoBtn = screen.getByText('Terreno').closest('button') as HTMLButtonElement
+    expect(comercialBtn.disabled).toBe(true)
     expect(terrenoBtn.disabled).toBe(true)
     // Clicar não altera o tipo selecionado (apartamento é o default):
     // "Do condomínio" continua visível (só aparece para apartamento)
     fireEvent.click(terrenoBtn)
+    fireEvent.click(comercialBtn)
     expect(screen.getByText('Do condomínio')).toBeInTheDocument()
   })
 
-  it('review step não exibe campos ocultos para Comercial', async () => {
+  it('review step exibe os dados do imóvel (apartamento default)', async () => {
     renderFlow()
 
     // Step 0 → Step 1 (skip IntakeStep)
     await act(async () => { fireEvent.click(screen.getByText('Pular')) })
 
-    fireEvent.click(screen.getByText('Comercial'))
     fireEvent.change(screen.getByPlaceholderText('Ex: Av. Epitácio Pessoa, 1000, Manaíra, João Pessoa, PB'), {
       target: { value: 'Rua Teste, 100' },
     })
@@ -332,9 +325,6 @@ describe('ValuationFlow', () => {
     // Step 2 → Step 3 (Revisão)
     await act(async () => { fireEvent.click(screen.getByText('Continuar')) })
 
-    expect(screen.queryByText('Quartos')).not.toBeInTheDocument()
-    expect(screen.queryByText('Banheiros')).not.toBeInTheDocument()
-    expect(screen.queryByText('Vagas')).not.toBeInTheDocument()
     expect(screen.getByText('300m²')).toBeInTheDocument()
   })
 

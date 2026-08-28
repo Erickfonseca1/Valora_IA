@@ -13,7 +13,7 @@ import LiveValuationHero from './LiveValuationHero'
 const PROPERTY_TYPES: { label: string; value: PropertyType; soon?: boolean }[] = [
   { label: 'Apartamento', value: 'apartment' },
   { label: 'Casa', value: 'house' },
-  { label: 'Comercial', value: 'commercial' },
+  { label: 'Comercial', value: 'commercial', soon: true },
   { label: 'Terreno', value: 'land', soon: true },
 ]
 
@@ -124,7 +124,7 @@ export default function ValuationFlow() {
   const internoVisible = form.propertyType !== 'land'
 
   const handlePropertyTypeChange = (value: PropertyType) => {
-    if ((value as string) === 'land') return // avaliação de terrenos desativada (em breve)
+    if ((value as string) === 'land' || (value as string) === 'commercial') return // em breve
     setForm(f => ({
       ...f,
       propertyType: value,
