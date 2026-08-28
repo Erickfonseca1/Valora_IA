@@ -250,8 +250,8 @@ export default function AppShell({ children }: AppShellProps) {
         </div>
         <button
           onClick={async () => {
-            await signOut()
             navigate('/', { replace: true })
+            await signOut()
           }}
           style={{
             display: 'flex', alignItems: 'center', gap: 6, marginTop: 8,
