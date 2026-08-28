@@ -251,7 +251,7 @@ const PLANS: Plan[] = [
       'Análise de fotos por IA',
       'Exportação em PDF completa',
     ],
-    cta: 'Começar teste de 7 dias',
+    cta: 'Começar',
   },
   {
     name: 'Imobiliária',
@@ -268,7 +268,7 @@ const PLANS: Plan[] = [
       'Convites por e-mail com link de aceite',
       'Suporte por WhatsApp',
     ],
-    cta: 'Começar teste de 7 dias',
+    cta: 'Começar',
   },
   {
     name: 'Imobiliária+',
@@ -282,7 +282,7 @@ const PLANS: Plan[] = [
       'Tudo do plano Imobiliária',
       'Suporte prioritário',
     ],
-    cta: 'Falar com especialista',
+    cta: 'Começar',
   },
 ]
 
@@ -400,16 +400,16 @@ function PricingSection() {
         </div>
 
         {/* Free + institutional */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.35fr', gap: 16, marginTop: 16 }} className="pricing-bottom">
-          <div style={{ background: '#FEFCF5', border: '1px solid #E8D99A', borderRadius: 16, padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#111827' }}>Comece grátis</div>
-            <div style={{ fontSize: 12.5, color: 'var(--marketing-muted)', lineHeight: 1.6, marginTop: 4 }}>
-              <strong style={{ color: '#111827' }}>R$ 0</strong> — 2 estudos por mês, valores indicativos com faixa e memória de cálculo. Sem cartão.
-            </div>
-            <a href="/login" style={{ display: 'inline-block', marginTop: 12, fontSize: 13, fontWeight: 700, color: '#111827', textDecoration: 'none', borderBottom: '1.5px solid #C9A227', paddingBottom: 2, width: 'fit-content' }}>
-              Criar conta grátis →
-            </a>
+        <div style={{ background: '#FEFCF5', border: '1px solid #E8D99A', borderRadius: 16, padding: '22px 24px', display: 'flex', flexDirection: 'column', justifyContent: 'center', marginTop: 16 }}>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#111827' }}>Comece grátis</div>
+          <div style={{ fontSize: 12.5, color: 'var(--marketing-muted)', lineHeight: 1.6, marginTop: 4 }}>
+            <strong style={{ color: '#111827' }}>R$ 0</strong> — 2 estudos por mês, valores indicativos com faixa e memória de cálculo. Sem cartão.
           </div>
+          <a href="/login" style={{ display: 'inline-block', marginTop: 12, fontSize: 13, fontWeight: 700, color: '#111827', textDecoration: 'none', borderBottom: '1.5px solid #C9A227', paddingBottom: 2, width: 'fit-content' }}>
+            Criar conta grátis →
+          </a>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.35fr', gap: 16, marginTop: 16 }} className="pricing-bottom">
           {/* <div style={{ background: '#111827', borderRadius: 16, padding: '24px 26px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18 }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: 'uppercase', color: '#C9A227', marginBottom: 5 }}>
@@ -479,9 +479,8 @@ export default function LandingPage() {
             <a href="#precos">Preços</a>
           </nav>
           <div className="marketing-header-actions">
-            <a href="/app" className="marketing-header-login">Acessar plataforma</a>
-            <a href="#como-funciona" className="marketing-button marketing-button-dark marketing-button-small">
-              Conhecer a AVALIA <ArrowRight size={14} />
+            <a href="/app" className="marketing-button marketing-button-dark marketing-button-small">
+              Acessar plataforma <ArrowRight size={14} />
             </a>
           </div>
           <details className="marketing-mobile-menu">
@@ -619,20 +618,34 @@ export default function LandingPage() {
               <div className="marketing-audience-card"><Target size={20} /><strong>Avaliadores</strong><span>Organize comparáveis, fatores e memória de cálculo em uma única experiência.</span></div>
               <div className="marketing-audience-card"><BarChart3 size={20} /><strong>Imobiliárias</strong><span>Crie uma linguagem comum para decisões de preço e acompanhamento de mercado.</span></div>
             </div>
-          </div>
-        </section>
 
-        <section className="marketing-section marketing-security-section">
-          <div className="marketing-container">
-            <SectionHeading
-              eyebrow="SEGURANÇA E PRIVACIDADE"
-              title="Tratamento de dados com responsabilidade."
-              description="A AVALIA adota medidas técnicas e organizacionais para proteger os dados tratados na plataforma, com transparência alinhada à LGPD."
-            />
-            <div className="marketing-audience-grid">
-              <div className="marketing-audience-card"><Lock size={20} /><strong>Armazenamento privado</strong><span>Fotos e estudos ficam em ambiente com controle de acesso; imagens são entregues por URLs de curta duração.</span></div>
-              <div className="marketing-audience-card"><ShieldCheck size={20} /><strong>Privacidade por padrão</strong><span>Metadados de localização (GPS) das fotos são removidos no envio, e apenas o necessário é coletado.</span></div>
-              <div className="marketing-audience-card"><FileSearch size={20} /><strong>LGPD</strong><span>Transparência sobre o tratamento, responsabilidade técnica do avaliador e canais para direitos do titular.</span></div>
+            {/* Segurança e privacidade — faixa compacta (não vira seção própria) */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap',
+              marginTop: 26, padding: '18px 22px',
+              background: '#FEFCF5', border: '1px solid #E8D99A', borderRadius: 12,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 200 }}>
+                <ShieldCheck size={22} style={{ color: 'var(--marketing-gold-dark)' }} />
+                <div>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, color: 'var(--marketing-ink)' }}>Segurança e LGPD</div>
+                  <div style={{ fontSize: 11, color: 'var(--marketing-muted)' }}>Tratamento de dados com responsabilidade</div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start', fontSize: 12, color: 'var(--marketing-muted)', maxWidth: 250 }}>
+                  <Lock size={15} style={{ flexShrink: 0, marginTop: 2, color: 'var(--marketing-gold-dark)' }} />
+                  <span>Fotos e estudos em armazenamento privado, com URLs de curta duração.</span>
+                </div>
+                <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start', fontSize: 12, color: 'var(--marketing-muted)', maxWidth: 250 }}>
+                  <FileSearch size={15} style={{ flexShrink: 0, marginTop: 2, color: 'var(--marketing-gold-dark)' }} />
+                  <span>Metadados de localização (GPS) removidos e coleta mínima de dados.</span>
+                </div>
+                <div style={{ display: 'flex', gap: 7, alignItems: 'flex-start', fontSize: 12, color: 'var(--marketing-muted)', maxWidth: 250 }}>
+                  <Check size={15} style={{ flexShrink: 0, marginTop: 2, color: 'var(--marketing-gold-dark)' }} />
+                  <span>Transparência sobre tratamento e canais para direitos do titular.</span>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -655,6 +668,21 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
+          {/* JSON-LD FAQPage — rich results (perguntas frequentes no Google) */}
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: FAQ_ITEMS.map((item) => ({
+                  '@type': 'Question',
+                  name: item.question,
+                  acceptedAnswer: { '@type': 'Answer', text: item.answer },
+                })),
+              }),
+            }}
+          />
         </section>
 
         <section className="marketing-closing-section">
