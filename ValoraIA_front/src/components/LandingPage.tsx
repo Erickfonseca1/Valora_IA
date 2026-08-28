@@ -512,7 +512,6 @@ export default function LandingPage() {
             </div>
             <ProductPreview />
           </div>
-          <div className="marketing-hero-gridline marketing-container" aria-hidden="true"><span /><span /><span /><span /></div>
         </section>
 
         <section className="marketing-proof-strip" aria-label="Recursos da plataforma">
