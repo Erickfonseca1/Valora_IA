@@ -386,13 +386,14 @@ function PricingSection() {
               <a
                 href="/login"
                 style={{
-                  display: 'block', textAlign: 'center', padding: '13px 16px', borderRadius: 10,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '13px 16px', borderRadius: 10,
                   background: plan.name === 'Imobiliária+' ? '#F7F4EE' : '#111827',
                   color: plan.name === 'Imobiliária+' ? '#111827' : '#fff',
                   fontWeight: 700, fontSize: 13.5, textDecoration: 'none', border: plan.name === 'Imobiliária+' ? '1px solid var(--marketing-border)' : 'none',
                 }}
               >
-                {plan.cta} <ArrowRight size={14} style={{ verticalAlign: '-2px', marginLeft: 4 }} />
+                {plan.cta} <ArrowRight size={14} />
               </a>
             </div>
           ))}
@@ -409,7 +410,7 @@ function PricingSection() {
               Criar conta grátis →
             </a>
           </div>
-          <div style={{ background: '#111827', borderRadius: 16, padding: '24px 26px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18 }}>
+          {/* <div style={{ background: '#111827', borderRadius: 16, padding: '24px 26px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18 }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, textTransform: 'uppercase', color: '#C9A227', marginBottom: 5 }}>
                 Institucional
@@ -422,7 +423,7 @@ function PricingSection() {
             <a href="/login" style={{ whiteSpace: 'nowrap', padding: '12px 18px', borderRadius: 10, background: '#C9A227', color: '#111827', fontWeight: 800, fontSize: 13, textDecoration: 'none' }}>
               Falar com especialista
             </a>
-          </div>
+          </div> */}
         </div>
 
         <p style={{ textAlign: 'center', margin: '28px 0 0', fontSize: 12, color: 'var(--marketing-faint)' }}>
