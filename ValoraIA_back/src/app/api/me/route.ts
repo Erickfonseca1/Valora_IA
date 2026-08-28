@@ -19,11 +19,30 @@ const ProfilePatchSchema = z.object({
 });
 
 async function loadMe(db: ReturnType<typeof getAdminClient>, userId: string): Promise<MeData> {
-  const { data: profile } = await db
-    .from("profiles")
-    .select("id, full_name, creci, cnaI, avatar_url, onboarding_completed_at, created_at")
-    .eq("id", userId)
-    .maybeSingle();
+  let profile: Profile | null = null;
+  try {
+    const { data, error } = await db
+      .from("profiles")
+      .select("id, full_name, creci, cnai, avatar_url, onboarding_completed_at, created_at")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      console.error("[me] select profiles com onboarding falhou:", error?.message);
+      // Fallback: select básico (sem a flag) — a coluna pode faltar em bancos
+      // sem a migration 024, e o perfil não pode sumir por causa disso.
+      const { data: safe, error: safeError } = await db
+        .from("profiles")
+        .select("id, full_name, creci, cnai, avatar_url, created_at")
+        .eq("id", userId)
+        .maybeSingle();
+      if (!safeError && safe) profile = safe as Profile;
+    } else {
+      profile = data as Profile;
+    }
+  } catch (e) {
+    console.error("[me] load profile falhou:", e);
+  }
 
   const { data: memberships } = await db
     .from("memberships")
@@ -41,7 +60,7 @@ async function loadMe(db: ReturnType<typeof getAdminClient>, userId: string): Pr
   }
 
   return {
-    profile: (profile as Profile | null) ?? null,
+    profile,
     organizations,
     memberships: rows,
   };

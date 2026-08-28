@@ -49,7 +49,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const applyMe = useCallback((me: MeData) => {
-    setProfile(me.profile)
+    // Nunca derruba o perfil existente com null (evita regressão do nome no
+    // form/sidebar quando o GET /me sofre algum erro transitório).
+    setProfile(prev => me.profile ?? prev)
     setOrganizations(me.organizations)
     setMemberships(me.memberships)
     const active = me.organizations.find((o) => o.id === activeOrgId) ?? me.organizations[0] ?? null
