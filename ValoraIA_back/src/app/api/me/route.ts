@@ -13,7 +13,7 @@ interface MeData {
 const ProfilePatchSchema = z.object({
   full_name: z.string().min(1).max(120).optional(),
   creci: z.string().max(40).nullable().optional(),
-  cnaI: z.string().max(40).nullable().optional(),
+  cnai: z.string().max(40).nullable().optional(),
   avatar_url: z.string().url().max(2048).nullable().optional(),
   onboarding_completed_at: z.string().nullable().optional(),
 });
@@ -101,7 +101,7 @@ export async function PATCH(
   const updates: Record<string, unknown> = {};
   if (parsed.data.full_name !== undefined) updates.full_name = parsed.data.full_name;
   if (parsed.data.creci !== undefined) updates.creci = parsed.data.creci;
-  if (parsed.data.cnaI !== undefined) updates.cnaI = parsed.data.cnaI;
+  if (parsed.data.cnai !== undefined) updates.cnai = parsed.data.cnai;
   if (parsed.data.avatar_url !== undefined) updates.avatar_url = parsed.data.avatar_url;
   if (parsed.data.onboarding_completed_at !== undefined) {
     updates.onboarding_completed_at = parsed.data.onboarding_completed_at;
@@ -110,6 +110,21 @@ export async function PATCH(
   const { error } = await db.from("profiles").update(updates).eq("id", user.id);
   if (error) {
     return NextResponse.json({ success: false, error: "Failed to update profile" }, { status: 500 });
+  }
+
+  // Fonte única de nome: sincroniza o display name do Supabase Auth com o
+  // full_name do perfil — impede que o formulário/sidebar mostrem o nome
+  // antigo do user_metadata após uma atualização do profile.
+  if (parsed.data.full_name !== undefined) {
+    try {
+      const { data: u } = await db.auth.admin.getUserById(user.id);
+      const meta = (u?.user?.user_metadata ?? {}) as Record<string, unknown>;
+      await db.auth.admin.updateUserById(user.id, {
+        user_metadata: { ...meta, full_name: parsed.data.full_name },
+      });
+    } catch (e) {
+      console.error("[me] sync auth user_metadata falhou (não-crítico):", e);
+    }
   }
 
   const data = await loadMe(db, user.id);
